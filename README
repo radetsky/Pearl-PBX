@@ -3,4 +3,18 @@ Hi,
 This is simple skeleton for future. 
 It does not interesting for anyone till it will be done. 
 
+sql/
+	contains few files for local postgresql database. 
+	1. create_user_asterisk.sql creates user 'asterisk'. 
+	su - postgres 
+	psql -U postgres -i ./create_user_asterisk.sql
+	2. creates database for PearlPBX. 
+	psql -U asterisk -i ./asterisk.sql 
+
+web/ 
+  contains web gui files  
+
+etc/
+  contains configuration files 
+
 
