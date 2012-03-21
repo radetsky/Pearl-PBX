@@ -2083,4 +2083,6 @@ create table primary_operators (
 
 create INDEX on primary_operators ( msisdn ); 
 	
+create INDEX on integration.recordings (cdr_start);
+
 
