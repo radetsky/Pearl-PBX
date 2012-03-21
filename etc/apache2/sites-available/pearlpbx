@@ -1,0 +1,39 @@
+<VirtualHost *:80>
+        ServerName pearlpbx.com
+        ServerAdmin webmaster@localhost
+
+        DocumentRoot /var/www/pearlpbx
+
+        <Directory "/var/www/pearlpbx">
+#                AllowOverride AuthConfig 
+                Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch -Indexes
+                AddHandler cgi-script .pl
+                Order deny,allow 
+                Allow from all
+        </Directory>
+
+        Alias /recordings "/var/spool/asterisk/monitor/"
+        <Directory "/var/spool/asterisk/monitor/">
+                AllowOverride AuthConfig 
+                Options -MultiViews +SymLinksIfOwnerMatch Indexes
+                Order deny,allow 
+                Allow from all
+        </Directory>
+
+
+        ErrorLog /var/log/apache2/pearlpbx-error.log
+        LogLevel warn
+        CustomLog /var/log/apache2/pearlpbx-access.log combined
+
+        ProxyRequests Off 
+        <Proxy *>
+        Order deny,allow
+        Allow from all 
+        </Proxy>
+
+        ProxyPass /konference/rawman http://localhost:8081/konference/rawman
+        ProxyPassReverse /konference/rawman http://localhost:8081/konference/rawman 
+
+</VirtualHost>
+
+
