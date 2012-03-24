@@ -1,0 +1,4 @@
+
+psql -U postgres -f ./user.sql 
+psql -U postgres -f ./asterisk.sql 
+

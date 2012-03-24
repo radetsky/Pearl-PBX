@@ -65,10 +65,10 @@ ALTER SCHEMA routing OWNER TO asterisk;
 -- Name: plpgsql; Type: PROCEDURAL LANGUAGE; Schema: -; Owner: postgres
 --
 
-CREATE OR REPLACE PROCEDURAL LANGUAGE plpgsql;
+CREATE LANGUAGE plpgsql;
 
 
-ALTER PROCEDURAL LANGUAGE plpgsql OWNER TO postgres;
+ALTER LANGUAGE plpgsql OWNER TO postgres;
 
 SET search_path = integration, pg_catalog;
 
@@ -2072,17 +2072,16 @@ REVOKE ALL ON SCHEMA public FROM postgres;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
+set search_path to public; 
 
 create table primary_operators ( 
 	id bigserial not null primary key,
 	msisdn character varying (20),
-  operator character varying (20),
+	operator character varying (20),
 	create_date timestamp without time zone default now(), 
 	comment character varying (40)
 );
 
-create INDEX on primary_operators ( msisdn ); 
+create INDEX primary_operators_msisdn on primary_operators (msisdn); 
 	
-create INDEX on integration.recordings (cdr_start);
-
 
