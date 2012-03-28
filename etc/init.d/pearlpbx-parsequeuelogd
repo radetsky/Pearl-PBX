@@ -1,0 +1,58 @@
+#!/bin/sh
+#
+# Nibelite Conference start-stop script 
+### BEGIN INIT INFO
+# Provides:          nibelite-conference
+# Required-Start:    $local_fs $remote_fs $network $syslog $asterisk
+# Required-Stop:     $local_fs $remote_fs $network $syslog $asterisk
+# Should-Start:      postgresql asterisk 
+# Should-Stop:       
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Nibelite Conference Server 
+# Description:       Controls the Nibelite Conference Server v1.1 
+### END INIT INFO
+
+PATH=/opt/NetSDS/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+NAME="nibelite-parsequeuelogd "
+DAEMON=/usr/sbin/NetSDS-parsequeuelogd.pl  
+DESC="Nibelite Queue Log parser v.1.1."
+PIDFILE="/var/run/NetSDS/NetSDS-parsequeuelogd.pid"
+UMASK=007 # by default
+#MAXFILES=1024 # (the system default)
+
+. /lib/lsb/init-functions
+
+# by default: use real-time priority
+PARAMS=""
+CHDIR_PARM=""
+
+mkdir -p /var/run/NetSDS 
+
+status() {
+	status_of_proc "$DAEMON" "$DESC" && return 0 || return $?
+}
+
+case "$1" in
+	start)
+	echo -n "Starting $DESC: $NAME"
+	start-stop-daemon --start --exec $DAEMON tail 
+	echo "."
+	;; 
+  stop)
+	echo -n "Stopping $DESC: $NAME"
+	start-stop-daemon --stop --pidfile $PIDFILE 
+	echo "."
+	;;
+  status)
+	status
+	exit $?
+	;;
+  *)
+	N=/etc/init.d/$NAME
+	echo "Usage: $N {start|stop}" >&2
+	exit 1
+	;;
+esac
+
+exit 0
