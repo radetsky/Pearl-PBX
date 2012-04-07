@@ -17,4 +17,11 @@ web/
 etc/
   contains configuration files 
 
+sbin/ 
+  NetSDS-hangupd.pl - Hangup daemon. Listen AMI for hangups and clear the ulines. 
+  NetSDS-recd.pl    - Record concatenation tool from few/one WAV to MP3. 
+  NetSDS-parsequeuelogd.pl  - Tailing queue.log and parse it into database. Useful for Queues.      
+  missedcallnotification.pl - Searches for missed calls and send information about it by email. 
+
+
 
