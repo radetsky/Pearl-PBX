@@ -117,6 +117,7 @@ sub _exit {
 }
 
 sub _get_next_record {
+
     my $this       = shift;
     my $current_id = shift;
 
@@ -131,7 +132,39 @@ sub _get_next_record {
     return $result;
 }
 
+sub _get_record_by_previous_id {
 
+    my $this       = shift;
+    my $current_id = shift;
+
+    # remember - transaction already began;
+    my $sth = $this->dbh->prepare(
+        "select * from integration.recordings where previous_record=? and next_record is null and cdr_start < now() - '1 day'::interval order by id limit 1");
+    eval { $sth->execute($current_id); };
+    if ($@) {
+        $this->_exit( $this->dbh->errstr );
+    }
+    my $result = $sth->fetchrow_hashref;
+    return $result;
+}
+
+sub _fix_pseudo_active_talk { 
+		my $this = shift;
+		my $fail_record = shift; 
+
+		my $id = $fail_record->{'id'}; 
+		$this->log("info","Fix ID=$id set next_record=0");
+		$this->speak("Fix ID=$id set next_record=0");
+
+	  my $sth = $this->dbh->prepare(
+			"update integration.recordings set next_record=0 where id=?" ); 
+		eval { $sth->execute ( $id ); }; 
+		if ($@) { 
+				$this->_exit ( $this->dbh->errstr ); 
+		}
+
+		return 1; 
+}
 sub _set_result_file { 
 	my $this = shift; 
 	my $record_id = shift; 
@@ -173,8 +206,10 @@ sub process {
 		$this->speak("Skipping id=".$this->{'bad_id'}." until talk is active.");
 	} 
 
+		# Begin transaction
     $this->_begin;
 	
+	  # Prepare the query for finding 1st unconverted record in the database. 
     my $sth = $this->dbh->prepare(
         "select * from integration.recordings 
 			where concatenated=false 
@@ -184,27 +219,37 @@ sub process {
 				and id > ? 
 			order by id asc limit 1 for update"
     );
+
+		# Execute it. 
     eval { $sth->execute ($this->{'bad_id'}); };
     if ($@) {
         $this->_exit( $this->dbh->errstr );
     }
+
+    # Fetch only one row ! 
     my $result = $sth->fetchrow_hashref;
     unless ( defined($result) ) {
         $this->dbh->rollback;
         $this->_exit("No one file was found. ");
     }
 
+		# Push the result row in some list ? WTF ! 
     push @nexts, $result;
 
-    my $id            = $result->{'id'};
+    # Analyze fetched row 
+		my $id            = $result->{'id'};
     my $uline_id      = $result->{'uline_id'};
     my $original_file = $result->{'original_file'};
     my $next_record   = $result->{'next_record'};
     my $strlog =
       "Got ID=$id ULINE=$uline_id FILE=$original_file NEXT=$next_record";
+	
+	  # Устанавливаем в bad_id значение из поля next_record. Зачем ?
+		# Это маркер активного разговора. 
+	  $this->{'bad_id'} = $next_record;
 
-	$this->{'bad_id'} = $next_record; 
-	$this->log( "info", $strlog );
+		# Just logging it.
+	  $this->log( "info", $strlog );
     $this->speak($strlog);
 
     if ( $next_record == 0 ) {    # First and Final record
@@ -220,13 +265,9 @@ sub process {
             $outfile
         );
         unless ( defined ($rc) ) {
-
-			$this->_convert_fault($id);
-
+						$this->_convert_fault($id);
             $this->dbh->commit;
-            $this->_exit(
-                "Can't convert $infile into $outfile. Check the /usr/bin/sox");
-
+            $this->_exit("Can't convert $infile into $outfile. Check the /usr/bin/sox");
         }
 
         $sth = $this->dbh->prepare(
@@ -243,7 +284,6 @@ sub process {
         $this->speak(
             "File $original_file successfully converted to $result_file");
         return 1;
-
     }
 
     # Find the next record in the chain
@@ -251,8 +291,22 @@ sub process {
         my $next_record = $this->_get_next_record($id);
 
         unless ( defined($next_record) ) {
-			$this->dbh->rollback;
-            return; 
+						# FIXME: Лечим баг, когда он будет закрыт, убрать этот код. 
+						# Баг состоит в том, что NetSDS-route ставит next_record = текущий ID
+					  # каким-то очень старым записям. Подозреваю дело в том, что hangupd не выставляет
+						# в ноль (0) next_record по факту завершения звонка. Что-то я упустил. 
+						# Проверить !!! FIXME! 
+						my $fail_record = $this->_get_record_by_previous_id($id);
+						unless ( defined ( $fail_record ) ) {
+								$this->dbh->rollback;
+            		return;
+						}
+						# Update the recordings. set 0 to next_record and commit; 
+						$this->_fix_pseudo_active_talk($fail_record);
+						$this->dbh->commit;
+						$this->{'bad_id'} = 0; 
+						return; 
+
         }
 
         $strlog = sprintf(
@@ -261,17 +315,17 @@ sub process {
             $next_record->{'original_file'}, $next_record->{'next_record'}
         );
 
-		$this->{'bad_id'} = $next_record->{'id'}; 
+				$this->{'bad_id'} = $next_record->{'id'}; 
         $this->log( "info", $strlog );
         $this->speak($strlog);
 
         push @nexts, $next_record;
         $id = $next_record->{'id'};
 		
-		if ($next_record->{'next_record'} == 0) { 
-			last; 
-		} 
-	}
+		    if ($next_record->{'next_record'} == 0) { 
+		    	last; 
+		    } 
+	  }
 
 	my @infiles = ();
 	my @nexts_copy = @nexts; 	
