@@ -24,12 +24,12 @@ use strict;
 use warnings;
 
 PearlPBXMissedCallNotification->run(
-	daemon => undef, 
-	verbose => 1, 
+	daemon => 1, 
+	verbose => undef, 
 	use_pidfile => 1, 
 	has_conf => 1, 
 	conf_file   => "/etc/NetSDS/asterisk-router.conf",
-	infinite    => undef
+	infinite    => 1,
 );
 
 1; 
@@ -41,7 +41,9 @@ use strict;
 use warnings; 
 
 use base qw(NetSDS::App);
-use DBI; 
+use DBI;
+use Data::Dumper;
+use Net::SMTP;
 
 sub start {
     my $this = shift;
@@ -83,7 +85,7 @@ sub _db_connect {
     # If DBMS isn' t accessible - try reconnect
     if ( !$this->dbh or !$this->dbh->ping ) {
         $this->dbh(
-            DBI->connect_cached( $dsn, $user, $passwd, { RaiseError => 1 } ) );
+            DBI->connect_cached( $dsn, $user, $passwd, { RaiseError => 1 , AutoCommit => 0 } ) );
     }
 
     if ( !$this->dbh ) {
@@ -127,11 +129,16 @@ sub _get_last_calldate {
 	if ($@) { 
 		$this->_exit($this->dbh->errstr); 
 	} 
-	my $last_calldate = $sth->fetchrow_hashref;
-  # last_calldate may have undef value if cdr table is empty; 
+	my $result_hashref = $sth->fetchrow_hashref;
+	if ($result_hashref == {} ) { 
+		$this->dbh->rollback;
+		return undef; 
+	} 
+	my $last_calldate = $result_hashref->{'calldate'}; 
+	
 	$this->dbh->rollback;
 
-  $this->{'last_calldate'} = $last_calldate; 
+  	$this->{'last_calldate'} = $last_calldate; 
 	return $last_calldate; 
 }
 
@@ -143,12 +150,13 @@ sub _get_data {
 
 	my $result_hashref = undef; 
 
-  my $sql = "select calldate,src,dst,channel from public.cdr where dstchannel = '' and channel similar to (".$this->dbh->escape($channels).") ";
+  my $sql = "select calldate,src,dst,channel from public.cdr where dstchannel = '' and channel similar to '(".$channels.")%' ";
   if ( defined ( $last_calldate ) ) { 
 		$sql .= "and calldate > '$last_calldate' "; 
 	} 
 	$sql .= "order by calldate;"; 
-	
+	warn $sql; 
+
 	eval { 
 		$result_hashref = $this->dbh->selectall_hashref($sql,'calldate'); 
 	};
@@ -165,10 +173,30 @@ sub _send_notify {
 	my $subj = shift; 
 	my $body = shift; 
 
-	$this->log("info","Send notify to $addr"); 
+	$this->log("info","Send notify to $addr with body $body and subject $subj");
+	$this->speak("Send notify to $addr with subject $subj");
 
+	my $mailsmartrouter = undef; 
 
+	unless ( defined ( $this->{conf}->{'mailsmartrouter'} ) ) { 
+		$mailsmartrouter = 'localhost'; 
+	} else { 
+		$mailsmartrouter = $this->{conf}->{'mailsmartrouter'}; 
+	} 
+
+	my $smtp = Net::SMTP->new($mailsmartrouter); 
+	$smtp->mail ( $ENV{USER} ); 
+	$smtp->to ( $addr ); 
+	$smtp->data (); 
+	$smtp->datasend ("To: $addr\n");
+	$smtp->datasend ("Subject: $subj\n\n");
+	$smtp->datasend ($body);
+	$smtp->dataend();
+	$smtp->quit; 
+
+  	return 1; 
 }
+
 sub _notify {
 	my $this = shift; 
 	my $missed_hashref = shift; 
@@ -176,10 +204,11 @@ sub _notify {
   # We have {'calldate'},{'src'},{'dst'},{'channel'}; 
 	# We need to create a e-mail and send it to...
 
-	my $subject = "Attention! Missed call."; 
+	my $subject = "Attention! Missed call from $missed_hashref->{'src'}."; 
 	my $body = "Missed call from ". $missed_hashref->{'src'} . " to " . $missed_hashref->{'dst'} . "\n"; 
 	$body .= "Time: ".$missed_hashref->{'calldate'} . "\n"; 
 	$body .= "Source channel: ".$missed_hashref->{'channel'}."\n"; 
+	$body .= "Waiting time: " . $missed_hashref->{'billsec'}."\n"; 
 	$body .= "--\nBest,\nYour PBX."; 
 
 	my $dst = $missed_hashref->{'dst'}; 
@@ -198,7 +227,8 @@ sub _notify {
 
 } 
 sub process { 
-	my $this = shift; 
+
+  my $this = shift; 
 
   my $last_calldate = $this->_get_last_calldate;
 	unless ( defined ( $last_calldate ) ) { 
@@ -221,13 +251,13 @@ sub process {
   my $channel_list = $missconfig->{'channel'}; 
 
 # 0. select calldate,src,dst,channel from public.cdr where dstchannel = '' and channel=? and calldate >? 
-  
-	my $channels = join ('|' , keys %$channel_list ); 
+  my $channels = join ('|' , keys %$channel_list ); 
   my $missedrecords = $this->_get_data($channels,$last_calldate);
-
-  if ( $missedrecords == {} ) { 
-		$this->log("info","No missed calls. Wait for 1 minute."); 
-		sleep(60); 
+  my $mr = keys %$missedrecords; 
+  if ($mr == 0) { 
+	  	warn "no missed calls"; 
+		$this->log('info',"No missed calls. Wait for 1 minute."); 
+		sleep(10); 
 		return 1; 
   } 	
 
@@ -235,7 +265,8 @@ sub process {
 	   $this->_notify($missedrecords->{$missedcall});   	
 		 $this->{'last_calldate'} = $missedrecords->{$missedcall}->{'calldate'}; 
   }
-  sleep(60); 
+  
+  sleep(10); 
   return 1; 
 }
 
