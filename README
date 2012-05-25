@@ -23,5 +23,9 @@ sbin/
   NetSDS-parsequeuelogd.pl  - Tailing queue.log and parse it into database. Useful for Queues.      
   missedcallnotification.pl - Searches for missed calls and send information about it by email. 
 
+agi-bin/ 
+	NetSDS-route.pl - The main script that routes any calls and makes extra data to database. 
+	NetSDS-AGI-integration.pl - Script that calls after anyone answer on the line to get a some integration features. 
+
 
 

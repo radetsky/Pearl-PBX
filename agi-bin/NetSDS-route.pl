@@ -291,7 +291,7 @@ sub _cut_local_callerid {
 		if ($callerid =~ /^$local_country_code/) { 
 			# Еще и попал под regexp с началом номера с национального кода ? 
 			# Точно будем обрезать 
-		  $callerid = substr ( $substr, $calleridlen - $local_number_length, $local_number_length );
+		  $callerid = substr ( $callerid, $calleridlen - $local_number_length, $local_number_length );
 			$this->log("info","_cut_local_callerid: $callerid"); 
 		}
 	}
@@ -322,11 +322,14 @@ sub _get_dial_route {
 }
 
 sub _convert_extension { 
-		my $this = shift; 
-		my $result = undef; 
+	my $this = shift;
+	my $input = shift; 
+
+	my $output = $input;  
+	my $result = undef; 
 
 	  my $sth = $this->dbh->prepare ("select id,exten,operation,parameters,step from routing.convert_exten where ? ~ exten order by id,step"); 
-	  eval { my $rv = $sth->execute($this->{'exten'}); };
+	  eval { my $rv = $sth->execute($input); };
 		if ($@) {
 				$this->_exit($this->dbh->errstr); 
 		}
@@ -338,10 +341,10 @@ sub _convert_extension {
 			$this->_exit($this->dbh->errstr);
 		} 
 		unless ( defined ( $result ) ) { 
-				return undef; 
+				return $input; 
 		}
 		if ( $result == {} ) { 
-				return undef; 
+				return $input; 
 		}
 		foreach my $id ( sort keys %$result ) { 
 				my $operation = $result->{$id}->{'operation'};
@@ -353,10 +356,10 @@ sub _convert_extension {
 					}
 					# second param contains 'begin' or 'end'	
 					if ($param2 =~ /begin/) { 
-						$this->{'exten'} = $param1 . $this->{'exten'}; 
+						$output = $param1 . $output;  
 					} 
 					if ($param2 =~ /end/ ) { 
-						$this->{'exten'} = $this->{'exten'} . $param1; 
+						$output = $output . $param1; 
 					}
 				}
 				if ($operation =~ /substr/ ) { 
@@ -370,15 +373,13 @@ sub _convert_extension {
 						$param1 = 0; 
 					} 
 					unless ( $param2 ) {
-						$this->{'exten'} = substr($this->{'exten'},$param1);
+						$output = substr($output,$param1);
 					} else {
-						$this->{'exten'} = substr($this->{'exten'},$param1,$param2);
+						$output = substr($output,$param1,$param2);
 					}
 				} 
-
 		}
-		$this->{extension} = $this->{'exten'}; 
-
+		return $output; 
 }
 
 sub _mixmonitor_filename {
@@ -830,8 +831,8 @@ sub process {
     # Get permission
     $this->_get_permissions( $this->{peername}, $this->{extension} );
 
-		# Convert extension
-		$this->_convert_extension; 
+    # Convert extension
+    $extension = $this->_convert_extension ($this->{'extension'} );  
 
     my $tgrp_first;
 
