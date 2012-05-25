@@ -216,6 +216,7 @@ sub _get_callerid {
             $this->agi->verbose( "CHANGING NUM TO NAME.", 3 );
             $this->log( "info", "CHANGING NUM TO NAME." );
             $callerid = $this->agi->get_variable("CALLERID(name)");
+						$callerid = $this->_cut_the_plus($callerid); 
         }
 				
 				# Устанавливаем признак того, что номер поставили "свой", то есть для "своих нужд" 
@@ -232,7 +233,7 @@ sub _get_callerid {
 "$peername have to set CallerID to \'$callerid\' while calling to $exten"
         );
 
-        unless ( defined($set_own) )
+        unless ( defined ( $set_own ) )
         {   
 				    # Если не меняли номер на свой, а требуется его обрезать до национальго формата,
 						# для удобства набора, то проводим такую операцию.
@@ -246,6 +247,7 @@ sub _get_callerid {
         unless ( defined($set_own) )
         {    # Esli my ne menyali nomer na svoj. To obrezaem do 10 cyfr.
             $callerid = $this->agi->get_variable("CALLERID(num)");
+						$callerid = $this->_cut_the_plus($callerid); 
 						$callerid = $this->_cut_local_callerid($callerid);
 						$this->agi->exec( "Set", "CALLERID(all)=$callerid" );
         }
@@ -255,6 +257,27 @@ sub _get_callerid {
 
     $this->dbh->commit();
     return;
+
+}
+
+=item B<cut_the_plus(string)> 
+
+	Вырезает первый "+", если он там есть 
+
+=cut 
+
+sub _cut_the_plus { 
+	my $this = shift; 
+	my $str = shift; 
+
+	$this->log("info","_cut_the_plus: $str"); 
+
+	my $first = substr($str,0,1); 
+	if ($first eq '+') { 
+		return substr($str,1); 
+	} else { 
+		return $str; 
+	}
 
 }
 
@@ -268,6 +291,8 @@ sub _get_callerid {
 sub _cut_local_callerid { 
 	my $this = shift; 
 	my $callerid = shift; 
+
+	$this->log("info","_cut_local_callerid: $callerid"); 
 
 	my $local_country_code = undef; 
 	my $local_number_length = undef; 
