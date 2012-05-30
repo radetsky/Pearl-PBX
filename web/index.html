@@ -10,6 +10,7 @@
     <!-- Le styles -->
     <link href="css/bootstrap.css" rel="stylesheet">
 	  <link href="css/bootstrap-datepicker.css" rel="stylesheet">
+		<link href="css/pearlpbx.css" rel="stylesheet">
 
     <style type="text/css">
       body {
@@ -44,7 +45,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="#">Radetsky Pearl PBX</a>
+          <a class="brand" href="/">Radetsky Pearl PBX</a>
           <div class="nav-collapse">
             <ul class="nav">
               <li class="active"><a href="#">Главная</a></li>
@@ -72,8 +73,8 @@
             <ul class="nav nav-list">
               <li class="nav-header">Настройки</li>
               <li class="active">
-								<a href="#">SIP-подключения</a></li>
-							<li><a href="#">Очереди</a><li>
+								<a href="javascript:void(0)" onClick="pearlpbx_show('#sip-connections')">SIP-подключения</a></li>
+							<li><a href="javascript:void(0)" onClick="pearlpbx_show('#queues')">Очереди</a><li>
               <li><a href="#">Телефонные аппараты</a></li>
               <li><a href="#">Права доступа</a></li>
               <li><a href="#">Направления</a></li>
@@ -81,7 +82,7 @@
 							<li><a href="#">Интеграция</a><li>
               <li class="nav-header">Отчеты</li>
               <li><a href="#">CDR</a></li>
-              <li><a data-toggle="modal" href="#stored_sessions">Записанные разговоры</a></li>
+              <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#stored_sessions')">Записанные разговоры</a></li>
               <li><a href="#">Группы/очереди</a></li>
               <li><a href="#">Специализированные</a></li>
               <li class="nav-header">Состояние</li>
@@ -92,7 +93,10 @@
             </ul>
           </div><!--/.well -->
         </div><!--/span-->
-        <div class="span9">
+
+				<!-- Здесь начинается div с "телом" кредита :)-->
+
+        <div class="span9" id="pearl-pbx-main-container">
           <div class="hero-unit">
             <h1>Привет !</h1>
             <p>Это главная страница Express Pearl PBX.</p>
@@ -147,12 +151,11 @@
 
 <!-- STORED SESSIONS FORM -->   
 
-		<div class="modal fade" id="stored_sessions" style="display: none; width: 800px;">
-		 <div class="modal-header">
-		 	<a class="close" data-dismiss="modal">×</a>
-			<h3>Записанные разговоры</h3>
+		<div id="stored_sessions" style="display: none;">
+		 <div class="pearlpbx-main-container-header">
+			<h1><center>Записанные разговоры</center></h1>
 		 </div>
-		 <div class "modal-body">
+		 <div class "pearlpbx-main-container-body">
 
     <form class="well" onSubmit="return stored_sessions_submit()">
 		<fieldset>
@@ -167,14 +170,26 @@
     </form>
 		<div id="stored_sessions_result">
 		</div>
-
-		 </div>
-		 <div class="modal-footer">
-		 	<a href="#" class="btn" data-dismiss="modal">Закрыть</a>
 		 </div>
 		</div>
 
 <!-- END OF STORED SESSIONS FORM -->
+
+<!-- Begin of the navigations parts -->
+<div id="sip-connections" style="display: none">
+ <div class="pearlpbx-main-container-header">
+	<h1><center> SIP Connections </center></h1>
+ </div>
+</div>
+<div id="queues" style="display: none">
+ <div class="pearlpbx-main-container-header">
+	<h1><center> Queues </center></h1>
+ </div>
+</div>
+
+
+
+<!-- End of the zaglushka --> 
 
     <!-- Le javascript
     ================================================== -->

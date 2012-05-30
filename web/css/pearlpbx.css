@@ -1,0 +1,20 @@
+
+.pearlpbx-main-container-header {
+  padding: 30px;
+  margin-bottom: 15px;
+  background-color: #f5f5f5;
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
+}
+.pearlpbx-main-container-header h1 {
+  margin-bottom: 0;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.pearlpbx-main-container-header p {
+  font-size: 18px;
+  font-weight: 200;
+  line-height: 27px;
+}

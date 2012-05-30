@@ -1,3 +1,7 @@
+function pearlpbx_show(pearlpbx_item) { 
+	$('#pearl-pbx-main-container').html($(pearlpbx_item).html());
+} 
+
 function stored_sessions_submit() {
   var dateFrom; 
 	var timeFrom; 
