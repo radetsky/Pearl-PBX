@@ -36,7 +36,8 @@
   </head>
 
   <body>
-
+    <script src="js/jquery.js"></script>
+ 
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container-fluid">
@@ -81,7 +82,7 @@
 							<li><a href="#">Маршрутизация</a></li>
 							<li><a href="#">Интеграция</a><li>
               <li class="nav-header">Отчеты</li>
-              <li><a href="#">CDR</a></li>
+              <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-general')">Общие</a></li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#stored_sessions')">Записанные разговоры</a></li>
               <li><a href="#">Группы/очереди</a></li>
               <li><a href="#">Специализированные</a></li>
@@ -157,7 +158,7 @@
 		 </div>
 		 <div class "pearlpbx-main-container-body">
 
-    <form class="well" onSubmit="return stored_sessions_submit()">
+   <form class="well" onSubmit="return stored_sessions_submit()">
 		<fieldset>
         <input id='dateFrom' data-datepicker="datepicker" class="input-small" type="text" value="" />
         <input id='timeFrom' class="input-mini" type="text" value="00:00" />
@@ -181,13 +182,45 @@
 	<h1><center> SIP Connections </center></h1>
  </div>
 </div>
+
 <div id="queues" style="display: none">
  <div class="pearlpbx-main-container-header">
 	<h1><center> Queues </center></h1>
  </div>
 </div>
 
+<div id="reports-general" style="display: none">
+ <div class="pearlpbx-main-container-header">
+   <h1><center> Общие отчеты </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+	<div id="pearlpbx-general-reports-list">
+	</div>
+  <div id="pearlpbx-report-body">
+	</div>
+ </div>
+</div>
 
+<div id="pearlpbx-reports-bodies" style="display: none">
+</div>
+
+<!-- Скрипт, который заполняет список названий отчетов -->
+<script type="text/javascript">
+		<!--
+		$.get("/reports.pl",
+			{ "list-reports": 1, }, 
+			function(data) { 
+				$('#pearlpbx-general-reports-list').html(data); 
+			}, "html");
+		$.get("/reports.pl",
+			{ "list-reports": 2, }, 
+			function(data) { 
+				$('#pearlpbx-reports-bodies').html(data); 
+			}, "html");
+	
+		-->
+</script>
+		
 
 <!-- End of the zaglushka --> 
 

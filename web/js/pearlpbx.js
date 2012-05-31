@@ -2,45 +2,31 @@ function pearlpbx_show(pearlpbx_item) {
 	$('#pearl-pbx-main-container').html($(pearlpbx_item).html());
 } 
 
+function pearlpbx_show_report (reportname) { 
+	$('#pearlpbx-report-body').html($(reportname).html()); 
+}
+
 function stored_sessions_submit() {
   var dateFrom; 
 	var timeFrom; 
 	var dateTo; 
 	var timeTo; 
 	var phone; 
+	var parsed; 
 
   dateFrom = $('#dateFrom').val(); 
-	if (dateFrom == '') {
-		alert("Введите корректную дату начала!"); 
-		return false;
-	}
-
 	dateTo = $('#dateTo').val();
-	if (dateTo == '') { 
-		alert("Введите корректную дату окончания!");
-		return false; 
-	}
-	
 	timeFrom = $('#timeFrom').val();
-  if (timeFrom == '') { 
-		alert("Введите время начала поиска!");
-		return false; 
-	}
-	
 	timeTo = $('#timeTo').val();
-	if (timeTo == '') { 
-		alert("Введите время окончания поиска!");
-		return false; 
-	}
+
+	parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo); 
+	if (parsed == false ) { 
+		return false;
+	} 
 
 	phone = $('#phone').val(); 
-	if (phone == '') { 
-		alert ("Введите ПОЛНЫЙ номер телефона для поиска!"); 
-		return false; 
-	}
-
-  if (phone.length < 3 ) { 
-		alert ("Введите номер телефона, где количество цифр >= 3 !"); 
+	parsed = pearlpbx_parse_phone ( phone ); 
+	if (parsed == false ) { 
 		return false; 
 	}
 
@@ -58,5 +44,46 @@ function stored_sessions_submit() {
 		}, "html"); 
 
   return false; 
+}
+
+function pearlpbx_parse_phone ( phone ) { 
+	if (phone == '') { 
+		alert ("Введите ПОЛНЫЙ номер телефона для поиска!"); 
+		return false; 
+	}
+
+  if (phone.length < 3 ) { 
+		alert ("Введите номер телефона, где количество цифр >= 3 !"); 
+		return false; 
+	}
+
+	return true; 
+
+}
+
+function pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo) { 
+
+	if (dateFrom == '') {
+		alert("Введите корректную дату начала!"); 
+		return false;
+	}
+
+	if (dateTo == '') { 
+		alert("Введите корректную дату окончания!");
+		return false; 
+	}
+	
+  if (timeFrom == '') { 
+		alert("Введите время начала поиска!");
+		return false; 
+	}
+	
+	if (timeTo == '') { 
+		alert("Введите время окончания поиска!");
+		return false; 
+	}
+  
+	return true;
+
 }
 

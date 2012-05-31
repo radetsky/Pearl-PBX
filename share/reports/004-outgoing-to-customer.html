@@ -1,0 +1,18 @@
+<!-- Исходящие звонки на номер абонента -->
+<h2><center>Исходящие звонки на номер абонента</center></h2> 
+	<form class="well" onSubmit="return outgoing_to_customer_submit()">
+    <fieldset>
+        <input id='dateFrom' data-datepicker="datepicker" class="input-small" type="text" value="" />
+        <input id='timeFrom' class="input-mini" type="text" value="00:00" />
+                to
+        <input id='dateTo' data-datepicker="datepicker" class="input-small" type="text" value="" />
+        <input id='timeTo' class="input-mini" type="text" value="23:59" />
+
+        <input id='phone'  type="text" class="input-small" placeholder="Телефон">
+        <input type="submit" class="btn btn-primary" value="Поиск">
+    </fieldset>
+    </form>
+    <div id="outgoing_to_customer_result">
+    </div>
+
+

@@ -1,0 +1,45 @@
+<!-- Все звонки --> 
+<center><h2>Все звонки</h2></center>
+<form class="well" onSubmit="return alltraffic_submit()">
+    <fieldset>
+        <input id='dateFrom001' data-datepicker="datepicker" class="input-small" type="text" value="" />
+        <input id='timeFrom001' class="input-mini" type="text" value="00:00" />
+                to
+        <input id='dateTo001' data-datepicker="datepicker" class="input-small" type="text" value="" />
+        <input id='timeTo001' class="input-mini" type="text" value="23:59" />
+
+        <input type="submit" class="btn btn-primary" value="Поиск">
+    </fieldset>
+    </form>
+    <div id="alltraffic_result">
+    </div>
+<script type="text/javascript"> 
+function alltraffic_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+  var parsed;
+
+  dateFrom = $('#dateFrom001').val();
+  dateTo = $('#dateTo001').val();
+  timeFrom = $('#timeFrom001').val();
+  timeTo = $('#timeTo001').val();
+
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+  $.get("/reports.pl",
+    { "exec-report": "alltraffic",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+    },function(data)
+    {
+      $('#alltraffic_result').html(data);
+    }, "html");
+}
+</script>
+

@@ -126,6 +126,81 @@ sub htmlHeader {
 		                    			-charset => 'utf-8' );
 }; 
 
+=item B<listreportsnames> 
+
+ Возвращает список (LIST) уловных обозначений и наименований отчетов. 
+ Пример: ((001-alltraffic,Весь траффик),(007-internalcalls,Внутренние звонки)) 
+ Условные обозначения - это имена файлов без расширения, 
+ Наименование отчета - первая строка из файла html внутри комментария. 
+ Читается каталог /usr/share/pearlpbx/reports
+
+=cut 
+
+sub listreportsnames { 
+	my $this = shift; 
+	my @result; 
+
+	my $dirname = '/usr/share/pearlpbx/reports';
+
+# Классика :) 
+	opendir my ($dh), $dirname or return undef; 
+	my @files = readdir $dh; 
+	closedir $dh;
+
+	foreach my $filename (sort @files) { 
+		if ($filename =~ /\.html$/) { 
+			# try to read first line 
+		  next unless ( open ( my $fh, $dirname.'/'.$filename ) ); 	
+			my $firstline = <$fh>;
+			close $fh; 
+			# cut off comment chars
+			$firstline =~ s/<!--//g; 
+			$firstline =~ s/-->//g;
+			$filename =~ s/\.html$//g; 
+			push @result, [ $filename, $firstline ];
+		}
+	}
+	return @result; 
+
+};
+
+=item B<reportsbodies> 
+
+	Возвращает тела всех доступных отчетов, 
+	Каждый отчет в своем div-е c названием равным имени отчета 
+
+=cut 
+
+sub reportsbodies { 
+	my $this = shift; 
+
+	my $result=''; 
+	my $dirname = '/usr/share/pearlpbx/reports';
+
+# Классика :) 
+	opendir my ($dh), $dirname or return undef; 
+	my @files = readdir $dh; 
+	closedir $dh;
+
+	foreach my $filename (sort @files) { 
+		if ($filename =~ /\.html$/) { 
+			# try to read 
+		  next unless ( open ( my $fh, $dirname.'/'.$filename ) ); 	
+			my @body = <$fh>;
+			close $fh;
+			$filename =~ s/\.html$//g; 
+			$result .= '<div id="'.$filename.'">';
+			foreach my $line (@body) {
+				$result .= $line;
+			} 
+			$result .= '</div>'; 
+		}
+	}
+	return $result; 
+
+};
+
+
 1;
 
 __END__
