@@ -25,7 +25,19 @@ use warnings;
 use Pearl; 
 
 my $pearl = Pearl->new(); 
-my $listreports = $pearl->{cgi}->param('list-reports'); 
+my $listreports = $pearl->{cgi}->param('list-reports');
+my $execreport = $pearl->{cgi}->param('exec-report'); 
+
+# exec-report have high priority 
+if ( defined ( $execreport ) ) { 
+	my $reportname = $pearl->{cgi}->param('exec-report'); 
+	my $modulename = "PearlPBX::Report::".$reportname; 
+
+	eval { use $modulename; }; 
+
+
+
+}
 unless ( defined ( $listreports ) ) { 
 		$pearl->htmlError('No action given.');	
 		exit(0);

@@ -49,9 +49,10 @@ our @EXPORT_OK = qw();
 
 #-----------------------------------------------------------------------
 sub new {
-
+  
 	my $this = {};
-	$this->{cgi} = CGI->new; 
+	$this->{cgi} = CGI->new;
+
 	bless $this;
 	return $this;
 
