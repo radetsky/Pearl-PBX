@@ -30,8 +30,10 @@ use 5.8.0;
 use strict;
 use warnings;
 
-use version; our $VERSION = "0.01";
-our @EXPORT_OK = qw();
+use base qw(PearlPBX::Report); 
+
+use version; our $VERSION = "1.0";
+our @EXPORT_OK = ();
 
 #===============================================================================
 #
@@ -48,10 +50,11 @@ our @EXPORT_OK = qw();
 #-----------------------------------------------------------------------
 sub new {
 
-	my ( $class, %params ) = @_;
+	my ( $class, $conf ) = @_;
 
-	my $this = $class->SUPER::new();
+	my $this = $class->SUPER::new($conf);
 
+	bless $this; 
 	return $this;
 
 };
@@ -66,9 +69,9 @@ sub new {
 =cut
 
 #-----------------------------------------------------------------------
-sub test {
+sub report {
 
-	my ( $this, %attrs ) = @_;
+	my $this = shift;
 
 	return "Hello, Report!"; 
 

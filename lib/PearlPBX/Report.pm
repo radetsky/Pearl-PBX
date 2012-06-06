@@ -31,7 +31,8 @@ use strict;
 use warnings;
 
 use DBI;
-use Config::General;  
+use Config::General; 
+use NetSDS::Util::DateTime;  
 
 use version; our $VERSION = "1.00";
 our @EXPORT_OK = qw();
@@ -52,7 +53,8 @@ our @EXPORT_OK = qw();
 sub new {
 
 	my $class = shift; 
-	my $conf = shift;
+	
+  my $conf = shift;
 
   my $this = {}; 
 
@@ -80,6 +82,7 @@ sub new {
   $this->{dbh} = undef;     # DB handler 
   $this->{error} = undef;   # Error description string    
 
+	bless ( $this,$class ); 
 	return $this;
 
 };
@@ -115,9 +118,9 @@ sub db_connect {
         return undef;
     }
 
-    my $dsn    = $this->conf->{'db'}->{'main'}->{'dsn'};
-    my $user   = $this->conf->{'db'}->{'main'}->{'login'};
-    my $passwd = $this->conf->{'db'}->{'main'}->{'password'};
+    my $dsn    = $this->{conf}->{'db'}->{'main'}->{'dsn'};
+    my $user   = $this->{conf}->{'db'}->{'main'}->{'login'};
+    my $passwd = $this->{conf}->{'db'}->{'main'}->{'password'};
 
     # If DBMS isn' t accessible - try reconnect
     if ( !$this->{dbh} or !$this->{dbh}->ping ) {
@@ -132,6 +135,59 @@ sub db_connect {
 
     return 1;
 };
+
+=item B<filldatetime>
+
+ Преобразовывает дату и время (даже если они не заданы) в параметр, который годится для работы с БД.
+ Пример: 2012-12-21, 12:00 функция преобразует в "2012-12-21 12:00:00", 
+ undef,23:12 функция преобразует в <сегодня> "23:12:00" , где <сегодня> будет текущей датой в формате ГГГГ-ММ-ДД.
+ если же будет undef,undef , то функция вернет time() в формате YYYY-MM-DD HH:MM:SS
+
+=cut
+
+sub filldatetime {
+	
+ 	my $this = shift;
+ 
+  my $date = shift; 
+  my $time = shift; 
+
+  unless ( defined ( $date ) ) { 
+    unless ( defined ( $time ) ) { 
+      return date_now();
+    }
+  } 
+
+  unless ( defined ( $date ) ) {
+    $date = date_date(date_now());
+  }
+
+  unless ( defined ( $time ) ) {
+    $time = date_time(date_now());
+  }
+
+  return $date . ' ' . $time;
+
+}
+
+=item B<fill_direction_sql_condition()> 
+
+	Возвращает SQL условие для таблицы public.cdr 
+
+=cut 
+sub fill_direction_sql_condition { 
+	my $this = shift; 
+	my $direction = shift; 
+
+	if ($direction == 1) { # Incoming 
+	  return " channel not like 'SIP/2__-%' and channel not like 'Parked%' "; 	
+  }
+  if ($direction == 2) { # Outgoing 
+		return " channel like 'SIP/2__-%' ";  
+  } 
+	# Anyway 
+	return " channel not like 'Parked%' ";   
+}
 
 1;
 
