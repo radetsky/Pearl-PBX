@@ -32,6 +32,8 @@ use strict;
 use warnings;
 
 use base qw(PearlPBX::Report);
+use Data::Dumper;
+use Template; 
 
 use version; our $VERSION = "1.0";
 our @EXPORT_OK = ();
@@ -72,18 +74,14 @@ sub report {
 
     my $this = shift;
 
-    my $sincedate = shift;
-    my $sincetime = shift;
-    my $tilldate  = shift;
-    my $tilltime  = shift;
-    my $direction = shift;
+		my $params = shift;
 
-    my $sincedatetime = $this->filldatetime( $sincedate, $sincetime );
-    my $tilldatetime  = $this->filldatetime( $tilldate,  $tilltime );
-    my $sql_dir = $this->fill_direction_sql_condition($direction);
+    my $sincedatetime = $this->filldatetime( $params->{'dateFrom'}, $params->{'timeFrom'} );
+    my $tilldatetime  = $this->filldatetime( $params->{'dateTo'},  $params->{'timeTo'} );
+    my $sql_dir = $this->fill_direction_sql_condition($params->{'direction'});
 
     my $sql =
-"select calldate,src,channel,dst,dstchannel,disposition,billsec from public.cdr where calldate between ? and ? and $sql_dir order by calldate desc";
+"select calldate,src,dst,split_part(channel,'-',1) as channel, split_part(dstchannel,'-',1) as dstchannel,disposition,billsec from public.cdr where calldate between ? and ? and $sql_dir order by calldate desc";
 
     my $sth = $this->{dbh}->prepare($sql);
     eval { $sth->execute( $sincedatetime, $tilldatetime ); };
@@ -97,8 +95,18 @@ sub report {
         return 0;
     }
 
-    return $hash_ref;
+		my $template = Template->new( { 
+			INCLUDE_PATH => '/usr/share/pearlpbx/reports/templates',
+			INTERPOLATE  => 1, 
+			} ) || die "$Template::ERROR\n"; 
 
+		my @cdr_keys = $this->hashref2arrayofhashref($hash_ref);
+		my $template_vars = { 
+			cdr_keys => \@cdr_keys,
+			pearlpbx_player => sub { return $this->pearlpbx_player(@_); }, 
+		};  
+		$template->process ('alltraffic.html', $template_vars) || die $template->error(); 
+		
 }
 
 1;

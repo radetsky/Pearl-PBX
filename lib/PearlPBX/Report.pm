@@ -189,6 +189,45 @@ sub fill_direction_sql_condition {
 	return " channel not like 'Parked%' ";   
 }
 
+
+sub hashref2arrayofhashref { 
+	my $this = shift; 
+	my $hash_ref = shift; 
+	my @output; 
+
+	foreach my $cdr_key (sort keys %$hash_ref ) {
+		my $record = $hash_ref->{$cdr_key};
+		push @output, $record;
+	}
+
+	return @output; 
+}
+
+
+sub _href_monitor_file { 
+	my $this = shift; 
+  my $filename = shift; 
+ 
+  my ($year,$mon,$day,$time_src) = split('/',$filename);
+  my $link = "/recordings/$filename";
+  my $out = "<a href=\"$link\">$time_src<a>";
+  return $out;
+}
+
+sub pearlpbx_player { 
+	my $this = shift; 
+	my $cdr_start = shift; 
+	my $cdr_src = shift; 
+	my $cdr_dst = shift;
+	my $disposition = shift; 
+
+	if ($disposition =~ /ANSWERED/i ) { 
+
+		return '<a href="javascript:void(0)">link</a>';
+
+  } 
+	return ''; 
+}
 1;
 
 __END__

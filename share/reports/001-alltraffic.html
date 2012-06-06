@@ -8,6 +8,10 @@
         <input id='dateTo001' data-datepicker="datepicker" class="input-small" type="text" value="" />
         <input id='timeTo001' class="input-mini" type="text" value="23:59" />
 
+				<input type="radio" name="direction001" id="direction001_1" value="1"> Входящие 
+				<input type="radio" name="direction001" id="direction001_2" value="2"> Исходящие 
+				<input type="radio" name="direction001" id="direction001_3" value="0" checked> Все подряд 
+
         <input type="submit" class="btn btn-primary" value="Поиск">
     </fieldset>
     </form>
@@ -19,12 +23,15 @@ function alltraffic_submit() {
   var timeFrom;
   var dateTo;
   var timeTo;
+	var direction; 
   var parsed;
 
   dateFrom = $('#dateFrom001').val();
   dateTo = $('#dateTo001').val();
   timeFrom = $('#timeFrom001').val();
   timeTo = $('#timeTo001').val();
+
+	direction = $('input:radio[name=direction001]:checked').val();
 
   parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
   if (parsed == false ) {
@@ -36,10 +43,12 @@ function alltraffic_submit() {
       timeFrom: timeFrom,
       dateTo: dateTo,
       timeTo: timeTo,
+			direction: direction,
     },function(data)
     {
       $('#alltraffic_result').html(data);
     }, "html");
+	return false; 
 }
 </script>
 

@@ -201,6 +201,18 @@ sub reportsbodies {
 
 };
 
+sub cgi_params_to_hashref { 
+	my $this = shift; 
+
+	my $hash_ref = undef; 
+
+	my @names = $this->{cgi}->param; 
+	foreach my $name (@names) { 
+		$hash_ref->{$name} = $this->{cgi}->param($name); 
+	} 
+	return $hash_ref; 
+} 
+
 
 1;
 
