@@ -87,3 +87,12 @@ function pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo) {
 
 }
 
+function turnOnPBXPlayer (cdr_start, cdr_src, cdr_dst ) { 
+
+ //alert (cdr_start + ' ' + cdr_src + ' ' + cdr_dst ); 
+ $('#param_cdr_start').text(cdr_start);
+ $('#param_cdr_src').text(cdr_src);
+ $('#param_cdr_dst').text(cdr_dst); 
+ 
+ return false; 
+} 

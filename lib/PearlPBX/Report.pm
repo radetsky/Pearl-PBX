@@ -223,7 +223,7 @@ sub pearlpbx_player {
 
 	if ($disposition =~ /ANSWERED/i ) { 
 
-		return '<a href="javascript:void(0)">link</a>';
+		return '<a data-toggle="modal" href="#pearlpbx_player" onClick="turnOnPBXPlayer(\''.$cdr_start.'\',\''.$cdr_src.'\',\''.$cdr_dst.'\')">link</a>';
 
   } 
 	return ''; 

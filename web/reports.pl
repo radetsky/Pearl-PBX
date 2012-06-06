@@ -22,28 +22,40 @@ use 5.8.0;
 use strict;
 use warnings;
 
-use Pearl; 
+use Pearl;
+use Data::Dumper; 
 
-my $pearl = Pearl->new(); 
+my $pearl = Pearl->new();
+
 my $listreports = $pearl->{cgi}->param('list-reports');
 my $execreport = $pearl->{cgi}->param('exec-report'); 
+
+my $out = ''; 
 
 # exec-report have high priority 
 if ( defined ( $execreport ) ) { 
 	my $reportname = $pearl->{cgi}->param('exec-report'); 
-	my $modulename = "PearlPBX::Report::".$reportname; 
+	my $modulename = "PearlPBX::Report::".$reportname;
 
-	eval { use $modulename; }; 
+	eval "use $modulename;"; 
+	if ( $@ ) { 
+		$pearl->htmlError("Module not found.");
+		exit(0); 
+	} 
+	my $report = $modulename->new('/etc/PearlPBX/asterisk-router.conf');
+	$report->db_connect();
 
+	my $params = $pearl->cgi_params_to_hashref(); 
 
+	$pearl->htmlHeader;
+  $report->report ( $params );
 
+	exit(0); 
 }
 unless ( defined ( $listreports ) ) { 
 		$pearl->htmlError('No action given.');	
 		exit(0);
 }
-
-my $out = ''; 
 
 if ($listreports == 1) {
 	$out .= '<ul class="nav nav-tabs">'; 
