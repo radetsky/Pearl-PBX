@@ -27,7 +27,7 @@ use Data::Dumper;
 
 my $report = PearlPBX::Report::alltraffic->new('/etc/PearlPBX/asterisk-router.conf'); 
 $report->db_connect();
-warn Dumper $report->get_report('2012-03-19','00:00','2012-03-30','00:00'); 
+warn Dumper $report->report('2012-03-19','00:00','2012-03-30','00:00', 1); 
 1;
 #===============================================================================
 
