@@ -3,7 +3,9 @@ function pearlpbx_show(pearlpbx_item) {
 } 
 
 function pearlpbx_show_report (reportname) { 
-	$('#pearlpbx-report-body').html($(reportname).html()); 
+	$('#pearlpbx-report-body').html($(reportname).html());
+	$('.input-date').datepicker();
+	return false; 
 }
 
 function stored_sessions_submit() {
