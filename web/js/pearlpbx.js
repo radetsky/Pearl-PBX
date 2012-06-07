@@ -92,7 +92,35 @@ function turnOnPBXPlayer (cdr_start, cdr_src, cdr_dst ) {
  //alert (cdr_start + ' ' + cdr_src + ' ' + cdr_dst ); 
  $('#param_cdr_start').text(cdr_start);
  $('#param_cdr_src').text(cdr_src);
- $('#param_cdr_dst').text(cdr_dst); 
- 
+ $('#param_cdr_dst').text(cdr_dst);  
+
+ $.get("recordings.pl",
+    { "list-recordings": 1,
+			start: cdr_start,
+			src: cdr_src, 
+			dst: cdr_dst 
+    },function(data)
+    {
+
+      $('#recordings_table').html(data);
+		  PBXPlayerSetMedia('/','wav'); 	
+
+    }, "html");
+
  return false; 
-} 
+}
+
+function PBXPlayerSetMedia (url, type) { 
+
+$("#jquery_jplayer_1").jPlayer({
+        ready: function () {
+          $(this).jPlayer("setMedia", {
+						type: url,
+          });
+        },
+        swfPath: "/jPlayer",
+        supplied: type,
+      });
+
+ return false; 
+}

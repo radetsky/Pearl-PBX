@@ -213,6 +213,17 @@ sub cgi_params_to_hashref {
 	return $hash_ref; 
 } 
 
+sub hashref2arrayofhashes { 
+	my $this = shift; 
+	my $hash_ref = shift; 
+	my @output; 
+
+	foreach my $cdr_key (sort keys %$hash_ref ) { 
+		push @output, %{$hash_ref->{$cdr_key}};
+	}
+
+	return @output; 
+}
 
 1;
 
