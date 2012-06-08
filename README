@@ -27,5 +27,11 @@ agi-bin/
 	NetSDS-route.pl - The main script that routes any calls and makes extra data to database. 
 	NetSDS-AGI-integration.pl - Script that calls after anyone answer on the line to get a some integration features. 
 
+tests/ 
+ Containe some internal unit tests 
+
+lib/
+ Perl libraries
+
 
 
