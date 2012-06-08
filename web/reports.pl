@@ -24,11 +24,15 @@ use warnings;
 
 use Pearl;
 use Data::Dumper; 
+use PearlPBX::Report::ExternalNumbers;
+use PearlPBX::Report::ListQueues; 
 
 my $pearl = Pearl->new();
 
 my $listreports = $pearl->{cgi}->param('list-reports');
-my $execreport = $pearl->{cgi}->param('exec-report'); 
+my $execreport = $pearl->{cgi}->param('exec-report');
+my $listnumbers = $pearl->{cgi}->param('list-external-numbers');
+my $listqueues = $pearl->{cgi}->param('list-queues'); 
 
 my $out = ''; 
 
@@ -52,29 +56,46 @@ if ( defined ( $execreport ) ) {
 
 	exit(0); 
 }
-unless ( defined ( $listreports ) ) { 
-		$pearl->htmlError('No action given.');	
-		exit(0);
-}
-
-if ($listreports == 1) {
-	$out .= '<ul class="nav nav-tabs">'; 
+if ( defined ( $listreports ) ) { 
+	if ($listreports == 1) {
+		$out .= '<ul class="nav nav-tabs">'; 
 
 # Show short list of reports. Just names.
-	my @list = $pearl->listreportsnames(); 
-	foreach my $item (@list) { 
-		$out .= '<li><a href="javascript:void(0)" onclick="pearlpbx_show_report('."\'#".@$item[0]."\'".')">'.@$item[1] .'</a></li>';
+		my @list = $pearl->listreportsnames(); 
+		foreach my $item (@list) { 
+			$out .= '<li><a href="javascript:void(0)" onclick="pearlpbx_show_report('."\'#".@$item[0]."\'".')">'.@$item[1] .'</a></li>';
+		}
+		$out .= '</ul>'; 
 	}
-
-	$out .= '</ul>'; 
+	if ($listreports == 2) {
+		$out = $pearl->reportsbodies();
+	}
+	$pearl->htmlHeader; 
+	print $out; 
+  exit(0);
 }
 
-if ($listreports == 2) {
-	$out = $pearl->reportsbodies();
+if ( defined ( $listnumbers ) ) { 
+	if ($listnumbers == 1 ) {
+		my $n = PearlPBX::Report::ExternalNumbers->new("/etc/PearlPBX/asterisk-router.conf");
+		$n->db_connect();
+		$pearl->htmlHeader;
+		$n->report();
+		exit(0);
+	} 
+}
+if ( defined ( $listqueues ) ) { 
+	if ($listqueues == 1 ) {
+		my $n = PearlPBX::Report::ListQueues->new("/etc/PearlPBX/asterisk-router.conf");
+		$n->db_connect();
+		$pearl->htmlHeader;
+		$n->report();
+		exit(0);
+	} 
 }
 
-$pearl->htmlHeader; 
-print $out; 
+
+$pearl->htmlError('No action given.');	
 exit(0); 
 
 1;

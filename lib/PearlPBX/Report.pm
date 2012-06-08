@@ -228,6 +228,25 @@ sub pearlpbx_player {
   } 
 	return ''; 
 }
+=item B<queuemembers(queuename)> 
+
+  Возвращает fetchall_hashref из queue members, иначе undef
+
+=cut 
+
+sub queuemembers { 
+	my $this = shift; 
+	my $queuename = shift; 
+
+	my $sql = "select uniqueid,membername,interface,penalty,paused from public.queue_members where queue_name=? order by interface"; 
+	my $sth = $this->{dbh}->prepare($sql);
+	eval { $sth->execute($queuename); }; 
+	if ( $@ ) { 
+		warn $this->{dbh}->errstr; 
+		return undef; 
+	}
+	my $hash_ref = $sth->fetchall_hashref('uniqueid'); 
+}
 1;
 
 __END__

@@ -79,7 +79,7 @@
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
               <li class="nav-header">Настройки</li>
-              <li class="active">
+              <li>
 								<a href="javascript:void(0)" onClick="pearlpbx_show('#sip-connections')">SIP-подключения</a></li>
 							<li><a href="javascript:void(0)" onClick="pearlpbx_show('#queues')">Очереди</a><li>
               <li><a href="#">Телефонные аппараты</a></li>
@@ -89,7 +89,7 @@
 							<li><a href="#">Интеграция</a><li>
               <li class="nav-header">Отчеты</li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-general')">Общие</a></li>
-              <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#stored_sessions')">Записанные разговоры</a></li>
+              <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#cdr-filter')">CDR-фильтр</a></li>
               <li><a href="#">Группы/очереди</a></li>
               <li><a href="#">Специализированные</a></li>
               <li class="nav-header">Состояние</li>
@@ -194,6 +194,13 @@
  </div>
 </div>
 
+<div id="cdr-filter" style="display: none">
+ <div class="pearlpbx-main-container-header">
+  <h1><center> CDR Filter </center></h1>
+ </div>
+ Здесь будет интерфейс по фильтрации CDR-записей.
+</div>
+
 <div id="reports-general" style="display: none">
  <div class="pearlpbx-main-container-header">
    <h1><center> Общие отчеты </center></h1>
@@ -220,7 +227,17 @@
 		$.get("/reports.pl",
 			{ "list-reports": 2, }, 
 			function(data) { 
-				$('#pearlpbx-reports-bodies').html(data); 
+				$('#pearlpbx-reports-bodies').html(data);
+				$.get("/reports.pl", 
+					{ "list-external-numbers": 1, }, 
+					function(data) { 
+						$('.pearlpbx-external-numbers').html(data);
+					},"html");
+				$.get("/reports.pl",
+					{ "list-queues":1, },
+					function(data) { 
+						$('.pearlpbx-list-queues').html(data); 
+					},"html"); 
 			}, "html");
 	
 		-->
@@ -228,7 +245,7 @@
 
 <!-- End of the zaglushka --> 
 <!-- PearlPBX Player --> 
-<div class="modal fade" id="pearlpbx_player" style="display: none; width: 800px;">
+<div class="modal fade" id="pearlpbx_player" style="display: none; width: 1000px; position: fixed; left: 300px;   ">
  <div class="modal-header">
  	<a class="close" data-dismiss="modal">x</a>
 	<h3> PearlPBX Player </h3>
@@ -289,7 +306,8 @@
  </div>
 </div>
 <!-- End of PearlPBX Player --> 
-
+<div id="pearlpbx-external-numbers" style="display: none"> 
+</div>
 
     </body>
 </html>

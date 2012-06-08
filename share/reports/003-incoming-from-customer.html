@@ -2,17 +2,57 @@
 <h2><center>Входящие с номера абонента</center></h2> 
 	<form class="well" onSubmit="return incoming_from_customer_submit()">
     <fieldset>
-        <input id='dateFrom' data-datepicker="datepicker" class="input-date" type="text" value="" />
-        <input id='timeFrom' class="input-mini" type="text" value="00:00" />
+        <input id='dateFrom003' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeFrom003' class="input-mini" type="text" value="00:00" />
                 to
-        <input id='dateTo' data-datepicker="datepicker" class="input-date" type="text" value="" />
-        <input id='timeTo' class="input-mini" type="text" value="23:59" />
+        <input id='dateTo003' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeTo003' class="input-mini" type="text" value="23:59" />
 
-        <input id='phone'  type="text" class="input-small" placeholder="Телефон">
+        <input id='phone003'  type="text" class="input-small" placeholder="Телефон">
         <input type="submit" class="btn btn-primary" value="Поиск">
     </fieldset>
     </form>
     <div id="incoming_from_customer_result">
     </div>
+<script type="text/javascript"> 
+function incoming_from_customer_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+	var phone; 
+  var parsed;
+
+
+  dateFrom = $('#dateFrom003').val();
+  dateTo = $('#dateTo003').val();
+  timeFrom = $('#timeFrom003').val();
+  timeTo = $('#timeTo003').val();
+	phone = $('#phone003').val(); 
+
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+
+  parsed = pearlpbx_parse_phone ( phone );
+	if (parsed == false ) { 
+		return false; 
+	}
+
+  $.get("/reports.pl",
+    { "exec-report": "incomingFromCustomer",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+			phone: phone,
+    },function(data)
+    {
+      $('#incoming_from_customer_result').html(data);
+    }, "html");
+	return false; 
+}
+</script>
 
 

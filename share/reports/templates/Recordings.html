@@ -9,7 +9,9 @@
 <th>Номер Б</th>
 <th>Линия</th>
 <th>Оригинал</th>
+<th>Скачать</th>
 <th>Склейка</th>
+<th>Скачать</th>
 </tr>
 </thead>
 <tbody>
@@ -20,7 +22,9 @@
 <td>[% rec.cdr_dst %]</td>
 <td>[% rec.uline_id %]</td>
 <td><a href="javascript:void(0)" onClick="PBXPlayerSetMedia('/recordings/[% rec.original_file %]','wav')">[% rec.original_file %]</a></td>
+<td><a href="/recordings/[% rec.original_file %]">D</a></td>
 <td><a href="javascript:void(0)" onClick="PBXPlayerSetMedia('/recordings/[% rec.result_file %]','mp3')">[% rec.result_file %]</a></td>
+<td><a href="/recordings/[% rec.result_file %]">D</a></td>
 </tr>
 [% END %]
 </tbody>

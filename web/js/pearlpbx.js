@@ -50,7 +50,7 @@ function stored_sessions_submit() {
 
 function pearlpbx_parse_phone ( phone ) { 
 	if (phone == '') { 
-		alert ("Введите ПОЛНЫЙ номер телефона для поиска!"); 
+		alert ("Введите хотя 3 цифры номер телефона для поиска!"); 
 		return false; 
 	}
 
@@ -126,3 +126,20 @@ $("#jquery_jplayer_1").jPlayer({
 
  return false; 
 }
+
+function pearlpbx_parse_internal_phone ( phone ) { 
+	if (phone == '') { 
+		alert ("Введите 3 цифры номер телефона для поиска!"); 
+		return false; 
+	}
+
+  if (phone.length != 3 ) { 
+		alert ("Введите номер телефона, где количество цифр = 3 !"); 
+		return false; 
+	}
+
+	return true; 
+
+}
+
+

@@ -2,17 +2,60 @@
 <h2><center>Входящие, принятые внутренним абонентом </center></h2> 
 	<form class="well" onSubmit="return incoming_to_operator_submit()">
     <fieldset>
-        <input id='dateFrom' data-datepicker="datepicker" class="input-date" type="text" value="" />
-        <input id='timeFrom' class="input-mini" type="text" value="00:00" />
+        <input id='dateFrom008' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeFrom008' class="input-mini" type="text" value="00:00" />
                 to
-        <input id='dateTo' data-datepicker="datepicker" class="input-date" type="text" value="" />
-        <input id='timeTo' class="input-mini" type="text" value="23:59" />
+        <input id='dateTo008' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeTo008' class="input-mini" type="text" value="23:59" />
 
-        <input id='phone'  type="text" class="input-small" placeholder="Телефон">
+        <input id='phone008'  maxlength="3" type="text" class="input-small" placeholder="Телефон">
         <input type="submit" class="btn btn-primary" value="Поиск">
     </fieldset>
     </form>
     <div id="incoming_to_operator_result">
     </div>
+
+<script type="text/javascript"> 
+function incoming_to_operator_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+	var phone; 
+  var parsed;
+
+
+  dateFrom = $('#dateFrom008').val();
+  dateTo = $('#dateTo008').val();
+  timeFrom = $('#timeFrom008').val();
+  timeTo = $('#timeTo008').val();
+	phone = $('#phone008').val(); 
+
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+
+  parsed = pearlpbx_parse_internal_phone ( phone );
+	if (parsed == false ) { 
+		return false; 
+	}
+
+  $.get("/reports.pl",
+    { "exec-report": "incomingToOperator",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+			phone: phone,
+    },function(data)
+    {
+      $('#incoming_to_operator_result').html(data);
+    }, "html");
+	return false; 
+}
+</script>
+
+
 
 

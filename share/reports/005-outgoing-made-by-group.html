@@ -2,17 +2,66 @@
 <h2><center>Исходящие, сделанные группой</center></h2> 
 	<form class="well" onSubmit="return outgoing_made_by_group_submit()">
     <fieldset>
-        <input id='dateFrom' data-datepicker="datepicker" class="input-date" type="text" value="" />
-        <input id='timeFrom' class="input-mini" type="text" value="00:00" />
+        <input id='dateFrom005' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeFrom005' class="input-mini" type="text" value="00:00" />
                 to
-        <input id='dateTo' data-datepicker="datepicker" class="input-date" type="text" value="" />
-        <input id='timeTo' class="input-mini" type="text" value="23:59" />
+        <input id='dateTo005' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeTo005' class="input-mini" type="text" value="23:59" />
 
-        <input id='phone'  type="text" class="input-small" placeholder="Группа">
+<!-- Класс pearlpbx-list-queues заполняется по факту загрузки тел отчетов внешними номерами системы.
+см. Javascript в index.html -->
+
+				<select name="queues005" id="queues005" class="pearlpbx-list-queues"> 
+				</select>
+
         <input type="submit" class="btn btn-primary" value="Поиск">
     </fieldset>
     </form>
     <div id="outgoing_made_by_group_result">
     </div>
+
+
+		
+<script type="text/javascript">
+function outgoing_made_by_group_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+	var queue; 
+  var parsed;
+
+  dateFrom = $('#dateFrom005').val();
+  dateTo = $('#dateTo005').val();
+  timeFrom = $('#timeFrom005').val();
+  timeTo = $('#timeTo005').val();
+
+	queue = $('select#queues005 option:selected').val();
+	if (queue == false ) { 
+		return false; 
+	} 
+	if (queue == '' ) { 
+		return false; 
+	} 
+	
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+
+  $.get("/reports.pl",
+    { "exec-report": "outgoingMadeByGroup",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+			queue: queue,
+    },function(data)
+    {
+      $('#outgoing_made_by_group_result').html(data);
+    }, "html");
+	return false; 
+}
+</script>
 
 

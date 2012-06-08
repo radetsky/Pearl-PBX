@@ -2,17 +2,65 @@
 <h2><center>Звонки на внешний номер системы</center></h2> 
 	<form class="well" onSubmit="return calls_to_external_extension_submit()">
     <fieldset>
-        <input id='dateFrom' data-datepicker="datepicker" class="input-date" type="text" value="" />
-        <input id='timeFrom' class="input-mini" type="text" value="00:00" />
+        <input id='dateFrom002' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeFrom002' class="input-mini" type="text" value="00:00" />
                 to
-        <input id='dateTo' data-datepicker="datepicker" class="input-date" type="text" value="" />
-        <input id='timeTo' class="input-mini" type="text" value="23:59" />
+        <input id='dateTo002' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeTo002' class="input-mini" type="text" value="23:59" />
 
-        <input id='phone'  type="text" class="input-small" placeholder="Телефон">
+<!-- Класс pearlpbx-external-numbers заполняется по факту загрузки тел отчетов внешними номерами системы.
+см. Javascript в index.html -->
+
+				<select name="external_numbers002" id="external_numbers002" class="pearlpbx-external-numbers"> 
+				</select>
+
         <input type="submit" class="btn btn-primary" value="Поиск">
     </fieldset>
     </form>
     <div id="calls_to_external_extension_result">
     </div>
+
+		
+<script type="text/javascript">
+function calls_to_external_extension_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+	var extension; 
+  var parsed;
+
+  dateFrom = $('#dateFrom002').val();
+  dateTo = $('#dateTo002').val();
+  timeFrom = $('#timeFrom002').val();
+  timeTo = $('#timeTo002').val();
+
+	extension = $('select#external_numbers002 option:selected').val();
+	if (extension == false ) { 
+		return false; 
+	} 
+	if (extension == '' ) { 
+		return false; 
+	} 
+	
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+
+  $.get("/reports.pl",
+    { "exec-report": "callsToExternalNumbers",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+			extension: extension,
+    },function(data)
+    {
+      $('#calls_to_external_extension_result').html(data);
+    }, "html");
+	return false; 
+}
+</script>
 
 

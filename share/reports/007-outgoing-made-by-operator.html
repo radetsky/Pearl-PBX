@@ -1,18 +1,61 @@
 <!-- Исходящие, сделанные внутренним абонентом -->
 <h2><center>Исходящие, сделанные внутренним абонентом</center></h2> 
-	<form class="well" onSubmit="return outgoing-made-by-operator_submit()">
+	<form class="well" onSubmit="return outgoing_made_by_operator_submit()">
     <fieldset>
-        <input id='dateFrom' data-datepicker="datepicker" class="input-date" type="text" value="" />
-        <input id='timeFrom' class="input-mini" type="text" value="00:00" />
+        <input id='dateFrom007' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeFrom007' class="input-mini" type="text" value="00:00" />
                 to
-        <input id='dateTo' data-datepicker="datepicker" class="input-date" type="text" value="" />
-        <input id='timeTo' class="input-mini" type="text" value="23:59" />
+        <input id='dateTo007' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeTo007' class="input-mini" type="text" value="23:59" />
 
-        <input id='phone'  type="text" class="input-small" placeholder="Телефон">
+        <input id='phone007'  maxlength="3" type="text" class="input-small" placeholder="Телефон">
         <input type="submit" class="btn btn-primary" value="Поиск">
     </fieldset>
     </form>
-    <div id="outgoing-made-by-operator_result">
+    <div id="outgoing_made_by_operator_result">
     </div>
+
+<script type="text/javascript"> 
+function outgoing_made_by_operator_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+	var phone; 
+  var parsed;
+
+
+  dateFrom = $('#dateFrom007').val();
+  dateTo = $('#dateTo007').val();
+  timeFrom = $('#timeFrom007').val();
+  timeTo = $('#timeTo007').val();
+	phone = $('#phone007').val(); 
+
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+
+  parsed = pearlpbx_parse_internal_phone ( phone );
+	if (parsed == false ) { 
+		return false; 
+	}
+
+  $.get("/reports.pl",
+    { "exec-report": "outgoingMadeByOperator",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+			phone: phone,
+    },function(data)
+    {
+      $('#outgoing_made_by_operator_result').html(data);
+    }, "html");
+	return false; 
+}
+</script>
+
+
 
 
