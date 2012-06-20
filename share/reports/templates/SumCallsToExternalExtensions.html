@@ -1,0 +1,43 @@
+<!-- Это шаблон для отчета SumCallsToExternalExtensions -->
+<table class="table table-stripped" style="float: left; width: 200px;">
+<thead>
+<tr>
+<th>Номер Б</th>
+<th>Кол-во</th>
+</tr>
+</thead>
+<tbody>
+[% FOREACH cdr_key IN cdr_keys %]
+<tr>
+<td>[% cdr_key.dst %]</td>
+<td>[% cdr_key.s %]</td>
+</tr>
+[% END %]
+</tbody>
+</table>
+<div id='graphSumCalls010' style="float: left; width: 600px; height: 1024px; ">
+</div>
+
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.pieRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.barRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+<script type="text/javascript"> 
+function sum_calls_to_external_extensions_make_graph() { 
+
+	var data = [% jdata %];
+
+  var plot1 = jQuery.jqplot ('graphSumCalls010', [data], 
+    { 
+      seriesDefaults: {
+        renderer: jQuery.jqplot.PieRenderer, 
+        rendererOptions: {
+          showDataLabels: true,
+					diameter: 400, 
+        }
+      }, 
+      legend: { show:true, location: 'e' }
+    }
+  );
+}
+</script>
+

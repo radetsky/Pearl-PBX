@@ -1,0 +1,50 @@
+<!-- Количество звонков на внешние номера системы --> 
+<center><h2>Количество звонков на внешние номера системы</h2></center>
+<form class="well" onSubmit="return sum_calls_to_external_extensions_submit()">
+    <fieldset>
+        <input id='dateFrom_sum010' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeFrom_sum010' class="input-mini" type="text" value="00:00" />
+                to
+        <input id='dateTo_sum010' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeTo_sum010' class="input-mini" type="text" value="23:59" />
+
+        <input type="submit" class="btn btn-primary" value="Поиск">
+    </fieldset>
+    </form>
+    <div id="sum_calls_to_external_extensions_result">
+    </div>
+<script type="text/javascript"> 
+function sum_calls_to_external_extensions_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+  var parsed;
+
+  dateFrom = $('#dateFrom_sum010').val();
+  dateTo = $('#dateTo_sum010').val();
+  timeFrom = $('#timeFrom_sum010').val();
+  timeTo = $('#timeTo_sum010').val();
+
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+
+  $('#sum_calls_to_external_extensions_result').html("Request sent...");
+
+  $.get("/reports.pl",
+    { "exec-report": "SumCallsToExternalExtensions",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+    },function(data)
+    {
+      $('#sum_calls_to_external_extensions_result').html(data);
+			sum_calls_to_external_extensions_make_graph(); 
+    }, "html");
+	return false; 
+}
+</script>
+

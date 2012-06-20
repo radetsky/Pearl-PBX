@@ -12,6 +12,8 @@
 	  <link href="css/bootstrap-datepicker.css" rel="stylesheet">
 		<link href="css/pearlpbx.css" rel="stylesheet">
 		<link href="jPlayer/skin/blue.monday/jplayer.blue.monday.css" rel="stylesheet">
+		<link rel="stylesheet" type="text/css" href="/js/jqPlot/jquery.jqplot.css" />
+
 
     <style type="text/css">
       body {
@@ -42,8 +44,8 @@
 		<script src="js/bootstrap-datepicker.js"></script>
 		<script src="js/pearlpbx.js"></script>
 		<script src="jPlayer/jquery.jplayer.min.js"></script>
-
-
+ 		<script language="javascript" type="text/javascript" src="/js/jqPlot/jquery.jqplot.min.js"></script>
+  
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container-fluid">
@@ -90,6 +92,7 @@
               <li class="nav-header">Отчеты</li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-general')">Общие</a></li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#cdr-filter')">CDR-фильтр</a></li>
+							<li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-summary')">Количественные</a></li>
               <li><a href="#">Группы/очереди</a></li>
               <li><a href="#">Специализированные</a></li>
               <li class="nav-header">Состояние</li>
@@ -208,12 +211,23 @@
  <div class="pearlpbx-main-container-subheader">
 	<div id="pearlpbx-general-reports-list">
 	</div>
-  <div id="pearlpbx-report-body">
+  <div class="pearlpbx-report-body">
 	</div>
  </div>
 </div>
 
 <div id="pearlpbx-reports-bodies" style="display: none">
+</div>
+
+<div id="reports-summary" style="display: none">
+ <div class="pearlpbx-main-container-header">
+	<h1><center> Количественные отчеты </center></h1>
+ </div>
+ <div id="reports-summary-names"> </div>
+ <div class="pearlpbx-report-body"></div>
+</div>
+
+<div id="pearlpbx-summary-reports-bodies" style="display: none">
 </div>
 
 <!-- Скрипт, который заполняет список названий отчетов -->
@@ -239,7 +253,9 @@
 						$('.pearlpbx-list-queues').html(data); 
 					},"html"); 
 			}, "html");
-	
+			$('#reports-summary-names').load('/reports.pl?list-reports=1&rtype=sum');
+      $('#pearlpbx-summary-reports-bodies').load('/reports.pl?list-reports=2&rtype=sum'); 
+			
 		-->
 </script>
 

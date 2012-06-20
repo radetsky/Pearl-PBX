@@ -1,9 +1,10 @@
-function pearlpbx_show(pearlpbx_item) { 
+function pearlpbx_show(pearlpbx_item) {
+  $('.pearlpbx-report-body').html(''); 
 	$('#pearl-pbx-main-container').html($(pearlpbx_item).html());
 } 
 
 function pearlpbx_show_report (reportname) { 
-	$('#pearlpbx-report-body').html($(reportname).html());
+	$('.pearlpbx-report-body').html($(reportname).html());
 	$('.input-date').datepicker();
 	return false; 
 }

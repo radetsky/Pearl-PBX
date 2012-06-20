@@ -138,11 +138,16 @@ sub htmlHeader {
 =cut 
 
 sub listreportsnames { 
-	my $this = shift; 
+	my ($this,$rtype) = @_;
+
 	my @result; 
+  my $dirname = '/usr/share/pearlpbx/reports';
 
-	my $dirname = '/usr/share/pearlpbx/reports';
-
+	if ( defined ( $rtype ) ) { 
+		  if ($rtype =~ /sum/i ) { 
+				$dirname .= '/summary'; 
+			} 
+	} 
 # Классика :) 
 	opendir my ($dh), $dirname or return undef; 
 	my @files = readdir $dh; 
@@ -173,10 +178,16 @@ sub listreportsnames {
 =cut 
 
 sub reportsbodies { 
-	my $this = shift; 
+	my ($this,$rtype) = @_; 
 
 	my $result=''; 
 	my $dirname = '/usr/share/pearlpbx/reports';
+
+  if ( defined ( $rtype ) ) {
+      if ($rtype =~ /sum/i ) {
+        $dirname .= '/summary';
+      }
+  }
 
 # Классика :) 
 	opendir my ($dh), $dirname or return undef; 

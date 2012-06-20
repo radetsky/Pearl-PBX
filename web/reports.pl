@@ -32,7 +32,7 @@ my $pearl = Pearl->new();
 my $listreports = $pearl->{cgi}->param('list-reports');
 my $execreport = $pearl->{cgi}->param('exec-report');
 my $listnumbers = $pearl->{cgi}->param('list-external-numbers');
-my $listqueues = $pearl->{cgi}->param('list-queues'); 
+my $listqueues = $pearl->{cgi}->param('list-queues');
 
 my $out = ''; 
 
@@ -57,18 +57,19 @@ if ( defined ( $execreport ) ) {
 	exit(0); 
 }
 if ( defined ( $listreports ) ) { 
+  my $rtype = $pearl->{cgi}->param('rtype');
 	if ($listreports == 1) {
 		$out .= '<ul class="nav nav-tabs">'; 
 
 # Show short list of reports. Just names.
-		my @list = $pearl->listreportsnames(); 
+		my @list = $pearl->listreportsnames($rtype); 
 		foreach my $item (@list) { 
 			$out .= '<li><a href="javascript:void(0)" onclick="pearlpbx_show_report('."\'#".@$item[0]."\'".')">'.@$item[1] .'</a></li>';
 		}
 		$out .= '</ul>'; 
 	}
 	if ($listreports == 2) {
-		$out = $pearl->reportsbodies();
+		$out = $pearl->reportsbodies($rtype);
 	}
 	$pearl->htmlHeader; 
 	print $out; 
