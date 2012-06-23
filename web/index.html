@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Radetsky Pearl PBX</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
+    <meta name="description" content="PearlPBX Graphical User Interface">
     <meta name="author" content="Alex Radetsky rad@rad.kiev.ua">
 
     <!-- Le styles -->
@@ -188,6 +188,14 @@
 <div id="sip-connections" style="display: none">
  <div class="pearlpbx-main-container-header">
 	<h1><center> SIP Connections </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+  <ul class="nav nav-tabs">
+   <li><a href="javascript:void(0)" onClick="pearlpbx_show_sip_internal_users()">Внутренние пользователи</a></li> 
+	 <li><a href="javascript:void(0)" onClick="pearlpbx_show_sip_external_trunks()">Внешние транки</a></li>
+	</ul>
+ </div>
+ <div id="pearlpbx-sip-connections-body">
  </div>
 </div>
 

@@ -1,3 +1,9 @@
+function pearlpbx_show_sip_internal_users () { 
+	$('#pearlpbx-sip-connections-body').load('/sip.pl?a=list&b=internal'); 
+}
+function pearlpbx_show_sip_external_trunks () { 
+	$('#pearlpbx-sip-connections-body').load('/sip.pl?a=list&b=external');
+} 
 function pearlpbx_show(pearlpbx_item) {
   $('.pearlpbx-report-body').html(''); 
 	$('#pearl-pbx-main-container').html($(pearlpbx_item).html());
@@ -106,37 +112,26 @@ function turnOnPBXPlayer (cdr_start, cdr_src, cdr_dst ) {
     {
 
       $('#recordings_table').html(data);
-       pearlpbx_initjplayer(); 
+		  PBXPlayerSetMedia('/','wav'); 	
 
     }, "html");
 
  return false; 
 }
-function pearlpbx_initjplayer() {
-	$("#jquery_jplayer_1").jPlayer({ 
-		swfPath: "/jPlayer", 
-		supplied: "mp3",
-	}); 
-	$("#jquery_jplayer_1").bind($.jPlayer.event.error, function (event) { 
-		alert("Error type: " + event.jPlayer.error.type); 
-	}); 
-	return false; 
-}
-function PBXPlayerSetMedia (url, type) {
-if (type == "wav") {
-$("#jquery_jplayer_1").jPlayer("destroy");
-$("#jquery_jplayer_1").jPlayer({swfPath: "/jPlayer",supplied: "wav",solution: "html" });
-$("#jquery_jplayer_1").jPlayer("setMedia", { wav: url } ).jPlayer("play");  
-} 
-if (type == "mp3" ) { 
-$("#jquery_jplayer_1").jPlayer("destroy");
-$("#jquery_jplayer_1").jPlayer({ ready: function () { 
-		$(this).jPlayer("setMedia", { mp3: url } ).jPlayer("play");
-	}, 
-	swfPath: "/jPlayer",supplied: "mp3", solution: "flash"});
-}
 
-return false; 
+function PBXPlayerSetMedia (url, type) { 
+
+$("#jquery_jplayer_1").jPlayer({
+        ready: function () {
+          $(this).jPlayer("setMedia", {
+						type: url,
+          });
+        },
+        swfPath: "/jPlayer",
+        supplied: type,
+      });
+
+ return false; 
 }
 
 function pearlpbx_parse_internal_phone ( phone ) { 
