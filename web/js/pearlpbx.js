@@ -1,8 +1,15 @@
+function pearlpbx_sip_edit_id(sip_id) { 
+	alert("called sip_edit_id ( "+sip_id+" )"); 
+}
 function pearlpbx_show_sip_internal_users () { 
-	$('#pearlpbx-sip-connections-body').load('/sip.pl?a=list&b=internal'); 
+	$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=internal');
+	$('#pearlpbx-sip-add-internal-button').css('display','block');
+	$('#pearlpbx-sip-add-external-button').css('display','none'); 
 }
 function pearlpbx_show_sip_external_trunks () { 
-	$('#pearlpbx-sip-connections-body').load('/sip.pl?a=list&b=external');
+	$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=external');
+	$('#pearlpbx-sip-add-external-button').css('display','block');
+	$('#pearlpbx-sip-add-internal-button').css('display','none');
 } 
 function pearlpbx_show(pearlpbx_item) {
   $('.pearlpbx-report-body').html(''); 
