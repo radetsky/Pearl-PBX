@@ -1,3 +1,12 @@
+function pearlpbx_sip_add_user() { 
+	alert ("called sip_add_user()"); 
+
+}
+function pearlpbx_sip_add_trunk() {
+	alert ("called sip_add_trunk()"); 
+
+} 
+
 function pearlpbx_sip_edit_id(sip_id) { 
 	alert("called sip_edit_id ( "+sip_id+" )"); 
 }

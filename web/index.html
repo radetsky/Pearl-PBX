@@ -198,10 +198,10 @@
  <div id="pearlpbx-sip-connections-list">
  </div>
  <div id="pearlpbx-sip-add-internal-button" style="display: none;" class="pearlpbx-main-container-header">
-<center>  <button class="btn btn-primary" onClick="pearlpbx_sip_add_user()">Добавить нового пользователя</button> </center>
+<center>  <button class="btn btn-primary" href="#add_sip_user" data-toggle="modal">Добавить нового пользователя</button> </center>
  </div>
  <div id="pearlpbx-sip-add-external-button" style="display: none;" class="pearlpbx-main-container-header">
-<center> <button class="btn btn-primary" onClick="pearpbx_sip_add_trunk()">Добавить новый транк</button></center>
+<center> <button class="btn btn-primary" onClick="pearlpbx_sip_add_trunk()">Добавить новый транк</button></center>
  </div>
 </div>
 
@@ -339,6 +339,24 @@
 <div id="pearlpbx-external-numbers" style="display: none"> 
 </div>
 
-    </body>
+<!-- Диалог добавления SIP-пользователя. Модальный. -->
+
+<div class="modal fade" id="add_sip_user" style="width: 800px;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Добавление пользователя SIP</h3>
+  </div>
+  <div class="modal-body">
+    <p>One fine body…</p>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Close</a>
+    <a href="#" class="btn btn-primary">Save changes</a>
+  </div>
+</div>
+
+<!-- Конец диалога добавления SIP-пользователя --> 
+
+</body>
 </html>
 
