@@ -1,0 +1,66 @@
+<!-- Осуществленные операторами в группе --> 
+
+<center><h2>Количество звонков, осуществленные операторами в выбранной группе</h2></center>
+<form class="well" onSubmit="return outgoing_by_operators_in_group_submit()">
+    <fieldset>
+        <input id='dateFrom_sum040' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeFrom_sum040' class="input-mini" type="text" value="00:00" />
+                to
+        <input id='dateTo_sum040' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeTo_sum040' class="input-mini" type="text" value="23:59" />
+
+        <select name="queues_sum040" id="queues_sum040" class="pearlpbx-list-queues">
+        </select>
+
+        <input type="submit" class="btn btn-primary" value="Поиск">
+    </fieldset>
+    </form>
+    <div id="outgoing_by_operators_in_group_result">
+    </div>
+
+<script type="text/javascript"> 
+
+function outgoing_by_operators_in_group_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+  var parsed;
+  var queue; 
+
+  dateFrom = $('#dateFrom_sum040').val();
+  dateTo = $('#dateTo_sum040').val();
+  timeFrom = $('#timeFrom_sum040').val();
+  timeTo = $('#timeTo_sum040').val();
+
+  queue = $('select#queues_sum040 option:selected').val();
+  if (queue == false ) { 
+    return false; 
+  } 
+  if (queue == '' ) { 
+    return false; 
+  } 
+
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+
+  $('#outgoing_by_operators_in_group_result').html("Request sent...");
+
+  $.get("/reports.pl",
+    { "exec-report": "SumOutgoingByOperatorsInGroup",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+      queue: queue,
+    },function(data)
+    {
+      $('#outgoing_by_operators_in_group_result').html(data);
+			outgoing_by_operators_in_group_make_graph(); 
+    }, "html");
+	return false; 
+}
+</script>
+
