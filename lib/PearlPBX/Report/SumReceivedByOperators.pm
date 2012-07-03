@@ -1,6 +1,6 @@
 #===============================================================================
 #
-#         FILE:  SumReceivedByOperatorsInGroup.pm
+#         FILE:  SumReceivedByOperators.pm
 #
 #  DESCRIPTION:
 #
@@ -25,7 +25,7 @@ C<NetSDS> module contains superclass all other classes should be inherited from.
 
 =cut
 
-package PearlPBX::Report::SumReceivedByOperatorsInGroup;
+package PearlPBX::Report::SumReceivedByOperators;
 
 use 5.8.0;
 use strict;
@@ -82,9 +82,9 @@ sub report {
     my $queue = $params->{'queue'};
 
     my $sql =
- "select count(agent) as s,agent as operator from public.queue_log where queuename = ? and event='CONNECT' and time between ? and ? group by agent order by agent";
+ "select count(agent) as s,agent as operator from public.queue_log where event='CONNECT' and time between ? and ? group by agent order by agent";
     my $sth = $this->{dbh}->prepare($sql);
-    eval { $sth->execute( $queue, $sincedatetime, $tilldatetime ); };
+    eval { $sth->execute( $sincedatetime, $tilldatetime ); };
     if ($@) {
         $this->{error} = $this->{dbh}->errstr;
         return undef;
@@ -109,7 +109,7 @@ sub report {
 			cdr_keys => \@cdr_keys,
 			jdata => $jdata, 
 		};  
-		$template->process('SumReceivedByOperatorsInGroup.html', $template_vars) || die $template->error(); 
+		$template->process('SumReceivedByOperators.html', $template_vars) || die $template->error(); 
 		
 }
 

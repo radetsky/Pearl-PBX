@@ -1,0 +1,52 @@
+<!-- Сравнение всех операторов (входящие) --> 
+
+<center><h2>Сравнение работы всех операторов КЦ (входящие)</h2></center>
+<form class="well" onSubmit="return received_by_operators_submit()">
+    <fieldset>
+        <input id='dateFrom_sum035' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeFrom_sum035' class="input-mini" type="text" value="00:00" />
+                to
+        <input id='dateTo_sum035' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeTo_sum035' class="input-mini" type="text" value="23:59" />
+        <input type="submit" class="btn btn-primary" value="Поиск">
+    </fieldset>
+    </form>
+    <div id="received_by_operators_result">
+    </div>
+
+<script type="text/javascript"> 
+
+function received_by_operators_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+  var parsed;
+
+  dateFrom = $('#dateFrom_sum035').val();
+  dateTo = $('#dateTo_sum035').val();
+  timeFrom = $('#timeFrom_sum035').val();
+  timeTo = $('#timeTo_sum035').val();
+
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+
+  $('#received_by_operators_result').html("Request sent...");
+
+  $.get("/reports.pl",
+    { "exec-report": "SumReceivedByOperators",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+    },function(data)
+    {
+      $('#received_by_operators_result').html(data);
+			received_by_operators_make_graph(); 
+    }, "html");
+	return false; 
+}
+</script>
+

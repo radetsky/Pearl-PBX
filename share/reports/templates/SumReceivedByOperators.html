@@ -1,0 +1,46 @@
+<!-- Это шаблон для отчета SumReceivedByOperators -->
+<table class="table table-stripped" style="float: left; width: 200px;">
+<thead>
+<tr>
+<th>Оператор</th>
+<th>Кол-во</th>
+</tr>
+</thead>
+<tbody>
+[% FOREACH cdr_key IN cdr_keys %]
+<tr>
+<td>[% cdr_key.operator %]</td>
+<td>[% cdr_key.s %]</td>
+</tr>
+[% END %]
+</tbody>
+</table>
+<div id='graphSumCalls035' style="float: left; width: 600px; height: 400px; ">
+</div>
+
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.pieRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.barRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+<script type="text/javascript"> 
+function received_by_operators_make_graph() { 
+
+	var data = [% jdata %];
+
+  var plot1 = jQuery.jqplot ('graphSumCalls035', [data], 
+    { 
+      seriesDefaults: {
+        renderer: jQuery.jqplot.BarRenderer, 
+        rendererOptions: {
+				   varyBarColor: true
+        }
+      },
+			axes:{
+            xaxis:{
+                renderer: jQuery.jqplot.CategoryAxisRenderer
+            }
+      } 
+    }
+  );
+}
+</script>
+
