@@ -1,3 +1,18 @@
+function pearlpbx_today() { 
+	var now = new Date();
+	var mday = now.getDate(); 
+	if (mday < 10 ) { 
+		mday = "0"+mday;
+	}
+	var month = now.getMonth()+1; 
+	if (month < 10) { 
+		month = "0"+month;
+	}
+
+	var prettyDate =  now.getFullYear() + '-' + month + '-' + mday;
+	$('.input-date').val(prettyDate);
+	$('.input-date').datepicker();
+}
 function pearlpbx_sip_add_user() { 
 	alert ("called sip_add_user()"); 
 
@@ -21,13 +36,14 @@ function pearlpbx_show_sip_external_trunks () {
 	$('#pearlpbx-sip-add-internal-button').css('display','none');
 } 
 function pearlpbx_show(pearlpbx_item) {
-  $('.pearlpbx-report-body').html(''); 
+    $('.pearlpbx-report-body').html(''); 
 	$('#pearl-pbx-main-container').html($(pearlpbx_item).html());
+	pearlpbx_today();
 } 
 
 function pearlpbx_show_report (reportname) { 
 	$('.pearlpbx-report-body').html($(reportname).html());
-	$('.input-date').datepicker();
+	pearlpbx_today();
 	return false; 
 }
 

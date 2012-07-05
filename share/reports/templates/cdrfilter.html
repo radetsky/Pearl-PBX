@@ -1,0 +1,30 @@
+<!-- Это шаблон для отчета alltraffic -->
+
+<table class="table table-stripped">
+<thead>
+<tr>
+<th>Дата/время</th>
+<th>Номер А</th>
+<th>Номер Б</th>
+<th>Канал А</th>
+<th>Канал Б</th>
+<th>Состояние</th>
+<th>Время</th>
+<th>Запись</th>
+</tr>
+</thead>
+<tbody>
+[% FOREACH cdr_key IN cdr_keys %]
+<tr>
+<td>[% cdr_key.calldate %]</td>
+<td>[% cdr_key.src %]</td>
+<td>[% cdr_key.dst %]</td>
+<td>[% cdr_key.channel %]</td>
+<td>[% cdr_key.dstchannel %]</td>
+<td>[% cdr_key.disposition %]</td>
+<td>[% cdr_key.billsec %]</td>
+<td>[% pearlpbx_player(cdr_key.calldate,cdr_key.src,cdr_key.dst,cdr_key.disposition) %]</td>
+</tr>
+[% END %]
+</tbody>
+</table>

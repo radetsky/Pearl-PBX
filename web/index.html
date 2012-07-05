@@ -211,12 +211,130 @@
  </div>
 </div>
 
+
+<!-- CDR FILTER -->
+
 <div id="cdr-filter" style="display: none">
+
  <div class="pearlpbx-main-container-header">
   <h1><center> CDR Filter </center></h1>
  </div>
- Здесь будет интерфейс по фильтрации CDR-записей.
+ <form class="well form-inline" onSubmit="return cdrfilter_submit()">
+  <fieldset>
+      Дата и время начала 
+        <input id='cdrfilter_dateFrom' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='cdrfilter_timeFrom' class="input-mini" type="text" value="00:00" />
+      Дата и время окончания
+        <input id='cdrfilter_dateTill' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id="cdrfilter_timeTill" class="input-mini" type="text" value="23:59" />
+
+  <table>
+    <tr> <th>Номер А</th><th>Номер Б</th><th>Канал А</th><th>Канал Б</th> </tr>
+
+    <tr> 
+      <td><input type="text" class="input-small" id="cdrfilter_src" placeholder="0504139380" value=""></td>
+      <td><input type="text" class="input-small" id="cdrfilter_dst" placeholder="2391515" value=""></td>
+      <td>
+        <select name="cdrfilter_channel" id="cdrfilter_channel" class="pearlpbx_list_channels">
+        </select>
+      </td>
+      <td>
+        <select name="cdrfilter_dstchannel" id="cdrfilter_dstchannel" class="pearlpbx_list_channels">
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <th align="center" colspan="2">Статус</th><th align="center" colspan="2">Общее время<th>
+    </tr>
+    <tr>
+      <td colspan="2" align="center">
+        <select name="cdrfilter_disposition" id="cdrfilter_disposition">
+          <option value="ANY">Любой</option>
+          <option value="ANSWERED">ANSWERED</option>
+          <option value="NO ANSWER">NO ANSWER</option>
+          <option value="BUSY">BUSY</option>
+          <option value="FAILED">FAILED</option>
+        </select>
+      </td>
+      <td colspan="2" align="center">
+        <select name="cdrfilter_billsec" id="cdrfilter_billsec">
+          <option value="0"> Любое </option>
+          <option value="1"> 0 - 30 сек.</option>
+          <option value="2">30 - 60 сек.</option>
+          <option value="3">60 - 120 сек.</option>
+          <option value="4">120 - 180 сек.</option>
+          <option value="5">180 - 300 сек.</option>
+          <option value="6">300 - ... сек.</option>
+
+        </select>
+
+      </td>
+    
+    </tr>
+
+     
+    </tr>
+    </table>
+    </fieldset>
+
+</br>
+  <center>
+      <input type="submit" class="btn btn-primary btn-large" value="Поиск">
+  </center>
+ </form>
+
+<div id="cdrfilter_result">
 </div>
+
+</div>
+
+
+<script type="text/javascript">
+function cdrfilter_validate() { 
+  return false; 
+}
+function cdrfilter_submit () { 
+
+  var valid = cdrfilter_validate(); 
+
+  var cdrfilter_dateFrom = $('#cdrfilter_dateFrom').val();
+  var cdrfilter_timeFrom = $('#cdrfilter_timeFrom').val();
+  var cdrfilter_dateTill = $('#cdrfilter_dateTill').val();
+  var cdrfilter_timeTill = $('#cdrfilter_timeTill').val();
+
+  var cdrfilter_src = $('#cdrfilter_src').val();
+  var cdrfilter_dst = $('#cdrfilter_dst').val();
+
+  var cdrfilter_channel = $('select#cdrfilter_channel option:selected').val();
+  var cdrfilter_dstchannel = $('select#cdrfilter_dstchannel option:selected').val(); 
+  
+  var cdrfilter_disposition = $('select#cdrfilter_disposition option:selected').val();
+  var cdrfilter_billsec = $('select#cdrfilter_billsec option:selected').val();
+
+  $("#cdrfilter_result").html("Request sent...");
+  $.get("/reports.pl",
+    { "exec-report": "cdrfilter",
+      dateFrom: cdrfilter_dateFrom,
+      timeFrom: cdrfilter_timeFrom,
+      dateTill: cdrfilter_dateTill,
+      timeTill: cdrfilter_timeTill,
+      src:      cdrfilter_src,
+      dst:      cdrfilter_dst,
+      channel:  cdrfilter_channel,
+      dstchannel: cdrfilter_dstchannel,
+      disposition: cdrfilter_disposition,
+      billsec: cdrfilter_billsec,
+    },function(data)
+    {
+      $('#cdrfilter_result').html(data);
+    }, "html");
+
+  return false; 
+
+}
+</script>
+
+<!-- END OF CDR FILTER -->
 
 <div id="reports-general" style="display: none">
  <div class="pearlpbx-main-container-header">
@@ -252,6 +370,7 @@
 			function(data) { 
 				$('#pearlpbx-general-reports-list').html(data); 
 			}, "html");
+
 		$.get("/reports.pl",
 			{ "list-reports": 2, }, 
 			function(data) { 
@@ -267,8 +386,11 @@
 						$('.pearlpbx-list-queues').html(data); 
 					},"html"); 
 			}, "html");
+
 			$('#reports-summary-names').load('/reports.pl?list-reports=1&rtype=sum');
       $('#pearlpbx-summary-reports-bodies').load('/reports.pl?list-reports=2&rtype=sum'); 
+
+      $('.pearlpbx_list_channels').load('/reports.pl?list-channels=1');
 			
 		-->
 </script>
@@ -347,6 +469,17 @@
     <h3>Добавление пользователя SIP</h3>
   </div>
   <div class="modal-body">
+    <form class="form-horizontal">
+      <fieldset>
+        <div class="control-group">
+          <label class="control-label" for="input_sip_add_comment">Описание пользователя</label>
+          <div class="controls">
+            <input type="text" class="input-xlarge" id="input_sip_add_comment">
+            <p class="help-block">Это может быть описание рабочего места "Оператор №1" или ФИО "Иванова И.И."</p>
+          </div>
+        </div>
+      </fieldset>
+    </form>
     <p>One fine body…</p>
   </div>
   <div class="modal-footer">

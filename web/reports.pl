@@ -26,6 +26,7 @@ use Pearl;
 use Data::Dumper; 
 use PearlPBX::Report::ExternalNumbers;
 use PearlPBX::Report::ListQueues; 
+use PearlPBX::Report::ListChannels; 
 
 my $pearl = Pearl->new();
 
@@ -33,6 +34,7 @@ my $listreports = $pearl->{cgi}->param('list-reports');
 my $execreport = $pearl->{cgi}->param('exec-report');
 my $listnumbers = $pearl->{cgi}->param('list-external-numbers');
 my $listqueues = $pearl->{cgi}->param('list-queues');
+my $listchannels = $pearl->{cgi}->param('list-channels'); 
 
 my $out = ''; 
 
@@ -95,6 +97,15 @@ if ( defined ( $listqueues ) ) {
 	} 
 }
 
+if ( defined ( $listchannels) ) { 
+	if ($listchannels == 1) { 
+		my $n = PearlPBX::Report::ListChannels->new("/etc/PearlPBX/asterisk-router.conf");
+		$n->db_connect();
+		$pearl->htmlHeader;
+		$n->report();
+		exit(0);		
+	}
+}
 
 $pearl->htmlError('No action given.');	
 exit(0); 
