@@ -84,11 +84,16 @@ sub report {
     my $disposition = $this->_sql_cond_disposition ( $params->{'disposition'} );
     my $billsec = $this->_sql_cond_billsec ( $params->{'billsec'} );
 
+    my $src = $this->_sql_cond_src ($params->{'src'} ); 
+    my $dst = $this->_sql_cond_dst ($params->{'dst'} );
+
+    my $channel = $this->_sql_cond_channel ($params->{'channel'}); 
+    my $dstchannel = $this->_sql_cond_dstchannel ($params->{'dstchannel'}); 
 
     my $sql = "select calldate,src,dst,split_part(channel,'-',1) as channel, 
      split_part(dstchannel,'-',1) as dstchannel,disposition,billsec 
       from public.cdr where calldate between ? and ? 
-       and $sql_cond $disposition $billsec order by calldate";
+       and $sql_cond $src $dst $channel $dstchannel $disposition $billsec order by calldate";
 
     my $sth = $this->{dbh}->prepare($sql);
     eval { $sth->execute( $sincedatetime, $tilldatetime ); };
@@ -157,6 +162,40 @@ sub _sql_cond_billsec {
     }
     return ''; 
 }
+
+sub _sql_cond_src { 
+    my ($this,$src) = @_; 
+
+    if ($src =~ /^\d/) {
+        return "and src ~ E'$src'"; 
+    }
+    return ''; 
+}
+sub _sql_cond_dst { 
+    my ($this,$dst) = @_; 
+
+    if ($dst =~ /^\d/) {
+        return "and dst ~ E'$dst'"; 
+    }
+    return ''; 
+}
+
+sub _sql_cond_channel { 
+    my ($this, $channel) = @_; 
+
+    if ( $channel =~ /^SIP/ ) { 
+        return "and channel like '".$channel."%'"; 
+    }
+}
+
+sub _sql_cond_dstchannel { 
+    my ($this, $dstchannel) = @_; 
+
+    if ( $dstchannel =~ /^SIP/ ) { 
+        return "and dstchannel like '".$dstchannel."%'"; 
+    }
+}
+
 
 1;
 
