@@ -75,7 +75,7 @@ sub report {
     my $this = shift;
     my @channels; 
 
-	my $sql = "select concat('SIP/',name) as name from public.sip_peers order by name;"; # %-) 
+	my $sql = "select 'SIP/'||name as name from public.sip_peers order by name;"; # %-) 
 
     my $sth = $this->{dbh}->prepare($sql);
     eval { $sth->execute( ); };

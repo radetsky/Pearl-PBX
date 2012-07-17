@@ -142,7 +142,6 @@ sub list_internal {
 	return $this->_list($sql);
 }
 
-
 =item B<list_external> 
 
  возвращает HTML представление списка внешних транков 
@@ -170,10 +169,28 @@ sub _list {
 		 unless ( defined ( $row->{'comment'} ) ) { 
 		 	$row->{'comment'} = ''; 
 		 } 
-	   $out .= '<li><a href="javascript:void(0)" onClick="pearlpbx_sip_open_id('.$row->{'id'}.')">'.$row->{'comment'}.'&lt;'.$row->{'name'}.'&gt;'.'</a></li>';
+	   $out .= '<li><a href="javascript:void(0)" onClick="pearlpbx_sip_edit_id('.$row->{'id'}.')">'.$row->{'comment'}.'&lt;'.$row->{'name'}.'&gt;'.'</a></li>';
 	}		 
   $out .= "</ul>";
 	return $out; 
+}
+
+sub list_internal_free { 
+  my $this = shift; 
+
+  my $sql = 'select freename from generate_series (200,299,1) as freename where freename::text not in ( select name from public.sip_peers);'; 
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute(); }; 
+  if ( $@ ) {
+    print $this->{dbh}->errstr; 
+    return undef; 
+  }
+  my $out = '';
+  while ( my $row = $sth->fetchrow_hashref ) {
+    $out .= '<option value="'.$row->{'freename'}.'">'.$row->{'freename'}.'</option>';
+  }
+  return $out; 
+
 }
 
 1;

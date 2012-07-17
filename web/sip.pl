@@ -45,9 +45,11 @@ if ( $action eq 'list') {
 
 	if ($b eq 'internal' ) { print $sip->list_internal; } 
 	if ($b eq 'external' ) { print $sip->list_external; } 
+	if ($b eq 'internal-free') { print $sip->list_internal_free; }
 
 	exit(0); 
 }
+
 
 
 1;
