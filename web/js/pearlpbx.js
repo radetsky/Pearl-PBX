@@ -25,6 +25,11 @@ function pearlpbx_sip_add_trunk() {
 function pearlpbx_sip_edit_id(sip_id) { 
 	alert("called sip_edit_id ( "+sip_id+" )"); 
 }
+
+function pearlpbx_load_internal_free_extensions () { 
+	$('.pearlpbx_internal_free_list').load('/sip.pl?a=list&b=internal-free');
+}
+
 function pearlpbx_show_sip_internal_users () { 
 	$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=internal');
 	$('#pearlpbx-sip-add-internal-button').css('display','block');

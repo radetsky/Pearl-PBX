@@ -196,7 +196,7 @@
  <div id="pearlpbx-sip-connections-list">
  </div>
  <div id="pearlpbx-sip-add-internal-button" style="display: none;" class="pearlpbx-main-container-header">
-<center>  <button class="btn btn-primary" href="#add_sip_user" data-toggle="modal">Добавить нового пользователя</button> </center>
+<center>  <button class="btn btn-primary" href="#add_sip_user" data-toggle="modal" onClick="pearlpbx_load_internal_free_extensions();">Добавить нового пользователя</button> </center>
  </div>
  <div id="pearlpbx-sip-add-external-button" style="display: none;" class="pearlpbx-main-container-header">
 <center> <button class="btn btn-primary" onClick="pearlpbx_sip_add_trunk()">Добавить новый транк</button></center>
@@ -477,11 +477,13 @@ function cdrfilter_submit () {
             <p class="help-block">Это может быть описание рабочего места "Оператор №1" или ФИО "Иванова И.И."</p>
           </div>
         </div>
+
         <div class="control-group">
           <label class="control-label" for="input_sip_add_comment">Внутренний номер</label>
           <div class="controls">
-            <input type="text" class="input-xlarge" id="input_sip_add_extension">
-            <p class="help-block">Внутренний номер</p>
+            <select name="input_sip_add_extension" class="pearlpbx_internal_free_list" id="input_sip_add_extension">
+            </select>
+            <p class="help-block">Выберите свободный внутренний номер из этого списка.</p>
           </div>
         </div>
 
