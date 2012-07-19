@@ -174,6 +174,11 @@ sub _list {
   $out .= "</ul>";
 	return $out; 
 }
+=item B<list_internal_free> 
+
+Возвращает список свободных внутренних номеров в виде списка option for select 
+
+=cut 
 
 sub list_internal_free { 
   my $this = shift; 
@@ -190,6 +195,87 @@ sub list_internal_free {
     $out .= '<option value="'.$row->{'freename'}.'">'.$row->{'freename'}.'</option>';
   }
   return $out; 
+
+}
+
+=item B<newsecret>
+
+ Генерирует новый пароль и возвращает его 
+
+=cut 
+
+sub newsecret { 
+  my $this = shift; 
+
+  return `pwgen -c 16`;
+
+}
+
+=item B<adduser>
+
+ Добавляет нового пользователя в public.sip_peers. 
+ Простой метод. Сложный будет доступен чуть позже, для advanced administrators и подозреваю, 
+ что за деньги. Ибо для SMB-сектора текущего метода должно хватить.  
+
+=cut 
+
+sub adduser { 
+  my ($this, $params) = @_;
+
+  my $sql  = "insert into public.sip_peers (name, comment, secret, host, context ) values (?,?,?,?,?) returning id"; 
+  my $sql2 = "insert into integration.workplaces (sip_id, teletype, autoprovision, mac_addr_tel ) 
+    values (?,?,?,?)"; 
+
+  unless ( defined ( $params->{'extension'} ) or 
+         defined ( $params->{'comment'} ) or 
+         defined ( $params->{'secret'} ) ) { 
+    return "ERROR";
+  }
+
+  my $sth  = $this->{dbh}->prepare($sql);
+
+  eval { 
+    $sth->execute( 
+      $params->{'extension'},
+      $params->{'comment'},
+      $params->{'secret'},
+      'dynamic',
+      'default',
+    ); 
+  };
+
+  if ( $@ ) {
+    return "ERROR:". $this->{dbh}->errstr;  
+  }
+
+  my $row = $sth->fetchrow_hashref; 
+  my $sip_id = $row->{'id'};
+
+  
+  my $sth2 = $this->{dbh}->prepare($sql2);
+  my $teletype = $params->{'terminal'};
+  my $autoprovision = 'true';
+
+  unless ( defined ( $params->{'terminal'})) { 
+    $teletype = "softphone"; 
+    $autoprovision = 'false';  
+  } 
+
+  eval { 
+    $sth2->execute( 
+      $sip_id, $teletype, $autoprovision, $params->{'macaddr'}
+    ); 
+  };
+
+  if ( $@ ) {
+    return "ERROR:". $this->{dbh}->errstr;  
+  }
+
+  eval { $this->{dbh}->commit;};
+  if ( $@ ) {
+    return "ERROR:". $this->{dbh}->errstr;  
+  }
+  return "OK";
 
 }
 

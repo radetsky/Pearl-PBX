@@ -9,7 +9,7 @@
 #      COMPANY:  Net.Style
 #      VERSION:  1.0
 #      CREATED:  23.06.201
-#     REVISION:  001
+#     REVISION:  002
 #===============================================================================
 
 use 5.8.0;
@@ -31,11 +31,11 @@ unless ( defined ( $action ) ) {
   exit(0);
 } 
 
-if ( $action eq 'list') {
+my $sip = PearlPBX::SIP->new('/etc/PearlPBX/asterisk-router.conf');
+$sip->db_connect();
+$pearl->htmlHeader;
 
-	my $sip = PearlPBX::SIP->new('/etc/PearlPBX/asterisk-router.conf');
-	$sip->db_connect();
-	$pearl->htmlHeader;
+if ( $action eq 'list') {
 
 	my $b = $pearl->{cgi}->param('b');
 	unless ( defined ( $b ) ) { 
@@ -50,7 +50,16 @@ if ( $action eq 'list') {
 	exit(0); 
 }
 
+if ($action eq 'newsecret') { 
 
+	print $sip->newsecret; 
+	exit(0);
+}
+if ($action eq 'adduser') {
+	my $params = $pearl->cgi_params_to_hashref();
+	print $sip->adduser ( $params );
+
+}
 
 1;
 #===============================================================================

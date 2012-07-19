@@ -1,3 +1,44 @@
+function pearlpbx_sip_add_user(){ 
+	var comment = $('#input_sip_add_comment').val(); 
+	var extension = $('select#input_sip_add_extension option:selected').val();
+	var terminal = $('select#input_sip_add_terminal option:selected').val();
+	var macaddr = $('#input_sip_add_macaddr').val();
+	var secret = $('#input_sip_add_secret').val(); 
+
+	// FIXME: validate 
+
+	// Submit 
+	$.get("/sip.pl",
+		{ a: "adduser",
+		  comment: comment, 
+		  extension: extension,
+		  terminal: terminal,
+		  macaddr: macaddr,
+		  secret: secret,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				$('#add_sip_user').modal('hide');
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+
+}
+function pearlpbx_sip_add_advanced_mode() { 
+	alert('Профессиональный режим добавления пользователей SIP будет доступен в следующей версии!');
+}
+
+function pearlpbx_change_secret_add_form() { 
+	$('#input_sip_add_secret').load('/sip.pl?a=newsecret');
+	return false; 
+}
+
 function pearlpbx_today() { 
 	var now = new Date();
 	var mday = now.getDate(); 
@@ -13,10 +54,7 @@ function pearlpbx_today() {
 	$('.input-date').val(prettyDate);
 	$('.input-date').datepicker();
 }
-function pearlpbx_sip_add_user() { 
-	alert ("called sip_add_user()"); 
 
-}
 function pearlpbx_sip_add_trunk() {
 	alert ("called sip_add_trunk()"); 
 
@@ -26,8 +64,9 @@ function pearlpbx_sip_edit_id(sip_id) {
 	alert("called sip_edit_id ( "+sip_id+" )"); 
 }
 
-function pearlpbx_load_internal_free_extensions () { 
+function pearlpbx_fill_sip_form() { 
 	$('.pearlpbx_internal_free_list').load('/sip.pl?a=list&b=internal-free');
+	pearlpbx_change_secret_add_form();
 }
 
 function pearlpbx_show_sip_internal_users () { 

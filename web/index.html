@@ -196,7 +196,7 @@
  <div id="pearlpbx-sip-connections-list">
  </div>
  <div id="pearlpbx-sip-add-internal-button" style="display: none;" class="pearlpbx-main-container-header">
-<center>  <button class="btn btn-primary" href="#add_sip_user" data-toggle="modal" onClick="pearlpbx_load_internal_free_extensions();">Добавить нового пользователя</button> </center>
+<center>  <button class="btn btn-primary" href="#add_sip_user" data-toggle="modal" onClick="pearlpbx_fill_sip_form();">Добавить нового пользователя</button> </center>
  </div>
  <div id="pearlpbx-sip-add-external-button" style="display: none;" class="pearlpbx-main-container-header">
 <center> <button class="btn btn-primary" onClick="pearlpbx_sip_add_trunk()">Добавить новый транк</button></center>
@@ -461,7 +461,7 @@ function cdrfilter_submit () {
 
 <!-- Диалог добавления SIP-пользователя. Модальный. -->
 
-<div class="modal fade" id="add_sip_user" style="width: 800px;">
+<div class="modal fade" id="add_sip_user" style="width: 800px; max-height: 900px;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Добавление пользователя SIP</h3>
@@ -479,7 +479,7 @@ function cdrfilter_submit () {
         </div>
 
         <div class="control-group">
-          <label class="control-label" for="input_sip_add_comment">Внутренний номер</label>
+          <label class="control-label" for="input_sip_add_extension">Внутренний номер</label>
           <div class="controls">
             <select name="input_sip_add_extension" class="pearlpbx_internal_free_list" id="input_sip_add_extension">
             </select>
@@ -487,13 +487,45 @@ function cdrfilter_submit () {
           </div>
         </div>
 
+        <div class="control-group">
+          <label class="control-label" for="input_sip_add_comment">Модель терминала</label>
+          <div class="controls">
+            <select name="input_sip_add_terminal_type" class="pearlpbx_terminal_list" id="input_sip_add_terminal">
+
+              <option value="SPA502G">Cisco SPA502G</option>
+              <option value="SPA504G">Cisco SPA504G</option>
+              <option value="GrandStreamGXP1200">GrandStream GXP1200</option>
+              <option value="softphone">Other/Softphone</option>
+            </select>
+            <p class="help-block">Выберите модель терминала/телефона.</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_sip_add_macaddr">MAC-addr терминала</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_sip_add_macaddr" placeholder="01234567890abcdef">
+            <p class="help-block">Введите МАК-адрес терминала, если это не программный телефон</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Пароль</label>
+          <div class="controls">
+            <span class="input-xlarge uneditable-input" id="input_sip_add_secret"></span>
+            <a class="btn btn-inverse" onclick="pearlpbx_change_secret_add_form();">Поменять</a>
+            <p class="help-block">Вводить свой пароль запрещено. Нажмите кнопку "Поменять", если текущий пароль не устраивает.</p>
+          </div>
+        </div>
+
       </fieldset>
     </form>
-    <p>One fine body…</p>
+    
   </div>
   <div class="modal-footer">
-    <a href="#" class="btn" data-dismiss="modal">Close</a>
-    <a href="#" class="btn btn-primary">Save changes</a>
+    <a href="#" class="btn" data-dismiss="modal">Отменить</a>
+    <a href="#" class="btn btn-primary" onClick="pearlpbx_sip_add_user()">Добавить</a>
+    <a href='#' class='btn btn-info' onClick="pearlpbx_sip_add_advanced_mode()">Профессиональный режим</a>
   </div>
 </div>
 
