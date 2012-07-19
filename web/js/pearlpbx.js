@@ -18,6 +18,7 @@ function pearlpbx_sip_add_user(){
 		},function(data) 
 		{
 			if (data == "OK") { 
+				$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=internal');
 				$('#add_sip_user').modal('hide');
 				return false; 
 			}
