@@ -58,8 +58,25 @@ if ($action eq 'newsecret') {
 if ($action eq 'adduser') {
 	my $params = $pearl->cgi_params_to_hashref();
 	print $sip->adduser ( $params );
-
+	exit(0);
 }
+if ($action eq 'setuser') {
+	my $params = $pearl->cgi_params_to_hashref();
+	print $sip->setuser ( $params );
+	exit(0);
+}
+
+if ($action eq 'getuser') { 
+	my $id = $pearl->{cgi}->param('id'); 
+	unless ( defined ( $id )) { 
+		print "ERROR: id is undefined";
+		exit(0);
+	}
+	print $sip->getuser($id);
+	exit(0);
+}
+
+
 
 1;
 #===============================================================================

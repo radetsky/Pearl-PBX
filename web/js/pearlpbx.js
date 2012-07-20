@@ -1,9 +1,53 @@
+function pearlpbx_sip_update_user(){ 
+	var sip_id = $('#input_sip_edit_id').val();
+	var comment = $('#input_sip_edit_comment').val(); 
+	var terminal = $('select#input_sip_edit_terminal option:selected').val();
+	var macaddr = $('#input_sip_edit_macaddr').val();
+	var secret = $('#input_sip_edit_secret').html(); 
+ 
+ // Submit 
+	$.get("/sip.pl",
+		{ a: "setuser",
+		  id: sip_id,
+		  comment: comment, 
+		  terminal: terminal,
+		  macaddr: macaddr,
+		  secret: secret,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=internal');
+				$('#pearlpbx_sip_edit_user').modal('hide');
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+}
+function pearlpbx_sip_load_id(sip_id) { 
+	$.getJSON("/sip.pl",
+	{
+		a: "getuser",
+		id: sip_id,
+	}, function (json) { 
+		$('#input_sip_edit_id').val(json.id);
+		$('#input_sip_edit_comment').val(json.comment);
+		$('#input_sip_edit_extension').html(json.extension);
+		$('#input_sip_edit_secret').html(json.secret);
+		$('#input_sip_edit_macaddr').val(json.mac_addr_tel);
+		$('#input_sip_edit_terminal').val(json.teletype);
+	});
+}
 function pearlpbx_sip_add_user(){ 
 	var comment = $('#input_sip_add_comment').val(); 
 	var extension = $('select#input_sip_add_extension option:selected').val();
 	var terminal = $('select#input_sip_add_terminal option:selected').val();
 	var macaddr = $('#input_sip_add_macaddr').val();
-	var secret = $('#input_sip_add_secret').val(); 
+	var secret = $('#input_sip_add_secret').html(); 
 
 	// FIXME: validate 
 
@@ -35,10 +79,19 @@ function pearlpbx_sip_add_advanced_mode() {
 	alert('Профессиональный режим добавления пользователей SIP будет доступен в следующей версии!');
 }
 
+function pearlpbx_sip_edit_advanced_mode() { 
+	alert('Профессиональный режим редактирования пользователей SIP будет доступен в следующей версии!');
+}
+
 function pearlpbx_change_secret_add_form() { 
 	$('#input_sip_add_secret').load('/sip.pl?a=newsecret');
 	return false; 
 }
+function pearlpbx_change_secret_edit_form() { 
+	$('#input_sip_edit_secret').load('/sip.pl?a=newsecret');
+	return false; 
+}
+
 
 function pearlpbx_today() { 
 	var now = new Date();

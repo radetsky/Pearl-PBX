@@ -28,6 +28,8 @@ use warnings;
 
 use DBI;
 use Config::General; 
+use JSON;
+use NetSDS::Util::String; 
 
 use version; our $VERSION = "1.00";
 our @EXPORT_OK = qw();
@@ -169,7 +171,7 @@ sub _list {
 		 unless ( defined ( $row->{'comment'} ) ) { 
 		 	$row->{'comment'} = ''; 
 		 } 
-	   $out .= '<li><a href="javascript:void(0)" onClick="pearlpbx_sip_edit_id('.$row->{'id'}.')">'.$row->{'comment'}.'&lt;'.$row->{'name'}.'&gt;'.'</a></li>';
+	   $out .= '<li><a href="#pearlpbx_sip_edit_user" data-toggle="modal" onClick="pearlpbx_sip_load_id('.$row->{'id'}.')">'.$row->{'comment'}.'&lt;'.$row->{'name'}.'&gt;'.'</a></li>';
 	}		 
   $out .= "</ul>";
 	return $out; 
@@ -278,6 +280,58 @@ sub adduser {
   return "OK";
 
 }
+
+
+
+sub getuser { 
+  my ($this,$id) = @_; 
+
+  my $sql = "select a.id, a.name as extension, a.comment, a.secret,
+  b.teletype, b.mac_addr_tel from public.sip_peers a,
+  integration.workplaces b where a.id=? and a.id=b.sip_id;";
+
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute($id); }; 
+  if ( $@ ) {
+    return "ERROR:". $this->{dbh}->errstr;  
+  }
+  my $row = $sth->fetchrow_hashref; 
+  $row->{'comment'} = str_encode($row->{'comment'}); 
+  return encode_json($row);
+
+}
+
+sub setuser {
+
+my ($this, $params) = @_;
+
+  my $sql  = "update public.sip_peers set comment=?, secret=? where id=? "; 
+  my $sql2 = "update integration.workplaces set teletype=?, autoprovision=?, mac_addr_tel=? where sip_id=?"; 
+
+  my $autoprovision = 'true'; 
+
+  if ( $params->{'terminal'} =~ /softphone/ ) { 
+      $autoprovision = 'false';
+  }
+
+  unless ( defined ( $params->{'comment'} ) or defined ( $params->{'secret'} ) ) { 
+    return "ERROR";
+  }
+
+  my $sth  = $this->{dbh}->prepare($sql);
+  my $sth2 = $this->{dbh}->prepare($sql2);
+
+  eval {$sth->execute($params->{'comment'}, $params->{'secret'}, $params->{'id'});};
+  if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
+
+  eval { $sth2->execute($params->{'terminal'}, $autoprovision, $params->{'macaddr'}, $params->{'id'});}; 
+  if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
+
+  $this->{dbh}->commit;
+  return "OK";
+
+}
+
 
 1;
 
