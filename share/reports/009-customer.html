@@ -1,0 +1,60 @@
+<!-- Поиск по номеру -->
+<h2><center>Поиск всех звонков по номеру абонента</center></h2> 
+	<form class="well" onSubmit="return customer_submit()">
+    <fieldset>
+        <input id='dateFrom009' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeFrom009' class="input-mini" type="text" value="00:00" />
+                to
+        <input id='dateTo009' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeTo009' class="input-mini" type="text" value="23:59" />
+
+        <input id='phone009'  type="text" class="input-small" placeholder="Телефон">
+        <input type="submit" class="btn btn-primary" value="Поиск">
+    </fieldset>
+    </form>
+    <div id="customer_result">
+    </div>
+
+<script type="text/javascript"> 
+function customer_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+	var phone; 
+  var parsed;
+
+
+  dateFrom = $('#dateFrom009').val();
+  dateTo = $('#dateTo009').val();
+  timeFrom = $('#timeFrom009').val();
+  timeTo = $('#timeTo009').val();
+	phone = $('#phone009').val(); 
+
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+
+  parsed = pearlpbx_parse_phone ( phone );
+	if (parsed == false ) { 
+		return false; 
+	}
+
+	$('#customer_result').html('Request sent. Please wait...');
+
+  $.get("/reports.pl",
+    { "exec-report": "customer",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+			phone: phone,
+    },function(data)
+    {
+      $('#customer_result').html(data);
+    }, "html");
+	return false; 
+}
+</script>
+
