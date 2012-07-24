@@ -423,9 +423,9 @@ sub process {
 
     my $outfile = "/var/spool/asterisk/monitor/" . $result_file;
 
-	$strlog = "/usr/bin/sox ".join (" ",@infiles)." to $outfile"; 
-	$this->log("info",$strlog);
-	$this->speak($strlog); 
+    $strlog = "/usr/bin/sox ".join (" ",@infiles)." to $outfile"; 
+    $this->log("info",$strlog);
+    #	$this->speak($strlog); 
 	my $rc = exec_external ('/usr/bin/sox',@infiles,'-t','mp3','-c','2','-r','8000',$outfile); 
 
 	unless ( defined ( $rc ) ) { 
@@ -442,6 +442,7 @@ sub process {
 	while ( my $record = shift ( @nexts_copy ) ) { 
 		my $id = $record->{'id'}; 
 		$this->_set_result_file ( $id, $result_file ); 	
+		$this->speak("ID $id joined to $result_file"); 
 	}	
 
     $this->dbh->commit;
