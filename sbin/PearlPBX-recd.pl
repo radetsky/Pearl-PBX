@@ -1,9 +1,9 @@
 #!/usr/bin/env perl 
 #===============================================================================
 #
-#         FILE:  NetSDS-recd.pl
+#         FILE:  PearlPBX-recd.pl
 #
-#        USAGE:  ./NetSDS-recd.pl
+#        USAGE:  ./PearlPBX-recd.pl [ --verbose ]
 #
 #  DESCRIPTION:  Find and converts sound files
 #
@@ -12,7 +12,7 @@
 #         BUGS:  ---
 #        NOTES:  ---
 #       AUTHOR:  Alex Radetsky (Rad), <rad@rad.kiev.ua>
-#      COMPANY:  Net.Style
+#      COMPANY:  Radetsky 
 #      VERSION:  1.0
 #      CREATED:  12/31/11 09:44:14 EET
 #     REVISION:  ---
@@ -22,7 +22,7 @@ use 5.8.0;
 use strict;
 use warnings;
 
-NetSDSRecd->run(
+PearlPBXRecd->run(
     daemon      => undef,
     verbose     => 0,
     use_pidfile => 1,
@@ -33,7 +33,7 @@ NetSDSRecd->run(
 
 1;
 
-package NetSDSRecd;
+package PearlPBXRecd;
 
 use 5.8.0;
 use strict;
@@ -56,7 +56,7 @@ sub start {
     $this->mk_accessors('dbh');
     $this->_db_connect();
 
-	  $this->{'bad_id'} = 0; 
+    $this->{'bad_id'} = 0; 
 
 }
 
@@ -117,7 +117,6 @@ sub _exit {
 }
 
 sub _get_next_record {
-
     my $this       = shift;
     my $current_id = shift;
 
@@ -191,6 +190,70 @@ sub _convert_fault {
     }
     return 1;
 }
+=item B<_fix_very_old_talks> 
+
+ Пытается исправить ошибку в работе route+hangupd. Проверяет, если цепочка между сессиями больше 1 часа,
+ то цепочку разрывает. 
+ Возвращает 1 в случае исправления,
+ 0 - если исправлять не надо, 
+ undef в случае непредвиденной ошибки.
+
+=cut 
+sub _fix_very_old_talks { 
+    my $this = shift; 
+    my $current_id = shift; 
+    my $current_cdr_start = shift; 
+    my $previous_record = shift; 
+
+    my $sql = "select * from integration.recordings where id=?"; 
+    my $sth = $this->dbh->prepare ($sql);
+    eval { $sth->execute($previous_record); };
+    if ($@) {
+        $this->dbh->rollback;
+        $this->log("warning",$this->dbh->errstr);
+        return undef; 
+    }
+    my $prev = $sth->fetchrow_hashref; 
+
+    my $sth2 = $this->dbh->prepare(
+        "select (?::timestamp - ?::timestamp) > '01:00:00' as interval"); 
+    eval { $sth2->execute($current_cdr_start,$prev->{'cdr_start'}); };
+    if ($@) {
+        $this->dbh->rollback;
+        $this->log("warning",$this->dbh->errstr);
+        return undef; 
+    }
+    my $interval = $sth2->fetchrow_hashref; 
+    if ($interval->{'interval'} == 0) {
+        return 0; # Исправлять не надо.
+    }
+    # А вот теперь пытаемся исправить.
+    # Надо на предыдущей записи поставить финальный признак и всю цепочку конвертнуть. 
+    $this->log("warning","Try to fix WRONG LONG record between $current_id and ".$prev->{'id'});
+    $this->speak( "Try to fix WRONG LONG record between $current_id and ".$prev->{'id'});
+
+    $sql = "update integration.recordings set next_record=0 where id=".$prev->{'id'};
+    warn $sql; 
+
+    eval { $this->dbh->do($sql); }; 
+    if ($@) {
+        $this->dbh->rollback;
+        $this->log("warning",$this->dbh->errstr);
+        return undef; 
+    }
+    # На текущей записи надо поставить previous_record = 0 и начать ее раскручивать.  
+    $sql = "update integration.recordings set previous_record=0 where id=".$current_id;
+    warn $sql; 
+    eval { $this->dbh->do($sql); }; 
+    if ($@) {
+        $this->dbh->rollback;
+        $this->log("warning",$this->dbh->errstr);
+        return undef; 
+    }
+    $this->dbh->commit;
+    return 1; 
+
+}
 
 sub process {
     my $this = shift;
@@ -206,10 +269,10 @@ sub process {
 		$this->speak("Skipping id=".$this->{'bad_id'}." until talk is active.");
 	} 
 
-		# Begin transaction
+	# Begin transaction
     $this->_begin;
 	
-	  # Prepare the query for finding 1st unconverted record in the database. 
+	# Prepare the query for finding 1st unconverted record in the database. 
     my $sth = $this->dbh->prepare(
         "select * from integration.recordings 
 			where concatenated=false 
@@ -217,10 +280,10 @@ sub process {
 				and next_record is not null 
 				and previous_record=0 
 				and id > ? 
-			order by id asc limit 1 for update"
+                    order by id asc limit 1 for update"
     );
 
-		# Execute it. 
+	# Execute it. 
     eval { $sth->execute ($this->{'bad_id'}); };
     if ($@) {
         $this->_exit( $this->dbh->errstr );
@@ -233,23 +296,23 @@ sub process {
         $this->_exit("No one file was found. ");
     }
 
-		# Push the result row in some list ? WTF ! 
+	# Push the result row in some list ? WTF ! 
     push @nexts, $result;
 
     # Analyze fetched row 
-		my $id            = $result->{'id'};
+	my $id            = $result->{'id'};
     my $uline_id      = $result->{'uline_id'};
     my $original_file = $result->{'original_file'};
     my $next_record   = $result->{'next_record'};
     my $strlog =
       "Got ID=$id ULINE=$uline_id FILE=$original_file NEXT=$next_record";
 	
-	  # Устанавливаем в bad_id значение из поля next_record. Зачем ?
-		# Это маркер активного разговора. 
-	  $this->{'bad_id'} = $next_record;
+	# Устанавливаем в bad_id значение из поля next_record. Зачем ?
+	# Это маркер активного разговора. 
+	$this->{'bad_id'} = $next_record;
 
-		# Just logging it.
-	  $this->log( "info", $strlog );
+	# Just logging it.
+	$this->log( "info", $strlog );
     $this->speak($strlog);
 
     if ( $next_record == 0 ) {    # First and Final record
@@ -265,16 +328,15 @@ sub process {
             $outfile
         );
         unless ( defined ($rc) ) {
-						$this->_convert_fault($id);
+			$this->_convert_fault($id);
             $this->dbh->commit;
-	    $this->speak("Can't convert $infile into $outfile. Check the /usr/bin/sox");
-	    $this->log("info","Can't convert $infile into $outfile. Check the /usr/bin/sox");
-	    return 1; 
-            $this->_exit("Can't convert $infile into $outfile. Check the /usr/bin/sox");
+	        $this->speak("Can't convert $infile into $outfile. Check the /usr/bin/sox");
+	        $this->log("info","Can't convert $infile into $outfile. Check the /usr/bin/sox");
+	        return 1; 
         }
 
-        $sth = $this->dbh->prepare(
-"update integration.recordings set concatenated=true, result_file=? where id=?"
+        $sth = $this->dbh->prepare (
+            "update integration.recordings set concatenated=true, result_file=? where id=?"
         );
         eval { $sth->execute( $result_file, $id ); };
         if ($@) {
@@ -296,13 +358,13 @@ sub process {
         unless ( defined($next_record) ) {
 						# FIXME: Лечим баг, когда он будет закрыт, убрать этот код. 
 						# Баг состоит в том, что NetSDS-route ставит next_record = текущий ID
-					  # каким-то очень старым записям. Подозреваю дело в том, что hangupd не выставляет
+					    # каким-то очень старым записям. Подозреваю дело в том, что hangupd не выставляет
 						# в ноль (0) next_record по факту завершения звонка. Что-то я упустил. 
 						# Проверить !!! FIXME! 
 						my $fail_record = $this->_get_record_by_previous_id($id);
 						unless ( defined ( $fail_record ) ) {
 								$this->dbh->rollback;
-            		return;
+            		             return;
 						}
 						# Update the recordings. set 0 to next_record and commit; 
 						$this->_fix_pseudo_active_talk($fail_record);
@@ -312,13 +374,26 @@ sub process {
 
         }
 
+        # Лечим баг с "длинными" разговорами. Проверяем разницу между записями. Если она больше часа, 
+        # то разделяем цепочку. Предыдущий разговор фиксируем последним, а текущий первым в новой цепочке. 
+
+        my $fixed = $this->_fix_very_old_talks( $next_record->{'id'}, 
+                                                $next_record->{'cdr_start'},
+                                                $next_record->{'previous_record'});
+        unless ( defined ( $fixed ) ) { 
+            $this->_exit("_fix_very_old_talks returns undef.");
+        }
+        if ($fixed == 1) { 
+            return 1; 
+        }
+
         $strlog = sprintf(
             "Got ID=%s ULINE=%s FILE=%s NEXT=%s",
             $next_record->{'id'},            $next_record->{'uline_id'},
             $next_record->{'original_file'}, $next_record->{'next_record'}
         );
 
-				$this->{'bad_id'} = $next_record->{'id'}; 
+		$this->{'bad_id'} = $next_record->{'id'}; 
         $this->log( "info", $strlog );
         $this->speak($strlog);
 
