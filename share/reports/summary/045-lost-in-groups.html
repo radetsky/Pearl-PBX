@@ -1,0 +1,50 @@
+<!-- Пропущенные группами --> 
+<center><h2>Количество звонков, пропущенные группами</h2></center>
+<form class="well" onSubmit="return lost_in_groups_submit()">
+    <fieldset>
+        <input id='dateFrom_sum045' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeFrom_sum045' class="input-mini" type="text" value="00:00" />
+                to
+        <input id='dateTo_sum045' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeTo_sum045' class="input-mini" type="text" value="23:59" />
+
+        <input type="submit" class="btn btn-primary" value="Поиск">
+    </fieldset>
+    </form>
+    <div id="lost_in_groups_result">
+    </div>
+<script type="text/javascript"> 
+function lost_in_groups_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+  var parsed;
+
+  dateFrom = $('#dateFrom_sum045').val();
+  dateTo = $('#dateTo_sum045').val();
+  timeFrom = $('#timeFrom_sum045').val();
+  timeTo = $('#timeTo_sum045').val();
+
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+
+  $('#lost_in_groups_result').html("Request sent...");
+
+  $.get("/reports.pl",
+    { "exec-report": "LostInGroups",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+    },function(data)
+    {
+      $('#lost_in_groups_result').html(data);
+			lost_in_groups_make_graph(); 
+    }, "html");
+	return false; 
+}
+</script>
+
