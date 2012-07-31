@@ -132,7 +132,13 @@ function pearlpbx_show_sip_external_trunks () {
 	$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=external');
 	$('#pearlpbx-sip-add-external-button').css('display','block');
 	$('#pearlpbx-sip-add-internal-button').css('display','none');
-} 
+}
+
+function pearlpbx_show_queues() {
+	$('#pearl-pbx-main-container').html($('#queues').html());
+	$('#pearlpbx-queues-list').load('/queues.pl?a=list&b=li'); 
+	return false; 	
+}
 function pearlpbx_show(pearlpbx_item) {
     $('.pearlpbx-report-body').html(''); 
 	$('#pearl-pbx-main-container').html($(pearlpbx_item).html());

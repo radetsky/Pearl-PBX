@@ -83,7 +83,7 @@
               <li class="nav-header">Настройки</li>
               <li>
 								<a href="javascript:void(0)" onClick="pearlpbx_show('#sip-connections')">SIP-подключения</a></li>
-							<li><a href="javascript:void(0)" onClick="pearlpbx_show('#queues')">Очереди</a><li>
+							<li><a href="javascript:void(0)" onClick="pearlpbx_show_queues()">Группы/Очереди</a><li>
               <li><a href="#">Телефонные аппараты</a></li>
               <li><a href="#">Права доступа</a></li>
               <li><a href="#">Направления</a></li>
@@ -206,8 +206,9 @@
 
 <div id="queues" style="display: none">
  <div class="pearlpbx-main-container-header">
-	<h1><center> Queues </center></h1>
+	<h1><center> Группы/Очереди </center></h1>
  </div>
+ <div id="pearlpbx-queues-list"></div>
 </div>
 
 
