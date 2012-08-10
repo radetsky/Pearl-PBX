@@ -161,12 +161,27 @@ sub _list {
 		 unless ( defined ( $row->{'comment'} ) ) { 
 		 	$row->{'comment'} = ''; 
 		 } 
-	   $out .= '<li><a href="#pearlpbx_queues_edit" data-toggle="modal" onClick="pearlpbx_queues_load_by_name('.$row->{'name'}.')">'.$row->{'name'}.'</a></li>';
+	   $out .= '<li><a href="#pearlpbx_queues_edit" data-toggle="modal" 
+         onClick="pearlpbx_queues_load_by_name(\''.$row->{'name'}.'\')">'.$row->{'name'}.'</a></li>';
 	}		 
   $out .= "</ul>";
 	return $out; 
 }
 
+sub getqueue { 
+  my ($this, $qname) = @_; 
+
+  my $sql = "select * from public.queues where name=?";
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute ($qname); }; 
+  if ($@) { 
+    print $this->{dbh}->errstr; 
+    return undef; 
+  }
+  my $row = $sth->fetchrow_hashref;
+  return encode_json($row);
+
+}
 
 1;
 

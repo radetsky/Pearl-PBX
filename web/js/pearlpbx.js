@@ -1,3 +1,20 @@
+function pearlpbx_queues_load_by_name (qname) {
+	$.getJSON("/queues.pl",
+	{
+		a: "getqueue",
+		name: qname,
+	},function (json) { 
+		$('#input_queue_edit_name').val(json.name);
+		$('#input_queue_edit_strategy').val(json.strategy);
+		$('#input_queue_edit_timeout').val(json.timeout);
+		$('#input_queue_edit_maxlen').val(json.maxlen);
+	} );
+}
+
+function pearlpbx_queue_edit_advanced_mode() { 
+	alert('Профессиональный режим редактирования групп/очередей будет доступен в следующей версии!');
+}
+
 function pearlpbx_sip_update_user(){ 
 	var sip_id = $('#input_sip_edit_id').val();
 	var comment = $('#input_sip_edit_comment').val(); 

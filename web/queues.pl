@@ -48,6 +48,16 @@ if ( $action eq 'list') {
 	exit(0); 
 }
 
+if ( $action eq 'getqueue') { 
+	my $b = $pearl->{cgi}->param('name');
+	unless ( defined ( $b ) ) {
+		$pearl->htmlError ("Method not found");
+		exit(0);
+	}
+	print $queues->getqueue($b);
+	exit(0);
+}
+
 $pearl->htmlError("Action not found.");
 exit(0);
 

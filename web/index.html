@@ -209,6 +209,13 @@
 	<h1><center> Группы/Очереди </center></h1>
  </div>
  <div id="pearlpbx-queues-list"></div>
+ <div id="pearlpbx-queues-add-button" class="pearlpbx-main-container-header">
+  <center>  
+    <button class="btn btn-primary" href="#add_queue" data-toggle="modal">Добавить группу операторов
+    </button> 
+  </center>
+ </div>
+
 </div>
 
 
@@ -533,6 +540,78 @@ function cdrfilter_submit () {
 
 <!-- Конец диалога добавления SIP-пользователя --> 
 
+<!-- Диалог редактирования очереди. Модальный. -->
+<div class="modal fade" id="pearlpbx_queues_edit" style="width: 800px; max-height: 900px;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Редактирование группы/очереди операторов</h3>
+  </div>
+  <div class="modal-body">
+    <form class="form-horizontal">
+      <fieldset>
+        <input type='hidden' id='input_queue_edit_id' value=''>
+        
+        <div class="control-group">
+          <label class="control-label" for="input_queue_edit_name">Название группы/очереди</label>
+          <div class="controls">
+            <input type="text" class="input-xlarge" id="input_queue_edit_name">
+            <p class="help-block">Название группы/очереди состоит только из ЛАТИНСКИХ символов и цифр. Например: "group123".</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_queue_edit_strategy">Стратегия распределения звонков</label>
+          <div class="controls">
+            <select name="input_queue_edit_strategy" class="pearlpbx_queue_stategy_list" id="input_queue_edit_strategy" style="width: 500px;">
+              <option value="ringall">Звонить всем доступным (по-умолчанию)</option>
+              <option value="roundrobin">Последовательный выбор по кругу</option>
+              <option value="random">Случайный выбор</option>
+              <option value="rrmemory">Последовательный выбор с запоминанием предыдущей позиции
+              </option>
+            </select>
+            <p class="help-block">Выберите одну из стратегий распределения звонков между операторами.</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_queue_edit_timeout">Сколько секунд звонит телефон</label>
+          <div class="controls">
+            <input type="text" class="input-small" id="input_queue_edit_timeout" value="15">
+            <p class="help-block">Время вызова оператора(-ов) в группе. По истечению будет вызван другой оператор, если стратегия не "звонить всем".</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_queue_edit_maxlen">Максимальное кол-во ожидающих в очереди</label>
+          <div class="controls">
+            <input type="text" class="input-small" id="input_queue_edit_maxlen" value="0">
+            <p class="help-block">Сколько абонентов могут становиться в очередь, не учитывая тех, кто уже разговаривает. 0 - без ограничений. </p>
+          </div>
+        </div>
+          <center>
+          <table class="table table-bordered" >
+            <thead>
+              <tr>
+                <th>Оператор</th>
+                <th>Интерфейс оператора</th>
+            </thead>
+            <!-- FIXME: закачать через ajax данные про операторов. --> 
+          </table>
+          </center>
+
+      </fieldset>
+    </form>
+    
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Отменить</a>
+    <a href="#" class="btn btn-primary" onClick="pearlpbx_queue_update()">Сохранить</a>
+    <a href='#' class='btn btn-info' onClick="pearlpbx_queue_edit_advanced_mode()">Профессиональный режим</a>
+  </div>
+</div>
+
+<!-- Конец диалога редактирования SIP-пользователя --> 
+
 <!-- Диалог редактирования SIP-пользователя. Модальный. -->
 
 <div class="modal fade" id="pearlpbx_sip_edit_user" style="width: 800px; max-height: 900px;">
@@ -602,7 +681,7 @@ function cdrfilter_submit () {
   </div>
 </div>
 
-<!-- Конец диалога редактирования SIP-пользователя --> 
+<!-- Конец диалога редактирования очереди --> 
 
 </body>
 </html>
