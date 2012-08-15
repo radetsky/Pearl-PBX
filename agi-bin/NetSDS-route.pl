@@ -337,6 +337,7 @@ sub _get_dial_route {
     if ($@) {
         $this->log( "warning", $this->dbh->errstr );
         $this->agi->verbose( $this->dbh->errstr, 3 );
+        $this->agi->exec( "Playback" , "pearlpbx-nomorelines");
         $this->agi->exec( "Hangup", "17" );
         exit(-1);
     }
