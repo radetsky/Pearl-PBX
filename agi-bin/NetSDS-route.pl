@@ -206,50 +206,47 @@ sub _get_callerid {
 
     my $set_own = undef;
     if ( $callerid ne '' ) {
-				# Зачастую внешние устройства типа шлюзов FXO-SIP или GSM-SIP ставят в callerid(num)
-				# свой локальный номер, например, 1001. 
-				# А реальный пришедший номер типа 380501231231 подставляют в callerid(name). 
-				# Значение NAME в правилах преобразования callerid служит именно для цели получения 
-				# корректного номера из callerid(name). 
+		# Зачастую внешние устройства типа шлюзов FXO-SIP или GSM-SIP ставят в callerid(num)
+		# свой локальный номер, например, 1001. 
+		# А реальный пришедший номер типа 380501231231 подставляют в callerid(name). 
+		# Значение NAME в правилах преобразования callerid служит именно для цели получения 
+		# корректного номера из callerid(name). 
 				
         if ( $callerid =~ /^NAME/i ) {
             $this->agi->verbose( "CHANGING NUM TO NAME.", 3 );
             $this->log( "info", "CHANGING NUM TO NAME." );
             $callerid = $this->agi->get_variable("CALLERID(name)");
-						$callerid = $this->_cut_the_plus($callerid); 
+			$callerid = $this->_cut_the_plus($callerid); 
+            $callerid = $this->_cut_the_lineX($callerid);
         }
-				
-				# Устанавливаем признак того, что номер поставили "свой", то есть для "своих нужд" 
-				# и его преобразовывать не надо. 
+
+		# Устанавливаем признак того, что номер поставили "свой", то есть для "своих нужд" 
+		# и его преобразовывать не надо. 
         else {
             $set_own = 1;
         }
 
-        $this->agi->verbose(
-"$peername have to set CallerID to \'$callerid\' while calling to $exten",
-            3
-        );
-        $this->log( "info",
-"$peername have to set CallerID to \'$callerid\' while calling to $exten"
-        );
+        $this->agi->verbose("$peername have to set CallerID to \'$callerid\' while calling to $exten",3);
+        $this->log( "info","$peername have to set CallerID to \'$callerid\' while calling to $exten");
 
         unless ( defined ( $set_own ) )
         {   
-				    # Если не меняли номер на свой, а требуется его обрезать до национальго формата,
-						# для удобства набора, то проводим такую операцию.
-						# Конфиг-> telephony->local_country_code + local_number_length 
-						$callerid = $this->_cut_local_callerid($callerid);
+			# Если не меняли номер на свой, а требуется его обрезать до национальго формата,
+			# для удобства набора, то проводим такую операцию.
+			# Конфиг-> telephony->local_country_code + local_number_length 
+			$callerid = $this->_cut_local_callerid($callerid);
         }
 
         $this->agi->exec( "Set", "CALLERID(all)=$callerid" );
     }
     else {
         unless ( defined($set_own) )
-        {    # Esli my ne menyali nomer na svoj. To obrezaem do 10 cyfr.
+        {    
+            # Esli my ne menyali nomer na svoj. To obrezaem do 10 cyfr.
             $callerid = $this->agi->get_variable("CALLERID(num)");
-						$callerid = $this->_cut_the_plus($callerid); 
-						$callerid = $this->_cut_local_callerid($callerid);
-						$this->agi->exec( "Set", "CALLERID(all)=$callerid" );
+			$callerid = $this->_cut_the_plus($callerid); 
+			$callerid = $this->_cut_local_callerid($callerid);
+			$this->agi->exec( "Set", "CALLERID(all)=$callerid" );
         }
         $this->agi->verbose( "$peername does not change own CallerID", 3 );
         $this->log( "info", "$peername does not change own CallerID" );
@@ -258,6 +255,29 @@ sub _get_callerid {
     $this->dbh->commit();
     return;
 
+}
+=item B<cut_the_lineX(string)>
+
+ Вырезает из строки вида LINE %d CALLERID собственно сам CALLERID. 
+ Такая ситуация возникает, в следующем случае:
+ 1. звонок пришел на шлюз, оригинальный номер А хранится в CALLERID(name);
+ 2. устанавливается callerid(num) = callerid(name);
+ 3. при слепом транфере снова вызывается этот скрипт и снова пытается из-за имени канала 
+    поменять name на num. Но при этом Name уже = LINE X CALLERID.  
+    Так что нам придется вытащить его оттуда и установить в all(num);
+
+=cut 
+
+sub _cut_the_lineX { 
+    my $this = shift; 
+    my $str = shift; 
+
+    $this->log("info","_cut_the_linex: $str"); 
+    if ( $str =~ /^LINE/ ) {
+        my ($line,$linex,$callerid) = split (' ',$str);
+        return $callerid; 
+    }
+    return $str;
 }
 
 =item B<cut_the_plus(string)> 
