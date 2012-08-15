@@ -954,10 +954,8 @@ sub process {
         }    # End of (if tgrp)
 
     }    # End of for (1...5)
+    $this->agi->exec( "Playback","pearlpbx-nomorelines");
 
-    # dial
-    # check for congestion
-    # epic fail
 
 }    # End of process();
 
