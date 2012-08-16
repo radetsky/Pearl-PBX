@@ -1,14 +1,53 @@
+function pearlpbx_queue_update () { 
+	var oldname    = $('#input_queue_hidden_oldname').val();
+	var queue_name = $('#input_queue_edit_name').val(); 
+	var strategy   = $('select#input_queue_edit_strategy option:selected').val();
+	var timeout    = $('#input_queue_edit_timeout').val();
+	var maxlen     = $('#input_queue_edit_maxlen'). val();
+
+	// Submit 
+	$.get("/queues.pl",
+		{ a: "setqueue",
+		  oldname: oldname, 
+		  name: queue_name,
+		  strategy: strategy, 
+		  timeout: timeout,
+		  maxlen: maxlen,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_show_queues();
+				$('#pearlpbx_queues_edit').modal('hide');
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+}
+
+
 function pearlpbx_queues_load_by_name (qname) {
 	$.getJSON("/queues.pl",
 	{
 		a: "getqueue",
 		name: qname,
 	},function (json) { 
+		$('#input_queue_hidden_oldname').val(json.name);
 		$('#input_queue_edit_name').val(json.name);
 		$('#input_queue_edit_strategy').val(json.strategy);
 		$('#input_queue_edit_timeout').val(json.timeout);
 		$('#input_queue_edit_maxlen').val(json.maxlen);
 	} );
+}
+
+function pearlpbx_show_queues() {
+	$('#pearl-pbx-main-container').html($('#queues').html());
+	$('#pearlpbx-queues-list').load('/queues.pl?a=list&b=li'); 
+	return false; 	
 }
 
 function pearlpbx_queue_edit_advanced_mode() { 
@@ -151,11 +190,7 @@ function pearlpbx_show_sip_external_trunks () {
 	$('#pearlpbx-sip-add-internal-button').css('display','none');
 }
 
-function pearlpbx_show_queues() {
-	$('#pearl-pbx-main-container').html($('#queues').html());
-	$('#pearlpbx-queues-list').load('/queues.pl?a=list&b=li'); 
-	return false; 	
-}
+
 function pearlpbx_show(pearlpbx_item) {
     $('.pearlpbx-report-body').html(''); 
 	$('#pearl-pbx-main-container').html($(pearlpbx_item).html());

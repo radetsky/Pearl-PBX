@@ -58,6 +58,26 @@ if ( $action eq 'getqueue') {
 	exit(0);
 }
 
+if ( $action eq 'setqueue') { 
+	unless ( defined ( $pearl->{cgi}->param('oldname')) or 
+		     defined ( $pearl->{cgi}->param ('name' )) or 
+		     defined ( $pearl->{cgi}->param ('strategy' )) or
+		     defined ( $pearl->{cgi}->param ('timeout' )) or
+		     defined ( $pearl->{cgi}->param ('maxlen' )) 
+		) { 
+		$pearl->htmlError ("Method not found");
+		exit(0);
+	}
+	print $queues->setqueue ( 
+			$pearl->{cgi}->param('oldname'),
+			$pearl->{cgi}->param ('name' ),
+			$pearl->{cgi}->param ('strategy' ),
+			$pearl->{cgi}->param ('timeout' ),
+			$pearl->{cgi}->param ('maxlen' )
+		);
+	exit(0);
+}
+
 $pearl->htmlError("Action not found.");
 exit(0);
 

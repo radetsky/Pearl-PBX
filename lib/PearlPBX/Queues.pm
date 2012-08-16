@@ -183,6 +183,23 @@ sub getqueue {
 
 }
 
+sub setqueue { 
+  my ($this, $oldname, $name, $strategy, $timeout, $maxlen) = @_; 
+
+  my $sql = "update public.queues set name=?, strategy=?, timeout=?, maxlen=? where name=?"; 
+  my $sth  = $this->{dbh}->prepare($sql);
+  eval { 
+    $sth->execute ($name, $strategy, $timeout, $maxlen, $oldname); 
+  };
+  if ($@) { 
+    warn $this->{dbh}->errstr;
+    return 'ERROR'; 
+  }
+  $this->{dbh}->commit;
+  return "OK";
+
+}
+
 1;
 
 __END__
