@@ -1,9 +1,23 @@
+function pearlpbx_validate_queue() { 
+	var name = $('#input_queue_edit_name').val(); 
+    var alphaExp = /^[0-9a-zA-Z]+$/;
+    if(name.search(/[^0-9A-Za-z]/) != -1) {
+    	alert("Имя группы должно содержать только латинские символы и цифры! Без пробелов!");
+    	return false;
+    }
+}
+
 function pearlpbx_queue_update () { 
 	var oldname    = $('#input_queue_hidden_oldname').val();
 	var queue_name = $('#input_queue_edit_name').val(); 
 	var strategy   = $('select#input_queue_edit_strategy option:selected').val();
 	var timeout    = $('#input_queue_edit_timeout').val();
 	var maxlen     = $('#input_queue_edit_maxlen'). val();
+
+	var valid = pearlpbx_validate_queue();
+	if (valid == false) {
+		return false;
+	}
 
 	// Submit 
 	$.get("/queues.pl",
