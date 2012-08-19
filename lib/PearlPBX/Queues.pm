@@ -217,6 +217,27 @@ sub addqueue {
 
 }
 
+sub listmembersAsJSON { 
+  my ($this, $qname) = @_;
+
+  my $sql = "select membername,interface from queue_members where queue_name = ? order by membername"; 
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { 
+    $sth->execute ($qname);
+  };
+  if ($@) { 
+    warn $this->{dbh}->errstr;
+    return 'ERROR';
+  }
+
+  my @rows; 
+  while (my $row = $sth->fetchrow_hashref) {
+    push @rows,$row;
+  }
+
+  return encode_json(\@rows);
+
+}
 
 1;
 

@@ -36,18 +36,26 @@ $queues->db_connect();
 $pearl->htmlHeader;
 
 if ( $action eq 'list') {
-
 	my $b = $pearl->{cgi}->param('b');
 	unless ( defined ( $b ) ) { 
 	  $pearl->htmlError("Method not found.");
 	  exit(0);
 	}
 	if ($b eq 'li' ) { print $queues->list_as_li;  exit(0); } 
-
 	$pearl->htmlError("Method not found.");
 	exit(0); 
 }
 
+if ($action eq 'listmembers') { 
+	my $b = $pearl->{cgi}->param('b'); 
+	unless ( defined ($b)) { 
+		$pearl->htmlError("Method not found.");
+		exit(0);
+	}
+	print $queues->listmembersAsJSON($b);
+	exit(0);
+
+}
 if ( $action eq 'getqueue') { 
 	my $b = $pearl->{cgi}->param('name');
 	unless ( defined ( $b ) ) {

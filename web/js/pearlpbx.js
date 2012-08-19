@@ -45,6 +45,10 @@ function pearlpbx_queue_update () {
 
 
 function pearlpbx_queues_load_by_name (qname) {
+	// clear 
+	$('#pearlpbx_edit_queue_operators_list tbody').empty();
+
+	// fill
 	$.getJSON("/queues.pl",
 	{
 		a: "getqueue",
@@ -56,6 +60,16 @@ function pearlpbx_queues_load_by_name (qname) {
 		$('#input_queue_edit_timeout').val(json.timeout);
 		$('#input_queue_edit_maxlen').val(json.maxlen);
 	} );
+	$.getJSON("/queues.pl", 
+	{
+		a: "listmembers",
+		b: qname,
+	}, function (json) { 
+		jQuery.each(json, function () {
+			$('#pearlpbx_edit_queue_operators_list').append("<tr><td>"+this['membername']
+				+"</td><td>"+this['interface']+"</td></tr>");
+		}); 
+	});
 }
 
 function pearlpbx_show_queues() {
