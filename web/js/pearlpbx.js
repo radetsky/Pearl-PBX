@@ -1,3 +1,13 @@
+function pearlpbx_fill_operators_select () {
+	$.get("/sip.pl", {  
+		a: "list",
+		b: "internalAsOption",
+	},  function (data) { 
+		$('#input_queue_edit_members').empty();
+		$('#input_queue_edit_members').append(data);
+	}, "html");
+}
+
 function pearlpbx_validate_queue() { 
 	var name = $('#input_queue_edit_name').val(); 
     var alphaExp = /^[0-9a-zA-Z]+$/;
@@ -60,6 +70,7 @@ function pearlpbx_queues_load_by_name (qname) {
 		$('#input_queue_edit_timeout').val(json.timeout);
 		$('#input_queue_edit_maxlen').val(json.maxlen);
 	} );
+
 	$.getJSON("/queues.pl", 
 	{
 		a: "listmembers",
@@ -70,6 +81,7 @@ function pearlpbx_queues_load_by_name (qname) {
 				+"</td><td>"+this['interface']+"</td></tr>");
 		}); 
 	});
+	pearlpbx_fill_operators_select();
 }
 
 function pearlpbx_show_queues() {

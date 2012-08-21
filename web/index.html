@@ -614,7 +614,7 @@ function cdrfilter_submit () {
 <!-- Конец диалога редактирования очереди --> 
 
 <!-- Диалог редактирования очереди. Модальный. -->
-<div class="modal fade" id="pearlpbx_queues_edit" style="width: 800px; max-height: 600px; overflow-y:scroll;">
+<div class="modal fade" id="pearlpbx_queues_edit" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 700px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Редактирование группы/очереди операторов</h3>
@@ -669,10 +669,18 @@ function cdrfilter_submit () {
                 <th>Интерфейс оператора</th>
               </tr>
             </thead>
-            <!-- FIXME: закачать через ajax данные про операторов. --> 
+            <!--  А здесь размещаются список операторов, которые подгружаются автоматически --> 
           </table>
           </center>
-
+        <div class="control-group">
+          <div class="controls">
+            <select name="input_queue_edit_members" class="pearlpbx_queue_stategy_list" 
+            id="input_queue_edit_members" style="width: 300px;">
+            </select>
+            <a class="btn btn-inverse" onclick="pearlpbx_queue_add_member();">Добавить оператора</a>
+            <p class="help-block">Выберите оператора из списка внутренних пользователей и нажмите кнопку "Добавить оператора".</p>
+          </div>
+        </div>
       </fieldset>
     </form>
     

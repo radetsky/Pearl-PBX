@@ -144,6 +144,12 @@ sub list_internal {
 	return $this->_list($sql);
 }
 
+sub list_internalAsOption { 
+  my $this = shift;
+my $sql = "select id,comment,name from public.sip_peers where name ~ E'2\\\\d\\\\d' order by name";
+
+  return $this->_listAsOption($sql);  
+}
 =item B<list_external> 
 
  возвращает HTML представление списка внешних транков 
@@ -176,6 +182,29 @@ sub _list {
   $out .= "</ul>";
 	return $out; 
 }
+
+sub _listAsOption { 
+  my ($this, $sql) = @_; 
+
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute(); }; 
+  if ( $@ ) {
+    print $this->{dbh}->errstr; 
+    return undef; 
+  }
+
+  my $out = '';
+  while ( my $row = $sth->fetchrow_hashref ) { 
+     unless ( defined ( $row->{'comment'} ) ) { 
+      $row->{'comment'} = ''; 
+     } 
+     $out .= '<option value="'.$row->{'name'}.'">'.$row->{'comment'}.'&lt;'.$row->{'name'}.'&gt;</option>';
+  }    
+  return $out; 
+}
+
+
+
 =item B<list_internal_free> 
 
 Возвращает список свободных внутренних номеров в виде списка option for select 
