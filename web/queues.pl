@@ -56,6 +56,7 @@ if ($action eq 'listmembers') {
 	exit(0);
 
 }
+
 if ( $action eq 'getqueue') { 
 	my $b = $pearl->{cgi}->param('name');
 	unless ( defined ( $b ) ) {
@@ -95,6 +96,22 @@ if ( $action eq 'setqueue') {
 		);
 	exit(0);
 }
+
+if ( $action eq 'addmember') { 
+	my $b = $pearl->{cgi}->param('queue');
+	unless ( defined ( $b ) ) {
+		$pearl->htmlError ("Method not found");
+		exit(0);
+	}
+	my $c = $pearl->{cgi}->param('newmember');
+	unless ( defined ( $c ) ) {
+		$pearl->htmlError ("Method not found");
+		exit(0);
+	}
+	print $queues->addmember($b,$c);
+	exit(0);
+}
+
 
 $pearl->htmlError("Action not found.");
 exit(0);

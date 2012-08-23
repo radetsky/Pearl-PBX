@@ -239,6 +239,32 @@ sub listmembersAsJSON {
 
 }
 
+sub addmember { 
+  my ($this, $qname, $member) = @_; 
+
+  # Check for existing operator. 
+  my $sql = "select membername,interface from public.queue_members where queue_name=? and membername=?";
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute($qname,$member);};
+  if ($@) { 
+    warn $this->{dbh}->errstr;
+    return "ERROR";
+  }
+  my $row = $sth->fetchrow_hashref;
+  if ($row->{'membername'}) { 
+    return "ALREADY";
+  }
+  $sql = "insert into public.queue_members (membername,queue_name,interface) values (?,?,?);";
+  $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute($member,$qname,'SIP/'.$member);};
+  if ($@) { 
+    warn $this->{dbh}->errstr;
+    return "ERROR";
+  }
+  $this->{dbh}->commit;
+  return "OK";
+
+}
 1;
 
 __END__

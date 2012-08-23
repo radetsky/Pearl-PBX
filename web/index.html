@@ -211,7 +211,7 @@
  <div id="pearlpbx-queues-list"></div>
  <div id="pearlpbx-queues-add-button" class="pearlpbx-main-container-header">
   <center>  
-    <button class="btn btn-primary" href="#pearlpbx_queues_edit" data-toggle="modal">Добавить группу операторов
+    <button class="btn btn-primary" href="#pearlpbx_queues_edit" data-toggle="modal" onClick="pearlpbx_queues_clear()">Добавить группу операторов
     </button> 
   </center>
  </div>
@@ -661,6 +661,7 @@ function cdrfilter_submit () {
             <p class="help-block">Сколько абонентов могут становиться в очередь, не учитывая тех, кто уже разговаривает. 0 - без ограничений. </p>
           </div>
         </div>
+
           <center>
           <table class="table table-bordered" id="pearlpbx_edit_queue_operators_list">
             <thead>
@@ -672,6 +673,7 @@ function cdrfilter_submit () {
             <!--  А здесь размещаются список операторов, которые подгружаются автоматически --> 
           </table>
           </center>
+
         <div class="control-group">
           <div class="controls">
             <select name="input_queue_edit_members" class="pearlpbx_queue_stategy_list" 

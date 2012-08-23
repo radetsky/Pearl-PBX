@@ -1,4 +1,51 @@
+
+
+function pearlpbx_queue_add_member() { 
+	var oldname = $('#input_queue_hidden_oldname').val();
+	var qname = $('#input_queue_edit_name').val();
+
+	if ( (oldname == '') && ( qname == '' )) 
+	{ 
+		alert("Для добавления операторов в группу, сначала назовите её.");
+		return false;
+	}
+	if ( ( oldname == '') && ( qname != '')) { 
+		var confirmed = confirm ("Группа "+qname+" будет сохранена перед тем как будет произведена операция добавления оператора. Вы согласны ?");
+		if (confirmed == true) {
+			pearlpbx_queue_update();
+		} else { 
+			return false;
+		}
+	}
+
+
+	var operator = $('select#input_queue_edit_members option:selected').val();
+	// Submit 
+	$.get("/queues.pl",
+		{ a: "addmember",
+		  newmember: operator, 
+		  queue: qname,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_queues_load_by_name(qname);
+				return true;
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			if (data == "ALREADY") { 
+				alert ("Данный оператор уже присутствует в группе.");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+}
+
 function pearlpbx_fill_operators_select () {
+
 	$.get("/sip.pl", {  
 		a: "list",
 		b: "internalAsOption",
@@ -54,9 +101,20 @@ function pearlpbx_queue_update () {
 }
 
 
+function pearlpbx_queues_clear () { 
+	$('#pearlpbx_edit_queue_operators_list tbody').empty();
+	$('#input_queue_hidden_oldname').val('');
+	$('#input_queue_edit_name').val('');
+	$('#input_queue_edit_strategy').val('');
+	$('#input_queue_edit_timeout').val('');
+	$('#input_queue_edit_maxlen').val('');
+	pearlpbx_fill_operators_select();
+}
+
 function pearlpbx_queues_load_by_name (qname) {
 	// clear 
 	$('#pearlpbx_edit_queue_operators_list tbody').empty();
+
 
 	// fill
 	$.getJSON("/queues.pl",
