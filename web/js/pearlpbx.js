@@ -1,5 +1,10 @@
-
-
+function pearlpbx_queue_remove() {
+	var qname = $('#input_queue_edit_name').val();
+	if ( qname == '') { 
+		alert("Невозможно удалить группу, у которой нет имени."); 
+		return false;
+	}
+}
 function pearlpbx_queue_add_member() { 
 	var oldname = $('#input_queue_hidden_oldname').val();
 	var qname = $('#input_queue_edit_name').val();

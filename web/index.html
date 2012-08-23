@@ -271,15 +271,14 @@
           <option value="3">60 - 120 сек.</option>
           <option value="4">120 - 180 сек.</option>
           <option value="5">180 - 300 сек.</option>
+          <option value="7">60 - ... сек.</option>
+          <option value="8">120 - ... сек.</option>
+          <option value="9">180 - ... сек.</option>
+          <option value="10">240 - ... сек.</option>
           <option value="6">300 - ... сек.</option>
-
         </select>
-
       </td>
-    
     </tr>
-
-     
     </tr>
     </table>
     </fieldset>
@@ -691,6 +690,7 @@ function cdrfilter_submit () {
     <a href="#" class="btn" data-dismiss="modal">Отменить</a>
     <a href="#" class="btn btn-primary" onClick="pearlpbx_queue_update()">Сохранить</a>
     <a href='#' class='btn btn-info' onClick="pearlpbx_queue_edit_advanced_mode()">Профессиональный режим</a>
+    <a href="#" class="btn btn-danger" onClick="pearlpbx_queue_remove()">Удалить группу</a>
   </div>
 </div>
 

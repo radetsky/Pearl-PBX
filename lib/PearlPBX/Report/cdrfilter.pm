@@ -160,6 +160,18 @@ sub _sql_cond_billsec {
     if ($billsec == 6) { 
         return 'and billsec > 300'; 
     }
+    if ($billsec == 7) {
+        return 'and billsec > 60';
+    }
+    if ($billsec == 8) { 
+        return 'and billsec > 120';
+    }
+    if ($billsec == 9) { 
+        return 'and billsec > 180';
+    }
+    if ($billsec == 10) {
+        return 'and billsec > 240'; 
+    }
     return ''; 
 }
 
