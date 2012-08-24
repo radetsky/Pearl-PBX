@@ -295,6 +295,35 @@ sub removemember {
   $this->{dbh}->commit;
   return "OK";
 }
+sub delqueue { 
+  my ($this, $name) = @_; 
+
+  #  Сохраняем параметры группы
+
+  my $sql = "delete from public.queues where name=?";  
+  my $sth  = $this->{dbh}->prepare($sql);
+  eval { 
+    $sth->execute ($name); 
+  };
+  if ($@) { 
+    warn $this->{dbh}->errstr;
+    return 'ERROR'; 
+  }
+
+  $sql = "delete from public.queue_members where queue_name=?"; 
+  $sth  = $this->{dbh}->prepare($sql);
+    eval { 
+      $sth->execute ($name); 
+    };
+    if ($@) { 
+      warn $this->{dbh}->errstr;
+      return 'ERROR'; 
+    }
+
+  $this->{dbh}->commit;
+  return "OK";
+}
+
 1;
 
 __END__

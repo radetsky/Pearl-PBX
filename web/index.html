@@ -696,6 +696,26 @@ function cdrfilter_submit () {
 
 <!-- Конец диалога редактирования очереди --> 
 
+<!-- Модальный диалог подтверждения удаления очереди -->
+<div class="modal" id="pearlpbx_remove_queue_confirm_dialog" style="display: none; position: fixed; top: 480px; left: 300px; width: 900px; max-height: 650px;">
+  <div class="modal-header">
+    <h3>Удаление группы/очереди операторов</h3>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="pearlpbx_remove_queue_confirm_name" value="">
+  <h3>
+    Удаление группы приведет к невозможности получения СТАТИСТИКИ по этой группе, а так же к возможным сбоям в работе, если на группу до сих пор смаршрутизированы звонки. 
+  </h3>    
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal" onClick="$('#pearlpbx_remove_queue_confirm_dialog').hide()">Отменить</a>
+    <a href="#" class="btn btn-danger" onClick="pearlpbx_queue_remove_сonfirmed()">Удалить группу</a>
+  </div>
+
+</div>
+
+<!-- Конец диалога редактирования очереди --> 
+
 </body>
 </html>
 

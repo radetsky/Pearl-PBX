@@ -27,7 +27,33 @@ function pearlpbx_queue_remove() {
 		alert("Невозможно удалить группу, у которой нет имени."); 
 		return false;
 	}
+	$('#pearlpbx_remove_queue_confirm_name').val(qname);
+	$('#pearlpbx_remove_queue_confirm_dialog').modal('show');
 }
+
+function pearlpbx_queue_remove_сonfirmed() {
+	$('#pearlpbx_remove_queue_confirm_dialog').modal('hide');
+	$('#pearlpbx_queues_edit').modal('hide');
+	var qname = $('#pearlpbx_remove_queue_confirm_name').val(); 
+// Submit 
+	$.get("/queues.pl",
+		{ a: "delqueue",
+		  queue: qname,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_show_queues();
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 	
+}
+
 function pearlpbx_queue_add_member() { 
 	var oldname = $('#input_queue_hidden_oldname').val();
 	var qname = $('#input_queue_edit_name').val();

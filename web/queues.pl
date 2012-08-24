@@ -127,6 +127,16 @@ if ( $action eq 'removemember') {
 	exit(0);
 }
 
+if ($action eq 'delqueue') { 
+	my $b = $pearl->{cgi}->param('queue');
+	unless ( defined ( $b ) ) {
+		$pearl->htmlError ("Method not found");
+		exit(0);
+	}
+	print $queues->delqueue($b);
+	exit(0);
+}
+
 $pearl->htmlError("Action not found.");
 exit(0);
 
