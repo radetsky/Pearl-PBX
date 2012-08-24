@@ -112,6 +112,20 @@ if ( $action eq 'addmember') {
 	exit(0);
 }
 
+if ( $action eq 'removemember') { 
+	my $b = $pearl->{cgi}->param('queue');
+	unless ( defined ( $b ) ) {
+		$pearl->htmlError ("Method not found");
+		exit(0);
+	}
+	my $c = $pearl->{cgi}->param('member');
+	unless ( defined ( $c ) ) {
+		$pearl->htmlError ("Method not found");
+		exit(0);
+	}
+	print $queues->removemember($b,$c);
+	exit(0);
+}
 
 $pearl->htmlError("Action not found.");
 exit(0);

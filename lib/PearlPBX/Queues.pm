@@ -186,6 +186,8 @@ sub getqueue {
 sub setqueue { 
   my ($this, $oldname, $name, $strategy, $timeout, $maxlen) = @_; 
 
+  #  Сохраняем параметры группы
+
   my $sql = "update public.queues set name=?, strategy=?, timeout=?, maxlen=? where name=?";  
   my $sth  = $this->{dbh}->prepare($sql);
   eval { 
@@ -195,6 +197,20 @@ sub setqueue {
     warn $this->{dbh}->errstr;
     return 'ERROR'; 
   }
+
+  # Если у группы новое имя, то стоит и членам группы поменять название группы 
+  if ( $oldname ne $name ) {
+    $sql = "update public.queue_members set queue_name=? where queue_name=?"; 
+    $sth  = $this->{dbh}->prepare($sql);
+    eval { 
+      $sth->execute ($name, $oldname); 
+    };
+    if ($@) { 
+      warn $this->{dbh}->errstr;
+      return 'ERROR'; 
+    }
+  }
+
   $this->{dbh}->commit;
   return "OK";
 
@@ -264,6 +280,20 @@ sub addmember {
   $this->{dbh}->commit;
   return "OK";
 
+}
+
+sub removemember { 
+  my ($this, $qname, $member) = @_; 
+
+  my $sql = "delete from public.queue_members where queue_name=? and membername=?"; 
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute($qname,$member);};
+  if ($@) { 
+    warn $this->{dbh}->errstr;
+    return "ERROR";
+  }
+  $this->{dbh}->commit;
+  return "OK";
 }
 1;
 

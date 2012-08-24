@@ -1,3 +1,26 @@
+function pearlpbx_queue_remove_operator(membername,qname) {
+	var confirmed = confirm ("Вы действительно уверены в том, что хотите удалить оператора "+
+		membername+" из группы "+qname+" ?");
+	if (confirmed == true) { 
+		$.get("/queues.pl",
+		{ a: "removemember",
+		  member: membername, 
+		  queue: qname,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_queues_load_by_name(qname);
+				return true;
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+	}
+}
 function pearlpbx_queue_remove() {
 	var qname = $('#input_queue_edit_name').val();
 	if ( qname == '') { 
@@ -8,6 +31,7 @@ function pearlpbx_queue_remove() {
 function pearlpbx_queue_add_member() { 
 	var oldname = $('#input_queue_hidden_oldname').val();
 	var qname = $('#input_queue_edit_name').val();
+	var confirmed = false;
 
 	if ( (oldname == '') && ( qname == '' )) 
 	{ 
@@ -15,7 +39,15 @@ function pearlpbx_queue_add_member() {
 		return false;
 	}
 	if ( ( oldname == '') && ( qname != '')) { 
-		var confirmed = confirm ("Группа "+qname+" будет сохранена перед тем как будет произведена операция добавления оператора. Вы согласны ?");
+		confirmed = confirm ("Группа "+qname+" будет сохранена перед тем как будет произведена операция добавления оператора. Вы согласны ?");
+		if (confirmed == true) {
+			pearlpbx_queue_update();
+		} else { 
+			return false;
+		}
+	}
+	if ( ( oldname != qname ) ) { 
+		confirmed = confirm ("Группа "+qname+" будет сохранена перед тем как будет произведена операция добавления оператора. Вы согласны ?");
 		if (confirmed == true) {
 			pearlpbx_queue_update();
 		} else { 
@@ -117,6 +149,8 @@ function pearlpbx_queues_clear () {
 }
 
 function pearlpbx_queues_load_by_name (qname) {
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+
 	// clear 
 	$('#pearlpbx_edit_queue_operators_list tbody').empty();
 
@@ -139,9 +173,13 @@ function pearlpbx_queues_load_by_name (qname) {
 		a: "listmembers",
 		b: qname,
 	}, function (json) { 
+		
 		jQuery.each(json, function () {
+			var remurl = '<td><a href="#" onClick="pearlpbx_queue_remove_operator('+
+				this['membername']+',\''+qname+'\')">'+remicon+'</a></td>';
+
 			$('#pearlpbx_edit_queue_operators_list').append("<tr><td>"+this['membername']
-				+"</td><td>"+this['interface']+"</td></tr>");
+				+"</td><td>"+this['interface']+"</td>"+remurl+"</tr>");
 		}); 
 	});
 	pearlpbx_fill_operators_select();
