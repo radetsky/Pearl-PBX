@@ -152,7 +152,8 @@ sub list_directions_tab {
 	my $out = '<ul class="nav nav-tabs">';
   while ( my $row = $sth->fetchrow_hashref ) { 
 	   $out .= '<li><a href="#pearlpbx_direction_edit" data-toggle="modal" 
-         onClick="pearlpbx_direction_load_by_id(\''.$row->{'dlist_id'}.'\')">'.$row->{'dlist_name'}.'</a></li>';
+         onClick="pearlpbx_direction_load_by_id(\''.$row->{'dlist_id'}.'\')">'.
+         str_encode($row->{'dlist_name'}).'</a></li>';
 	}		 
   $out .= "</ul>";
 	return $out; 

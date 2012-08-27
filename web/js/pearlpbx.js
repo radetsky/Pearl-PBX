@@ -1,3 +1,14 @@
+function pearlpbx_direction_load_by_id (dlist_id) { 
+	$.getJSON("/route.pl",
+	{
+		a: "getdirection",
+		b: dlist_id,
+	},function (json) { 
+		$('#input_direction_id').val(json.id);
+		$('#input_direction_edit_name').val(json.name);
+		
+	} );
+}
 function pearlpbx_queue_remove_operator(membername,qname) {
 	var confirmed = confirm ("Вы действительно уверены в том, что хотите удалить оператора "+
 		membername+" из группы "+qname+" ?");
