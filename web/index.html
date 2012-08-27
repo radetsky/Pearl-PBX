@@ -64,8 +64,7 @@
 								<a href="#" class="dropdown-toggle" 
 									data-toggle="dropdown">Язык<b class="caret"></b></a>
 								<ul class="dropdown-menu">
-									<li><a href="./index.html">English</a></li>
-									<li><a href="./index-ru.html">Russian</a></li>
+									<li><a href="./index.html">Русский</a></li>
 								</ul>
 							<li>
             </ul>
@@ -84,9 +83,8 @@
               <li>
 								<a href="javascript:void(0)" onClick="pearlpbx_show('#sip-connections')">SIP-подключения</a></li>
 							<li><a href="javascript:void(0)" onClick="pearlpbx_show_queues()">Группы/Очереди</a><li>
-              <li><a href="#">Телефонные аппараты</a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#directions')">Направления</a></li>
               <li><a href="#">Права доступа</a></li>
-              <li><a href="#">Направления</a></li>
 							<li><a href="#">Маршрутизация</a></li>
 							<li><a href="#">Интеграция</a><li>
               <li class="nav-header">Отчеты</li>
@@ -181,6 +179,7 @@
 		</div>
 
 <!-- END OF STORED SESSIONS FORM -->
+
 
 <!-- Begin of the navigations parts -->
 <div id="sip-connections" style="display: none">
@@ -713,8 +712,33 @@ function cdrfilter_submit () {
   </div>
 
 </div>
-
 <!-- Конец диалога редактирования очереди --> 
+
+<!-- Страница со списком направлений --> 
+<div id="directions" style="display: none">
+ <div class="pearlpbx-main-container-header">
+  <h1><center> Направления </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader" id="pearlpbx_directions_list">
+ </div>
+ 
+ <div id="pearlpbx_button_add_direction"> 
+  <center> 
+   <button class="btn btn-primary" onClick="pearlpbx_add_direction()">Добавить новое направление </button>
+  </center>
+ </div>
+<!-- Скрипт, который заполняет список направлений -->
+<script type="text/javascript">
+    <!--
+ 
+      $('#pearlpbx_directions_list').load('/route.pl?a=list-directions-tab');
+      
+    -->
+</script>
+
+</div>
+
+<!-- Конец Страница со списком направлений --> 
 
 </body>
 </html>
