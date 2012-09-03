@@ -11,12 +11,17 @@
 
 install -m 755 -o asterisk:asterisk agi-bin/NetSDS-AGI-integration.pl /var/lib/asterisk/agi-bin
 install -m 755 -o asterisk:asterisk agi-bin/NetSDS-route.pl /var/lib/asterisk/agi-bin
+
 install -m 755 -o asterisk:asterisk bin/* /usr/bin/ 
+
 install -d -m 755 -o asterisk:asterisk /etc/NetSDS
 install -m 644 -o asterisk:asterisk etc/NetSDS/asterisk-router.conf /etc/NetSDS
 ln -sf /etc/NetSDS /etc/PearlPBX
 install -m 644 -o asterisk:asterisk etc/apache2/sites-available/pearlpbx /etc/httpd/conf.d/pearlpbx.conf 
 install -m 755 -o root:root etc/init.d/pearpbx-parsequeuelogd /etc/init.d 
+mv -f /etc/asterisk /etc/asterisk.pearlpbx-moved-old-configs-here 
+install -d -m 755 -o asterisk:asterisk /etc/asterisk 
+install -d -m 755 -o asterisk:asterisk etc/asterisk /etc 
 
 install -m 644 -o root:root lib/*.pm /usr/share/perl5
 cp -a lib/PearlPBX /usr/share/perl5
@@ -24,8 +29,12 @@ cp -a lib/NetSDS /usr/share/perl5
 
 install -m 755 -o asterisk:asterisk sbin/* /usr/sbin/ 
 
+mkdir -p /usr/share/pearlpbx
+cp -av share/reports /usr/share/pearlpbx/
 
+cp -av sounds/* /var/lib/asterisk/sounds 
 
-
+mkdir -p /var/lib/tftpboot 
+cp -a var/lib/tftpboot/* /var/lib/tftpboot 
 
 
