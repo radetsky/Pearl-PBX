@@ -18,10 +18,10 @@ install -d -m 755 -o asterisk -g asterisk /etc/NetSDS
 install -m 644 -o asterisk -g asterisk etc/NetSDS/asterisk-router.conf /etc/NetSDS
 ln -sf /etc/NetSDS /etc/PearlPBX
 install -m 644 -o asterisk -g asterisk etc/apache2/sites-available/pearlpbx /etc/httpd/conf.d/pearlpbx.conf 
-install -m 755 -o root -g root etc/init.d/pearpbx-parsequeuelogd /etc/init.d 
+install -m 755 -o root -g root etc/init.d/pearlpbx-parsequeuelogd /etc/init.d 
 mv -f /etc/asterisk /etc/asterisk.pearlpbx-moved-old-configs-here 
-install -d -m 755 -o asterisk -g asterisk /etc/asterisk 
 install -d -m 755 -o asterisk -g asterisk etc/asterisk /etc 
+cp -a etc/asterisk/* /etc/asterisk
 
 install -m 644 -o root -g root lib/*.pm /usr/share/perl5
 cp -a lib/PearlPBX /usr/share/perl5
@@ -40,5 +40,7 @@ cp -a var/lib/tftpboot/* /var/lib/tftpboot
 psql -U postgres -f sql/create_user_asterisk.sql
 psql -U postgres -f sql/asterisk.sql 
 
+install -d -m 755 -o asterisk -g asterisk /var/www/pearlpbx 
 cp -a web/* /var/www/pearlpbx/ 
+
 
