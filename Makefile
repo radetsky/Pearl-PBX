@@ -2,7 +2,7 @@ install-ubuntu-depends:
 	sudo apt-get install libtemplate-perl 
 
 tar: 
-	cd .. && tar zcvf ./PearlPBX-0.4.3.tar.gz --exclude ./Pearl-PBX/.git ./Pearl-PBX
+	cd .. && tar zcvf ./PearlPBX-0.5.tar.gz --exclude ./Pearl-PBX/.git ./Pearl-PBX
 
 
 
