@@ -2084,11 +2084,15 @@ create table primary_operators (
 
 create INDEX primary_operators_msisdn on primary_operators (msisdn); 
 	
--- Table: routing.convert_exten
-
--- DROP TABLE routing.convert_exten;
-
-CREATE TABLE routing.convert_exten
+set search_path to routing; 
+CREATE SEQUENCE routing.convert_extension_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE routing.convert_extension_id_seq OWNER TO asterisk;
+CREATE TABLE convert_exten
 (
   id bigint NOT NULL DEFAULT nextval('routing.convert_extension_id_seq'::regclass),
   exten character varying(64) NOT NULL,
