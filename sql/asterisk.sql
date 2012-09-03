@@ -2084,4 +2084,25 @@ create table primary_operators (
 
 create INDEX primary_operators_msisdn on primary_operators (msisdn); 
 	
+-- Table: routing.convert_exten
+
+-- DROP TABLE routing.convert_exten;
+
+CREATE TABLE routing.convert_exten
+(
+  id bigint NOT NULL DEFAULT nextval('routing.convert_extension_id_seq'::regclass),
+  exten character varying(64) NOT NULL,
+  operation character varying NOT NULL DEFAULT 'concat'::character varying,
+  parameters character varying NOT NULL,
+  step smallint,
+  CONSTRAINT convert_extension_pkey PRIMARY KEY (id )
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE routing.convert_exten
+  OWNER TO asterisk;
+COMMENT ON TABLE routing.convert_exten
+  IS 'Таблица для преобразований номеров Б перед набором';
+
 

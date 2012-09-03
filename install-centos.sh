@@ -37,4 +37,8 @@ cp -av sounds/* /var/lib/asterisk/sounds
 mkdir -p /var/lib/tftpboot 
 cp -a var/lib/tftpboot/* /var/lib/tftpboot 
 
+psql -U postgres -f sql/create_user_asterisk.sql
+psql -U postgres -f sql/asterisk.sql 
+
+cp -a web/* /var/www/pearlpbx/ 
 
