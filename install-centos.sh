@@ -8,6 +8,7 @@
 # wget rpmforge-release-0.5.2-2.el6.rf.i686.rpm
 #yum install perl-Data-Dumper 
 #yum install httpd httpd-devel httpd-tools 
+#yum install uuid-perl uuid-pgsql 
 
 install -m 755 -o asterisk -g asterisk agi-bin/NetSDS-AGI-integration.pl /var/lib/asterisk/agi-bin
 install -m 755 -o asterisk -g asterisk agi-bin/NetSDS-route.pl /var/lib/asterisk/agi-bin
