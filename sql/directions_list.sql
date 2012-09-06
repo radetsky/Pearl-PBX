@@ -18,14 +18,14 @@ SET default_tablespace = '';
 
 SET default_with_oids = false;
 
-SELECT pg_catalog.setval('directions_list_DLIST_ID_seq', 21, true);
+select setval('"directions_list_DLIST_ID_seq"'::regclass,21,true);
 
 COPY directions_list (dlist_id, dlist_name) FROM stdin;
-4 Express
+4	Express
 5	parking slot
 6	Local City (Kyiv)
 7	Local Office
-8 Emergency
+8	Emergency
 9	International
 2	KyivStar and InterCity
 10	MTS

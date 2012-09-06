@@ -18,7 +18,7 @@ SET default_tablespace = '';
 
 SET default_with_oids = false;
 
-SELECT pg_catalog.setval('directions_dr_id_seq', 92, true);
+SELECT pg_catalog.setval('"directions_dr_id_seq"', 92, true);
 
 COPY directions (dr_id, dr_list_item, dr_prefix, dr_prio) FROM stdin;
 7	2	^098	5
