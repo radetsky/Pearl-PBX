@@ -152,11 +152,59 @@ sub list_directions_tab {
 	my $out = '<ul class="nav nav-tabs">';
   while ( my $row = $sth->fetchrow_hashref ) { 
 	   $out .= '<li><a href="#pearlpbx_direction_edit" data-toggle="modal" 
-         onClick="pearlpbx_direction_load_by_id(\''.$row->{'dlist_id'}.'\')">'.
+         onClick="pearlpbx_direction_load_by_id(\''.$row->{'dlist_id'}.'\',
+          \''.$row->{'dlist_name'}.'\')">'.
          str_encode($row->{'dlist_name'}).'</a></li>';
 	}		 
   $out .= "</ul>";
 	return $out; 
+}
+
+sub getdirectionAsJSON { 
+  my ($this, $dlist_id) = @_; 
+  my $sql = "select dr_id, dr_prefix, dr_prio from routing.directions where dr_list_item=? order by dr_id"; 
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute($dlist_id); }; 
+  if ( $@ ) { 
+      print $this->{dbh}->errstr; 
+      return undef; 
+  }
+  my @rows;
+  while ( my $row = $sth->fetchrow_hashref) { 
+    push @rows, $row; 
+  } 
+
+  return encode_json(\@rows);
+
+}
+
+sub addprefix { 
+  my ($this, $dlist_id, $prefix, $prio) = @_; 
+
+  my $sql = "select dr_id from routing.directions where dr_prefix=?"; 
+  my $sth = $this->{dbh}->prepare ($sql);
+  eval { $sth->execute($prefix); };
+  if ($@) { 
+    return 'ERROR: '.$this->{dbh}->errstr; 
+  }
+
+  my $row = $sth->fetchrow_hashref;
+  if ($row->{'dr_id'}) {
+    if ($row->{'dr_id'} eq $dlist_id ) { return "ALREADY"; } 
+    return "ALREADY_ANOTHER";
+  }
+
+  $sql = "insert into routing.directions (dr_list_item,dr_prefix,dr_prio) values (?,?,?)";
+  $sth = $this->{dbh}->prepare($sql);
+  
+  eval { $sth->execute($dlist_id,$prefix, $prio);};
+  if ($@) { 
+    warn $this->{dbh}->errstr;
+    return "ERROR";
+  }
+  $this->{dbh}->commit;
+  return "OK";
+
 }
 
 1;

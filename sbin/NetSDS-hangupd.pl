@@ -59,9 +59,8 @@ sub start {
     $this->mk_accessors('dbh');
 
     $this->_db_connect();
-    $this->_el_connect();
-
     $this->_clear_ulines();
+	  $this->_el_connect();
 
 }
 

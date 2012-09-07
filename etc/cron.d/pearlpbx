@@ -1,0 +1,4 @@
+*/5 * * * * root  /usr/sbin/PearlPBX-recd.pl 
+*/30 * * * * root /etc/init.d/pearlpbx-hangupd stop >/dev/null 2>&1; /etc/init.d/pearlpbx-hangupd start >/dev/null 2>&1 
+
+

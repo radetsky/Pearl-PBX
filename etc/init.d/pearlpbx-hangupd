@@ -16,10 +16,10 @@
 . /etc/rc.d/init.d/functions
 
 PATH=/opt/NetSDS/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-NAME="nibelite-parsequeuelogd "
-DAEMON=/usr/sbin/NetSDS-parsequeuelogd.pl  
-DESC="Nibelite Queue Log parser v.1.1."
-PIDFILE="/var/run/NetSDS/NetSDS-parsequeuelogd.pid"
+NAME="PearlPBX-hangupd"
+DAEMON=/usr/sbin/NetSDS-hangupd.pl  
+DESC="PearlPBX Hangup Daemon v.1.1."
+PIDFILE="/var/run/NetSDS/NetSDS-hangupd.pid"
 UMASK=007 # by default
 #MAXFILES=1024 # (the system default)
 
@@ -37,7 +37,7 @@ status() {
 case "$1" in
 	start)
 	echo -n "Starting $DESC: $NAME"
-	$DAEMON tail 
+	$DAEMON
 	echo "."
 	;; 
   stop)

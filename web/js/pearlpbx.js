@@ -1,11 +1,60 @@
-function pearlpbx_direction_load_by_id (dlist_id) { 
+function pearlpbx_direction_add_prefix(){ 
+	var new_prefix = $('#input_direction_new_prefix').val();
+	var dlist_id = $('#input_direction_id').val();
+	var prefix_prio = $('select#input_direction_new_prio option:selected').val();
+
+	if (new_prefix == '') {
+		alert("Префикс не должен быть пустым!");
+		return false; 
+	}
+	// Submit 
+	$.get("/route.pl",
+		{ a: "addprefix",
+		  b: dlist_id, 
+		  c: new_prefix,
+		  d: prefix_prio, 
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_direction_load_by_id(dlist_id);
+				return true;
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			if (data == "ALREADY") { 
+				alert ("Данный префикс уже присутствует в этом направлении.");
+				return false;
+			}
+			if (data == "ALREADY_ANOTHER") { 
+				alert ("Данный префикс уже присутствует в другом направлении.");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+
+}
+function pearlpbx_direction_load_by_id (dlist_id, dlist_name) { 
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+	$('#pearlpbx_direction_edit_list tbody').empty();
+	$('#input_direction_new_prefix').val('');
+
+	$('#input_direction_id').val(dlist_id);
+	$('#input_direction_edit_name').val(dlist_name);
 	$.getJSON("/route.pl",
 	{
 		a: "getdirection",
 		b: dlist_id,
 	},function (json) { 
-		$('#input_direction_id').val(json.id);
-		$('#input_direction_edit_name').val(json.name);
+		jQuery.each(json, function () {
+			var remurl = '<td><a href="#" onClick="pearlpbx_route_direction_remove('+
+			this['dr_id']+')">'+remicon+'</a></td>';
+
+			$('#pearlpbx_direction_edit_list').append("<tr><td>"+this['dr_prefix']
+				+"</td><td>"+this['dr_prio']+"</td>"+remurl+"</tr>");
+		}); 
 		
 	} );
 }
@@ -119,7 +168,6 @@ function pearlpbx_queue_add_member() {
 }
 
 function pearlpbx_fill_operators_select () {
-
 	$.get("/sip.pl", {  
 		a: "list",
 		b: "internalAsOption",

@@ -1,0 +1,9 @@
+check process pearlpbx-parsequeuelogd with pidfile /var/run/NetSDS/NetSDS-parsequeuelogd.pid
+        group asterisk
+        group services
+        start program = "/etc/init.d/pearlpbx-parsequeuelogd start"
+        stop  program = "/etc/init.d/pearlpbx-parsequeuelogd stop"
+        if mem > 20% for 5 cycles then restart
+        if cpu > 90% for 5 cycles then restart
+        if 5 restarts with 5 cycles then timeout
+

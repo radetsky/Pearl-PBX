@@ -39,6 +39,36 @@ if ( $action eq 'list-directions-tab') {
 	print $route->list_directions_tab;
 	exit(0); 
 }
+if ( $action eq 'getdirection' ) { 
+	my $b = $pearl->{cgi}->param('b');
+	unless ( defined ( $b ) ) { 
+		$pearl->htmlError("Method not found.");
+		exit(0);
+	}
+	print $route->getdirectionAsJSON($b);
+	exit(0);
+}
+if ($action eq 'addprefix') { 
+	my $b = $pearl->{cgi}->param('b');
+	my $c = $pearl->{cgi}->param('c'); 
+	my $d = $pearl->{cgi}->param('d');
+
+	unless ( defined ( $b )) { 
+		$pearl->htmlError("Method not found.");
+		exit(0);
+	}
+	unless ( defined ( $c )) { 
+		$pearl->htmlError("Method not found."); 
+		exit(0);
+	} 
+	unless ( defined ( $d )) { 
+		$pearl->htmlError("Method not found."); 
+		exit(0);	
+	}
+	print $route->addprefix($b,$c,$d);
+	exit(0);
+
+}
 
 $pearl->htmlError("Action not found.");
 exit(0);

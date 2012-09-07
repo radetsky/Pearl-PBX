@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo "Please add EPEL and RPMFORGE repositories"
+exit 0;
+
 #yum install screen postgresql-server postgresql vim perl-DBI perl-DBD-Pg wget 
 #cd /tmp
 #wget http://packages.sw.be/rpmforge-release/rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm
@@ -9,6 +12,12 @@
 #yum install perl-Data-Dumper 
 #yum install httpd httpd-devel httpd-tools 
 #yum install uuid-perl uuid-pgsql 
+#yum install cronie 
+#chkconfig crond on 
+#chkconfig httpd on 
+#chkconfig 
+
+mkdir -p /var/run/NetSDS
 
 install -m 755 -o asterisk -g asterisk agi-bin/NetSDS-AGI-integration.pl /var/lib/asterisk/agi-bin
 install -m 755 -o asterisk -g asterisk agi-bin/NetSDS-route.pl /var/lib/asterisk/agi-bin
