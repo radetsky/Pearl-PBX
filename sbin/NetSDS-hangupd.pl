@@ -60,7 +60,8 @@ sub start {
 
     $this->_db_connect();
     $this->_clear_ulines();
-	  $this->_el_connect();
+
+    $this->_el_connect();
 
 }
 
@@ -169,24 +170,23 @@ sub _clear_ulines {
         port     => $el_port,
         username => $el_username,
         secret   => $el_secret,
-        events   => 'Off'
+        events   => 'Off',
     );
 
     my $connected = $manager->connect;
     unless ( defined($connected) ) {
-        $this->speak("Can't connect to the asterisk manager interface.");
+
+        $this->speak("Can't connect to the asterisk manager interface: ".$manager->geterror());
         $this->log( "warning",
-            "Can't connect to the asterisk manager interface." );
+            "Can't connect to the asterisk manager interface: ".$manager->geterror());
         exit(-1);
     }
 
+    $this->speak("Manager connected. Getting status.");
     # get status
-
     my @liststatus = $this->_get_status($manager);
+    $this->speak("Got status. Getting busy ulines.");
     my $busyulines = $this->_get_busy_ulines;
-
-    #warn Dumper (\@liststatus);
-    #warn Dumper ($busyulines);
 
     # compare channels with ulines
     my $id      = undef;
@@ -207,9 +207,8 @@ sub _clear_ulines {
             $this->_free_uline($channel);
         }
     }
-
     # clear offline channels
-
+    $this->speak("Ulines cleared. Going to process().");
 }
 
 sub _get_status {
