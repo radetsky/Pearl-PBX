@@ -48,6 +48,30 @@ if ( $action eq 'getdirection' ) {
 	print $route->getdirectionAsJSON($b);
 	exit(0);
 }
+if ( $action eq 'setdirection' ) { 
+	my $b = $pearl->{cgi}->param('b');
+	unless ( defined ( $b ) ) { 
+		$pearl->htmlError("Method not found.");
+		exit(0);
+	}
+	my $c = $pearl->{cgi}->param('c');
+	unless ( defined ( $c ) ) { 
+		$pearl->htmlError("Method not found.");
+		exit(0);
+	}
+	print $route->setdirection($b,$c);
+	exit(0);
+}
+if ( $action eq 'removedirection' ) { 
+	my $b = $pearl->{cgi}->param('b');
+	unless ( defined ( $b ) ) { 
+		$pearl->htmlError("Method not found.");
+		exit(0);
+	}
+	print $route->removedirection($b);
+	exit(0);
+}
+
 if ($action eq 'addprefix') { 
 	my $b = $pearl->{cgi}->param('b');
 	my $c = $pearl->{cgi}->param('c'); 
@@ -67,7 +91,24 @@ if ($action eq 'addprefix') {
 	}
 	print $route->addprefix($b,$c,$d);
 	exit(0);
-
+}
+if ($action eq 'removeprefix') {
+	my $b = $pearl->{cgi}->param('b');
+	unless ( defined ( $b )) { 
+		$pearl->htmlError("Method not found.");
+		exit(0);
+	}
+	print $route->removeprefix ($b); 
+	exit(0);
+}
+if ($action eq 'adddirection') { 
+	my $b = $pearl->{cgi}->param('b'); 
+	unless ( defined ( $b ) ) { 
+		$pearl->htmlError("Method not found.");
+		exit(0);
+	}
+	print $route->adddirection($b);
+	exit(0);
 }
 
 $pearl->htmlError("Action not found.");

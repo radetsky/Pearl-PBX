@@ -151,10 +151,11 @@ sub list_directions_tab {
 
 	my $out = '<ul class="nav nav-tabs">';
   while ( my $row = $sth->fetchrow_hashref ) { 
-	   $out .= '<li><a href="#pearlpbx_direction_edit" data-toggle="modal" 
+    $row->{'dlist_name'} = str_encode ($row->{'dlist_name'}); 
+	  $out .= '<li><a href="#pearlpbx_direction_edit" data-toggle="modal" 
          onClick="pearlpbx_direction_load_by_id(\''.$row->{'dlist_id'}.'\',
           \''.$row->{'dlist_name'}.'\')">'.
-         str_encode($row->{'dlist_name'}).'</a></li>';
+         $row->{'dlist_name'}.'</a></li>';
 	}		 
   $out .= "</ul>";
 	return $out; 
@@ -181,7 +182,7 @@ sub getdirectionAsJSON {
 sub addprefix { 
   my ($this, $dlist_id, $prefix, $prio) = @_; 
 
-  my $sql = "select dr_id from routing.directions where dr_prefix=?"; 
+  my $sql = "select dr_id,dr_list_item from routing.directions where dr_prefix=?"; 
   my $sth = $this->{dbh}->prepare ($sql);
   eval { $sth->execute($prefix); };
   if ($@) { 
@@ -190,7 +191,7 @@ sub addprefix {
 
   my $row = $sth->fetchrow_hashref;
   if ($row->{'dr_id'}) {
-    if ($row->{'dr_id'} eq $dlist_id ) { return "ALREADY"; } 
+    if (( $row->{'dr_list_item'} eq $dlist_id ) or ( $row->{'dr_list_item'} == $dlist_id )) { return "ALREADY"; } 
     return "ALREADY_ANOTHER";
   }
 
@@ -204,6 +205,70 @@ sub addprefix {
   }
   $this->{dbh}->commit;
   return "OK";
+
+}
+
+sub removeprefix { 
+  my ($this, $dr_id) = @_; 
+
+  my $sql = "delete from routing.directions where dr_id=?";
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute($dr_id); };
+  if ($@) { 
+    return 'ERROR: '.$this->{dbh}->errstr; 
+  }
+  $this->{dbh}->commit;
+  return "OK";
+}
+
+sub adddirection { 
+  my ($this, $dlist_name) = @_; 
+
+  my $sql = "insert into routing.directions_list (dlist_name) values (?) returning dlist_id"; 
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute ($dlist_name); }; 
+  if ( $@ ) { 
+    return 'ERROR: '.$this->{dbh}->errstr;
+  } 
+  my $row = $sth->fetchrow_hashref; 
+  unless ( $row ) { 
+    return 'ERROR: '.$this->{dbh}->errstr;
+  }
+  my $dlist_id = $row->{'dlist_id'}; 
+  $this->{dbh}->commit;
+  return "OK:".$dlist_id;
+}
+
+sub setdirection {
+  my ($this, $dlist_id, $dlist_name) = @_; 
+  my $sql = "update routing.directions_list set dlist_name=? where dlist_id=?"; 
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute ($dlist_name, $dlist_id); }; 
+  if ( $@ ) { 
+    return 'ERROR: '.$this->{dbh}->errstr;
+  }
+  $this->{dbh}->commit;
+  return "OK:".$dlist_id;
+}
+
+sub removedirection { 
+  my ($this, $dlist_id) = @_;
+
+  my $sql = "delete from routing.directions where dr_list_item=?"; 
+  my $sql2 = "delete from routing.directions_list where dlist_id=?";
+
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute($dlist_id); }; 
+  if ( $@ ) {
+    return $this->{dbh}->errstr;
+  } 
+  $sth = $this->{dbh}->prepare($sql2);
+  eval { $sth->execute($dlist_id); }; 
+  if ( $@ ) {
+    return $this->{dbh}->errstr;
+  } 
+  $this->{dbh}->commit;
+  return "OK"; 
 
 }
 

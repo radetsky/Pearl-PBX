@@ -1,3 +1,139 @@
+function pearlpbx_isalpha_plus_russian(str) { 
+    if ( str.search(/[^0-9A-Za-zА-Яа-я ]/) != -1 ) {
+    	return false;
+    }
+    return true; 
+}
+
+function pearlpbx_validate_russian_name (str) {
+	var trimmed =  str.trim();
+	if (trimmed == '') { 
+		alert("Название не может быть пустым!");
+		return false;
+	}
+	var valid = pearlpbx_isalpha_plus_russian(str); 
+	if (valid == false) { 
+		alert("Название может содержать только латинские, кириллические символы и не должно быть пустым или содержать только пробелы.");
+		return false;
+	}
+	return true; 
+}
+
+function pearlpbx_empty_direction_edit_form() { 
+	$('#pearlpbx_direction_edit_list tbody').empty();
+	$('#input_direction_new_prefix').val('');
+	$('#input_direction_id').val('');
+	$('#input_direction_edit_name').val('');
+	return false;
+}
+
+function pearlpbx_direction_remove (){
+	var dlist_id = $('#input_direction_id').val();
+	var confirmed = confirm("Вы уверены, что хотите удалить данное направление со всеми префиксами ?");
+	if (confirmed == true) { 
+		$.get("/route.pl",
+		{ a: "removedirection",
+		  b: dlist_id, 
+		},function(data) 
+		{
+			var result = data.split(":",2);
+			if (result[0] == "OK") {
+				$('#pearlpbx_directions_list').load('/route.pl?a=list-directions-tab');
+				$('#pearlpbx_direction_edit').modal('hide');
+				return true;
+			}
+			if (result[0] == "ERROR") { 
+				alert("Сервер вернул ошибку! : "+data);
+				return false;
+			}
+		}, "html"); 
+	}
+	return false; 
+
+}
+
+function pearlpbx_direction_new() {
+	var dlist_name = $('#input_direction_edit_name').val();
+	var valid = pearlpbx_validate_russian_name(dlist_name);
+	if (valid == false) { 
+		return false; 
+	}
+	$.get("/route.pl",
+		{ a: "adddirection",
+		  b: dlist_name, 
+		},function(data) 
+		{
+			var result = data.split(":",2);
+			if (result[0] == "OK") {
+				$('#input_direction_id').val(result[1]);
+				$('#pearlpbx_directions_list').load('/route.pl?a=list-directions-tab');
+				$('#pearlpbx_direction_edit').modal('hide');
+				return true;
+			}
+			if (result[0] == "ERROR") { 
+				alert("Сервер вернул ошибку! : "+result[1]);
+				return false;
+			}
+		}, "html"); 
+
+	return false;
+}
+
+function pearlpbx_direction_update (){
+	var dlist_id = $('#input_direction_id').val();
+	if (dlist_id == '') {
+		return pearlpbx_direction_new();
+	} else { 
+		var dlist_name = $('#input_direction_edit_name').val();
+		var valid = pearlpbx_validate_russian_name(dlist_name);
+		if (valid == false) { 
+			return false; 
+		}		
+		$.get("/route.pl",
+			{ a: "setdirection",
+			  b: dlist_id,
+			  c: dlist_name, 
+			},function(data) 
+			{
+				var result = data.split(":",2);
+				if (result[0] == "OK") {
+					$('#pearlpbx_directions_list').load('/route.pl?a=list-directions-tab');
+					$('#pearlpbx_direction_edit').modal('hide');
+					return true;
+				}
+				if (result[0] == "ERROR") { 
+					alert("Сервер вернул ошибку! : "+result[1]);
+					return false;
+				}
+			}, "html"); 
+	}
+	return false; 
+}
+
+function pearlpbx_route_direction_prefix_remove(dr_id) { 
+	var confirmed = confirm ("Вы действительно уверены в том, что хотите удалить данный префикс ?");
+	if (confirmed == true) { 
+		$.get("/route.pl",
+		{ a: "removeprefix",
+		  b: dr_id, 
+		},function(data) 
+		{
+			if (data == "OK") { 
+				var dlist_name = $('#input_direction_edit_name').val();
+				var dlist_id = $('#input_direction_id').val();
+				pearlpbx_direction_load_by_id(dlist_id, dlist_name);
+				return true;
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+	}
+}
+
 function pearlpbx_direction_add_prefix(){ 
 	var new_prefix = $('#input_direction_new_prefix').val();
 	var dlist_id = $('#input_direction_id').val();
@@ -16,7 +152,8 @@ function pearlpbx_direction_add_prefix(){
 		},function(data) 
 		{
 			if (data == "OK") { 
-				pearlpbx_direction_load_by_id(dlist_id);
+				var dlist_name = $('#input_direction_edit_name').val();
+				pearlpbx_direction_load_by_id(dlist_id, dlist_name);
 				return true;
 			}
 			if (data == "ERROR") { 
@@ -49,7 +186,7 @@ function pearlpbx_direction_load_by_id (dlist_id, dlist_name) {
 		b: dlist_id,
 	},function (json) { 
 		jQuery.each(json, function () {
-			var remurl = '<td><a href="#" onClick="pearlpbx_route_direction_remove('+
+			var remurl = '<td><a href="#" onClick="pearlpbx_route_direction_prefix_remove('+
 			this['dr_id']+')">'+remicon+'</a></td>';
 
 			$('#pearlpbx_direction_edit_list').append("<tr><td>"+this['dr_prefix']
