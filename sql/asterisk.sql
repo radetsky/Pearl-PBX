@@ -2109,4 +2109,59 @@ ALTER TABLE routing.convert_exten
 COMMENT ON TABLE routing.convert_exten
   IS 'Таблица для преобразований номеров Б перед набором';
 
+CREATE FUNCTION get_route_list_gui() RETURNS TABLE(route_id bigint, route_direction_id bigint, route_step smallint, route_type character varying, destname character varying, sipname character varying)
+    LANGUAGE plpgsql
+    AS $$declare 
+
+r record; 
+
+begin 
+for r in select * from routing.route 
+	order by route_id LOOP 
+route_id = r.route_id; 
+route_direction_id = r.route_direction_id; 
+route_type = r.route_type; 
+route_step = r.route_step; 
+
+if r.route_type = 'trunk' then 
+	select name into destname from public.sip_peers where id=r.route_dest_id; 
+end if; 
+if r.route_type = 'tgrp' then 
+	select tgrp_name into destname from routing.trunkgroups where tgrp_id=r.route_dest_id; 
+end if;
+if r.route_type = 'user' then 
+	select name into destname from public.sip_peers where id=r.route_dest_id; 
+end if;
+if r.route_type = 'lmask' then 
+	destname = 'Anybody'; 
+end if; 
+if r.route_type = 'context' then 
+	select context into destname from public.extensions_conf where id=r.route_dest_id; 
+end if;
+
+sipname = 'Anybody';
+if r.route_sip_id is not null then 
+	select name into sipname from public.sip_peers where id=r.route_sip_id; 
+end if;
+
+return next;
+
+end LOOP;
+end
+$$;
+
+
+ALTER FUNCTION routing.get_route_list_gui() OWNER TO asterisk;
+
+--
+-- TOC entry 2303 (class 0 OID 0)
+-- Dependencies: 225
+-- Name: FUNCTION get_route_list_gui(); Type: COMMENT; Schema: routing; Owner: asterisk
+--
+
+COMMENT ON FUNCTION get_route_list_gui() IS 'Возвращает таблицу маршрутизации в удобочитаемом виде для человека. 
+А именно вместо route_dest_id подставляется имя нужного узла,контекста или пользователя.
+Вместо route_sip_id подставляется номер (имя) внутреннего абонента. 
+';
+
 

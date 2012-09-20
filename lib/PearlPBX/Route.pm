@@ -174,9 +174,7 @@ sub getdirectionAsJSON {
   while ( my $row = $sth->fetchrow_hashref) { 
     push @rows, $row; 
   } 
-
   return encode_json(\@rows);
-
 }
 
 sub addprefix { 
@@ -270,6 +268,23 @@ sub removedirection {
   $this->{dbh}->commit;
   return "OK"; 
 
+}
+
+sub getroutingAsJSON { 
+  my ($this, $dlist_id) = @_; 
+  my $sql = "select route_id, route_step, route_type, destname, sipname from \ 
+    routing.get_route_list_gui() where route_direction_id=? order by route_step,sipname"; 
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute($dlist_id); }; 
+  if ( $@ ) { 
+      print $this->{dbh}->errstr; 
+      return undef; 
+  }
+  my @rows;
+  while ( my $row = $sth->fetchrow_hashref) { 
+    push @rows, $row; 
+  } 
+  return encode_json(\@rows);
 }
 
 1;

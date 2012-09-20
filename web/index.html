@@ -86,6 +86,7 @@
               <li><a href="javascript:void(0)" onClick="pearlpbx_show('#directions')">Направления</a></li>
               <li><a href="#">Права доступа</a></li>
 							<li><a href="#">Маршрутизация</a></li>
+              <li><a href="#">Установка номеров А</a></li>
 							<li><a href="#">Интеграция</a><li>
               <li class="nav-header">Отчеты</li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-general')">Общие</a></li>
@@ -758,8 +759,8 @@ function cdrfilter_submit () {
             <p class="help-block">Название направления может состоять из символов и цифр. Например: "Local Office" или "Мобильные".</p>
           </div>
         </div>
-
-          <table class="table table-bordered" id="pearlpbx_direction_edit_list">
+        <div id="pearlpbx_direction_tables" class="control-group">
+          <table style="float: left; width: 280px;" class="table table-bordered" id="pearlpbx_direction_edit_list">
             <thead>
               <tr>
                 <th>Префикс</th>
@@ -768,10 +769,22 @@ function cdrfilter_submit () {
             </thead>
             <!--  А здесь размещается список префиксов для напрвления и приоритеты --> 
           </table>
+          <table style="float: left; width: 400px; margin-left: 10px;" class="table table-bordered" id="pearlpbx_direction_route_list">
+            <thead>
+              <tr>
+                <th>n/n</th>
+                <th>Тип маршрутизации</th>
+                <th>Назначение</th>
+                <th>Специально</th>
+              </tr>
+            </thead>
+            <!--  А здесь размещается список маршрутизации для направления --> 
+          </table>
+        </div>
 
         <div class="control-group">
-          <div class="controls">
-            <input type="text" class="input large" id="input_direction_new_prefix">
+          <div style="float: left;" class="controls">
+            <input type="text" class="input-small" id="input_direction_new_prefix" placeholder="Префикс">
             <select name="input_direction_new_prio" id="input_direction_new_prio" style="width: 50px;">
               <option value='5'>5</option>
               <option value='4'>4</option>
@@ -782,6 +795,33 @@ function cdrfilter_submit () {
             <a class="btn btn-inverse" onclick="pearlpbx_direction_add_prefix();">Добавить префикс</a>
           </div>
         </div>
+        <div class="control-group">
+          <div>
+            <label class="control-label" for="input_direction_routing_step">Шаг №&nbsp;&nbsp;&nbsp;</label>
+            <select name="input_direction_routing_step" id="input_direction_routing_step" style="width: 50px;">
+              <option value='1'>1</option>
+              <option value='2'>2</option>
+              <option value='3'>3</option>
+              <option value='4'>4</option>
+              <option value='5'>5</option>
+            </select>
+
+            <select name="input_direction_routing_type" id="input_direction_routing_type">
+              <option value='trunk'>Транкгруппа</option>
+              <option value='tgrp'>Транк</option>
+              <option value='lmask'>Локальная маска номеров</option>
+              <option value='context'>Контекст сценария IVR</option>
+              <option value='user'>Конечный пользователь</option>
+            </select>
+
+            <select name="input_direction_routing_dest" id="input_direction_routing_dest" style="width: 100px;">
+              <option value=""> </option>
+            </select>
+
+            <a class="btn btn-inverse" onclick="pearlpbx_direction_add_routing();">Добавить маршрут</a>
+          </div>
+        </div>
+
       </fieldset>
     </form>
     

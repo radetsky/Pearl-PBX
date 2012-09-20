@@ -176,6 +176,8 @@ function pearlpbx_direction_add_prefix(){
 function pearlpbx_direction_load_by_id (dlist_id, dlist_name) { 
 	var remicon = "<img src=/img/remove-icon.png width=16>";
 	$('#pearlpbx_direction_edit_list tbody').empty();
+	$('#pearlpbx_direction_route_list tbody').empty();
+	
 	$('#input_direction_new_prefix').val('');
 
 	$('#input_direction_id').val(dlist_id);
@@ -191,9 +193,26 @@ function pearlpbx_direction_load_by_id (dlist_id, dlist_name) {
 
 			$('#pearlpbx_direction_edit_list').append("<tr><td>"+this['dr_prefix']
 				+"</td><td>"+this['dr_prio']+"</td>"+remurl+"</tr>");
-		}); 
-		
+		}); 		
 	} );
+
+	$.getJSON("/route.pl",
+	{
+		a: "getrouting",
+		b: dlist_id,
+	},function (json) { 
+		jQuery.each(json, function () {
+			var remurl = '<td><a href="#" onClick="pearlpbx_route_direction_route_remove('+
+			this['route_id']+')">'+remicon+'</a></td>';
+
+			$('#pearlpbx_direction_route_list').append("<tr><td>"+this['route_step']+"</td><td>"
+				+this['route_type']
+				+"</td><td>"+this['destname']+"</td><td>"+this['sipname']+
+				"</td>"+remurl+"</tr>");
+		}); 		
+	} );
+
+
 }
 function pearlpbx_queue_remove_operator(membername,qname) {
 	var confirmed = confirm ("Вы действительно уверены в том, что хотите удалить оператора "+

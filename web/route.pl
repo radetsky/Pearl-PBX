@@ -48,6 +48,16 @@ if ( $action eq 'getdirection' ) {
 	print $route->getdirectionAsJSON($b);
 	exit(0);
 }
+if ( $action eq 'getrouting' ) { 
+	my $b = $pearl->{cgi}->param('b');
+	unless ( defined ( $b ) ) { 
+		$pearl->htmlError("Method not found.");
+		exit(0);
+	}
+	print $route->getroutingAsJSON($b);
+	exit(0);
+}
+
 if ( $action eq 'setdirection' ) { 
 	my $b = $pearl->{cgi}->param('b');
 	unless ( defined ( $b ) ) { 
