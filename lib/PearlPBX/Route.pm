@@ -326,6 +326,18 @@ sub list_contextsAsOption {
   return $out; 
 
 }
+sub removeroute { 
+  my ($this, $route_id) = @_;
+
+  my $sql = "delete from routing.route where route_id=?";
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute($route_id); }; 
+  if ($@) {
+      return $this->{dbh}->errstr;  
+  }
+  $this->{dbh}->commit;
+  return "OK";
+}
 
 
 1;

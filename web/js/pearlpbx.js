@@ -1,3 +1,46 @@
+function pearlpbx_routing_load_by_direction_id (dlist_id) {
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+	$('#pearlpbx_direction_route_list tbody').empty();
+	$.getJSON("/route.pl",
+	{
+		a: "getrouting",
+		b: dlist_id,
+	},function (json) { 
+		jQuery.each(json, function () {
+			var remurl = '<td><a href="#" onClick="pearlpbx_routing_remove('+
+			this['route_id']+')">'+remicon+'</a></td>';
+
+			$('#pearlpbx_direction_route_list').append("<tr><td>"+this['route_step']+"</td><td>"
+				+this['route_type']
+				+"</td><td>"+this['destname']+"</td><td>"+this['sipname']+
+				"</td>"+remurl+"</tr>");
+		}); 		
+	} );
+
+}
+function pearlpbx_routing_remove (id) {
+	var confirmed = confirm ("Вы уверены, что хотите удалить данную запись из таблицы маршрутизации ?");
+	if (confirmed == false ) { 
+		return false;
+	}
+	$.get("/route.pl",
+		{ a: "removeroute",
+		  b: id, 
+		},function(data) 
+		{
+			var result = data.split(":",2);
+			if (result[0] == "OK") {
+				var dlist_id = $('#input_direction_id').val();
+				pearlpbx_routing_load_by_direction_id (dlist_id);
+				return true;
+			}
+			if (result[0] == "ERROR") { 
+				alert("Сервер вернул ошибку! : "+data);
+				return false;
+			}
+		}, "html"); 
+
+}
 function pearlpbx_routing_type_change(){
 	var newvalue = $('select#input_direction_routing_type option:selected').val();
 	
@@ -224,7 +267,7 @@ function pearlpbx_direction_load_by_id (dlist_id, dlist_name) {
 		b: dlist_id,
 	},function (json) { 
 		jQuery.each(json, function () {
-			var remurl = '<td><a href="#" onClick="pearlpbx_route_direction_route_remove('+
+			var remurl = '<td><a href="#" onClick="pearlpbx_routing_remove('+
 			this['route_id']+')">'+remicon+'</a></td>';
 
 			$('#pearlpbx_direction_route_list').append("<tr><td>"+this['route_step']+"</td><td>"

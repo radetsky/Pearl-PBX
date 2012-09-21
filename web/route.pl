@@ -132,6 +132,15 @@ if ($action eq 'adddirection') {
 	print $route->adddirection($b);
 	exit(0);
 }
+if ($action eq 'removeroute') {
+	my $b = $pearl->{cgi}->param('b'); 
+	unless ( defined ( $b ) ) { 
+		$pearl->htmlError ("Method not found."); 
+		exit(0);
+	}
+	print $route->removeroute($b); 
+	exit(0);
+}
 
 $pearl->htmlError("Action not found.");
 exit(0);
