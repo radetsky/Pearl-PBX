@@ -1,3 +1,25 @@
+function pearlpbx_routing_type_change(){
+	var newvalue = $('select#input_direction_routing_type option:selected').val();
+	
+	$('select#input_direction_routing_dest').empty();
+	if ( newvalue == 'user') { 
+		$('select#input_direction_routing_dest').load("/sip.pl?a=list&b=internalAsOption");
+	}
+	if ( newvalue == 'context') { 
+		$('select#input_direction_routing_dest').load("/route.pl?a=list&b=contextsAsOption");
+	}
+	if ( newvalue == 'lmask') { 
+		$('select#input_direction_routing_dest').append("<option value='0'>Кто угодно</option>");
+		return true;
+	}
+	if ( newvalue == 'trunk') { 
+		$('select#input_direction_routing_dest').load("/sip.pl?a=list&b=externalAsOption");
+	}
+	if ( newvalue == 'tgrp') { 
+		$('select#input_direction_routing_dest').load("/route.pl?a=list&b=tgrpsAsOption");
+	}
+
+}
 function pearlpbx_isalpha_plus_russian(str) { 
     if ( str.search(/[^0-9A-Za-zА-Яа-я ]/) != -1 ) {
     	return false;

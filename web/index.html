@@ -742,7 +742,7 @@ function cdrfilter_submit () {
 
 
 <!-- Диалог редактирования направления Модальный. -->
-<div class="modal fade" id="pearlpbx_direction_edit" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; overflow-y:scroll;">
+<div class="modal fade" id="pearlpbx_direction_edit" style="display: none; position: fixed; top: 280px; left: 400px;  width: 900px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Редактирование направления</h3>
@@ -775,7 +775,7 @@ function cdrfilter_submit () {
                 <th>n/n</th>
                 <th>Тип маршрутизации</th>
                 <th>Назначение</th>
-                <th>Специально</th>
+                <th>Для кого</th>
               </tr>
             </thead>
             <!--  А здесь размещается список маршрутизации для направления --> 
@@ -806,18 +806,20 @@ function cdrfilter_submit () {
               <option value='5'>5</option>
             </select>
 
-            <select name="input_direction_routing_type" id="input_direction_routing_type">
-              <option value='trunk'>Транкгруппа</option>
-              <option value='tgrp'>Транк</option>
+            <select name="input_direction_routing_type" id="input_direction_routing_type" onChange="pearlpbx_routing_type_change()">
               <option value='lmask'>Локальная маска номеров</option>
+              <option value='tgrp'>Транкгруппа</option>
+              <option value='trunk'>Транк</option>
               <option value='context'>Контекст сценария IVR</option>
               <option value='user'>Конечный пользователь</option>
             </select>
 
-            <select name="input_direction_routing_dest" id="input_direction_routing_dest" style="width: 100px;">
-              <option value=""> </option>
+            <select name="input_direction_routing_dest" id="input_direction_routing_dest" style="width: 100px;" >
+              <option value="0">Кто угодно</option>
             </select>
-
+            <select name="input_direction_routing_source" id="input_direction_routing_source" style="width: 100px;">
+              <option value="Anybody">Для всех</option>
+            </select>
             <a class="btn btn-inverse" onclick="pearlpbx_direction_add_routing();">Добавить маршрут</a>
           </div>
         </div>

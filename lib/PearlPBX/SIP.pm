@@ -161,6 +161,12 @@ sub list_external {
 
   return $this->_list($sql); 
 }
+sub list_externalAsOption { 
+  my $this = shift; 
+  my $sql = "select id,name,comment from public.sip_peers where name !~ E'2\\\\d\\\\d' order by name"; 
+
+  return $this->_listAsOption($sql); 
+}
 
 sub _list { 
 	my ($this, $sql) = @_; 

@@ -287,6 +287,47 @@ sub getroutingAsJSON {
   return encode_json(\@rows);
 }
 
+sub list_tgrpsAsOption { 
+  my $this = shift; 
+
+  my $sql = "select tgrp_id, tgrp_name from routing.trunkgroups order by tgrp_name"; 
+
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute(); }; 
+  if ( $@ ) {
+    print $this->{dbh}->errstr; 
+    return undef; 
+  }
+
+  my $out = '';
+  while ( my $row = $sth->fetchrow_hashref ) { 
+     $out .= '<option value="'.$row->{'tgrp_id'}.'">'.$row->{'tgrp_name'}.'</option>';
+  }    
+  return $out; 
+
+}
+
+sub list_contextsAsOption { 
+  my $this = shift; 
+
+  my $sql = "select id,context from extensions_conf where priority =1 and exten = '_X!' order by context"; 
+
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute(); }; 
+  if ( $@ ) {
+    print $this->{dbh}->errstr; 
+    return undef; 
+  }
+
+  my $out = '';
+  while ( my $row = $sth->fetchrow_hashref ) { 
+     $out .= '<option value="'.$row->{'id'}.'">'.$row->{'context'}.'</option>';
+  }    
+  return $out; 
+
+}
+
+
 1;
 
 __END__

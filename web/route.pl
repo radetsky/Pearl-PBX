@@ -34,6 +34,18 @@ unless ( defined ( $action ) ) {
 my $route = PearlPBX::Route->new('/etc/PearlPBX/asterisk-router.conf');
 $route->db_connect();
 $pearl->htmlHeader;
+if ( $action eq 'list') { 
+	my $b = $pearl->{cgi}->param('b');
+	unless ( defined ( $b ) ) { 
+		$pearl->htmlError("Method not found.");
+	  exit(0);
+	}
+
+	if ( $b eq 'tgrpsAsOption') { print $route->list_tgrpsAsOption; }
+	if ( $b eq 'contextsAsOption') { print $route->list_contextsAsOption; }
+	exit(0);
+
+}
 
 if ( $action eq 'list-directions-tab') {
 	print $route->list_directions_tab;
