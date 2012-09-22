@@ -1,5 +1,11 @@
 function pearlpbx_validate_routing ( dlist_id, route_step, route_type, route_dest, route_src) { 
 
+	alert ("dlist_id: "+dlist_id + "\n" + "route_step: " + route_step + "\n" + 
+		"route_type: "+route_type + "\n" + "route_dest: " + route_dest + "\n" +
+		"route_src: "+route_src 
+
+		);
+
 	return true; 
 }
 function pearlpbx_direction_add_routing() { 
@@ -14,7 +20,25 @@ function pearlpbx_direction_add_routing() {
 		return false; 
 	}
 
-
+	$.get("/route.pl", {
+		a: "addrouting",
+		dlist_id: dlist_id,
+		route_step: route_step,
+		route_type: route_type, 
+		route_dest: route_dest, 
+		route_src: route_src,
+	}, function (data) { 
+		var result = data.split(":",2);
+			if (result[0] == "OK") {
+				var dlist_id = $('#input_direction_id').val();
+				pearlpbx_routing_load_by_direction_id (dlist_id);
+				return true;
+			}
+			if (result[0] == "ERROR") { 
+				alert("Сервер вернул ошибку! : "+data);
+				return false;
+			}
+		}, "html");
 
 	return true;
 }
@@ -66,7 +90,7 @@ function pearlpbx_routing_type_change(){
 	
 	$('select#input_direction_routing_dest').empty();
 	if ( newvalue == 'user') { 
-		$('select#input_direction_routing_dest').load("/sip.pl?a=list&b=internalAsOption");
+		$('select#input_direction_routing_dest').load("/sip.pl?a=list&b=internalAsOptionIdValue");
 	}
 	if ( newvalue == 'context') { 
 		$('select#input_direction_routing_dest').load("/route.pl?a=list&b=contextsAsOption");
@@ -76,7 +100,7 @@ function pearlpbx_routing_type_change(){
 		return true;
 	}
 	if ( newvalue == 'trunk') { 
-		$('select#input_direction_routing_dest').load("/sip.pl?a=list&b=externalAsOption");
+		$('select#input_direction_routing_dest').load("/sip.pl?a=list&b=externalAsOptionIdValue");
 	}
 	if ( newvalue == 'tgrp') { 
 		$('select#input_direction_routing_dest').load("/route.pl?a=list&b=tgrpsAsOption");
@@ -305,13 +329,13 @@ function pearlpbx_direction_load_by_id (dlist_id, dlist_name) {
 
 	$.get("/sip.pl", {
 		a: "list",
-		b: "internalAsOption" 
+		b: "internalAsOptionIdValue" 
 	}, function (data) {
 		$('select#input_direction_routing_source').append(data);
 		$('select#input_direction_routing_source').append('</optgroup><optgroup>');
 		$.get("/sip.pl", {
 			a: "list",
-			b: "externalAsOption" 
+			b: "externalAsOptionIdValue" 
 		}, function (data) {
 			$('select#input_direction_routing_source').append(data);
 			$('select#input_direction_routing_source').append('</optgroup>');

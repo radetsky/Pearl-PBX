@@ -48,6 +48,8 @@ if ( $action eq 'list') {
 	if ($b eq 'internal-free') { print $sip->list_internal_free; }
 	if ($b eq 'internalAsOption') { print $sip->list_internalAsOption;}
 	if ($b eq 'externalAsOption') { print $sip->list_externalAsOption;}
+	if ($b eq 'internalAsOptionIdValue') { print $sip->list_internalAsOptionIdValue;}
+	if ($b eq 'externalAsOptionIdValue') { print $sip->list_externalAsOptionIdValue;}
 
 	exit(0); 
 }

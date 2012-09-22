@@ -141,6 +141,23 @@ if ($action eq 'removeroute') {
 	print $route->removeroute($b); 
 	exit(0);
 }
+if ($action eq 'addrouting') { 
+	my $dlist_id = $pearl->{cgi}->param('dlist_id'); 
+	my $route_step = $pearl->{cgi}->param('route_step'); 
+	my $route_type = $pearl->{cgi}->param('route_type'); 
+	my $route_dest = $pearl->{cgi}->param('route_dest'); 
+	my $route_src = $pearl->{cgi}->param('route_src'); 
+
+	unless ( defined ( $dlist_id )) { print "ERROR: dlist_id is not defined."; exit(0); }
+	unless ( defined ( $route_step ) ) { print "ERROR: route_step is not defined. "; exit (0); }
+	unless ( defined ( $route_type ) ) { print "ERROR: route_type is not defined. "; exit (0); }
+	unless ( defined ( $route_dest ) ) { print "ERROR: route_dest is not defined. "; exit(0); }
+	unless ( defined ( $route_src ) ) { print "ERROR: route_src is not defined. "; exit(0); }
+
+	print $route->addrouting($dlist_id, $route_step, $route_type, $route_dest, $route_src); 
+	exit (0); 
+
+}
 
 $pearl->htmlError("Action not found.");
 exit(0);

@@ -339,6 +339,27 @@ sub removeroute {
   return "OK";
 }
 
+sub addrouting { 
+  my ($this, $dlist_id, $route_step, $route_type, $route_dest, $route_src ) = @_; 
+
+  my $sql = "insert into routing.route (route_direction_id, route_step, route_type, route_dest_id, route_sip_id ) 
+    values (?,?,?,?,?) "; 
+  my $sth = $this->{dbh}->prepare ($sql); 
+  if ($route_src =~ /^Anybody/i ) { 
+    $route_src = undef; 
+  }
+
+  eval { 
+    $sth->execute ($dlist_id, $route_step, $route_type, $route_dest, $route_src); 
+  }; 
+  if ( $@ ) { 
+    return $this->{dbh}->errstr;
+  }
+
+  $this->{dbh}->commit;
+  return "OK"; 
+
+}
 
 1;
 
