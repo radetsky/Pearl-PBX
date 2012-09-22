@@ -1,3 +1,23 @@
+function pearlpbx_validate_routing ( dlist_id, route_step, route_type, route_dest, route_src) { 
+
+	return true; 
+}
+function pearlpbx_direction_add_routing() { 
+	var dlist_id = $('#input_direction_id').val();
+	var route_step = $('select#input_direction_routing_step option:selected').val();
+	var route_type = $('select#input_direction_routing_type option:selected').val();
+	var route_dest = $('select#input_direction_routing_dest option:selected').val();
+	var route_src  = $('select#input_direction_routing_source option:selected').val();
+
+	var valid = pearlpbx_validate_routing(dlist_id, route_step, route_type, route_dest, route_src); 
+	if (valid == false) { 
+		return false; 
+	}
+
+
+
+	return true;
+}
 function pearlpbx_routing_load_by_direction_id (dlist_id) {
 	var remicon = "<img src=/img/remove-icon.png width=16>";
 	$('#pearlpbx_direction_route_list tbody').empty();
@@ -276,8 +296,29 @@ function pearlpbx_direction_load_by_id (dlist_id, dlist_name) {
 				"</td>"+remurl+"</tr>");
 		}); 		
 	} );
+	
 
+	$('select#input_direction_routing_source').empty();
+	var x = '<optgroup><option value="Anybody">Для всех</option></optgroup>'; 
+	$('select#input_direction_routing_source').append(x);
+	$('select#input_direction_routing_source').append('<optgroup>');	
 
+	$.get("/sip.pl", {
+		a: "list",
+		b: "internalAsOption" 
+	}, function (data) {
+		$('select#input_direction_routing_source').append(data);
+		$('select#input_direction_routing_source').append('</optgroup><optgroup>');
+		$.get("/sip.pl", {
+			a: "list",
+			b: "externalAsOption" 
+		}, function (data) {
+			$('select#input_direction_routing_source').append(data);
+			$('select#input_direction_routing_source').append('</optgroup>');
+		});
+	});
+
+	
 }
 function pearlpbx_queue_remove_operator(membername,qname) {
 	var confirmed = confirm ("Вы действительно уверены в том, что хотите удалить оператора "+
