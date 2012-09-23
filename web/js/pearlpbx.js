@@ -1,3 +1,43 @@
+function pearlpbx_check_routing() {
+	var channel = $('select#check_routing_channel option:selected').val();
+	var destination = $('#check_routing_destination').val(); 
+	var trimmed =  destination.trim();
+	if (trimmed == '') { 
+		alert("Номер Б не может быть пустым!");
+		return false;
+	}
+
+	$.get("/route.pl", {
+		a: "checkroute",
+		b: channel,
+		c: destination,
+	}, function (data) {
+		$('#pearlpbx_check_routing_result_window').empty();
+		$('#pearlpbx_check_routing_result_window').append(data);	
+		$('#pearlpbx_check_routing_result').modal('show'); 
+	});
+	 
+}
+function pearlpbx_fill_check_routing_channel () { 
+	$('select#check_routing_channel').empty();
+	$('select#check_routing_channel').append('<optgroup>');	
+
+	$.get("/sip.pl", {
+		a: "list",
+		b: "internalAsOption" 
+	}, function (data) {
+		$('select#check_routing_channel').append(data);
+		$('select#check_routing_channel').append('</optgroup><optgroup>');
+		$.get("/sip.pl", {
+			a: "list",
+			b: "externalAsOption" 
+		}, function (data) {
+			$('select#check_routing_channel').append(data);
+			$('select#check_routing_channel').append('</optgroup>');
+		});
+	});
+
+}
 function pearlpbx_validate_routing ( dlist_id, route_step, route_type, route_dest, route_src) { 
 
 	alert ("dlist_id: "+dlist_id + "\n" + "route_step: " + route_step + "\n" + 

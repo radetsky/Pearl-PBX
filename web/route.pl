@@ -156,7 +156,14 @@ if ($action eq 'addrouting') {
 
 	print $route->addrouting($dlist_id, $route_step, $route_type, $route_dest, $route_src); 
 	exit (0); 
-
+}
+if ($action eq 'checkroute') {
+	my $b = $pearl->{cgi}->param('b'); 
+	unless ( defined ( $b )) { $pearl->htmlError("ERROR: channel is not defined. "); exit(0); }
+	my $c = $pearl->{cgi}->param('c'); 
+	unless ( defined ( $c )) { $pearl->htmlError("ERROR: destination is not defined. "); exit(0); }
+	print $route->checkroute($b, $c); 
+	exit(0); 
 }
 
 $pearl->htmlError("Action not found.");

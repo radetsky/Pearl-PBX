@@ -121,9 +121,15 @@
               <p><a class="btn" href="#">View details &raquo;</a></p>
             </div><!--/span-->
             <div class="span4">
-              <h2>Callback</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-              <p><a class="btn" href="#">View details &raquo;</a></p>
+              <h2>Проверка маршрутизации</h2>
+              <form>
+              <label>Канал А</label>
+              <select id="check_routing_channel" name="check_routing_channel">
+              </select>
+              <label>Номер Б</label>
+              <input id="check_routing_destination" type="text" placeholder="Введите номер">
+              <p><a class="btn btn-success" href="#" onClick="pearlpbx_check_routing();">Проверить</a></p>
+            </form>
             </div><!--/span-->
           </div><!--/row-->
           <div class="row-fluid">
@@ -395,8 +401,9 @@ function cdrfilter_submit () {
 
 			$('#reports-summary-names').load('/reports.pl?list-reports=1&rtype=sum');
       $('#pearlpbx-summary-reports-bodies').load('/reports.pl?list-reports=2&rtype=sum'); 
-
       $('.pearlpbx_list_channels').load('/reports.pl?list-channels=1');
+
+      pearlpbx_fill_check_routing_channel();
 			
 		-->
 </script>
@@ -835,10 +842,26 @@ function cdrfilter_submit () {
     <a href="#" class="btn btn-danger" onClick="pearlpbx_direction_remove()">Удалить направление</a>
   </div>
 </div>
-
-
 <!-- Конец диалога редактирования направления --> 
 
+<!-- Окно результата проверки маршрутизации -->
+<div class="modal fade" id="pearlpbx_check_routing_result" style="display: none; position: fixed; top: 480px; left: 600px;  width: 600px; max-height: 650px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Результат проверки маршрутизации</h3>
+  </div>
+  <div class="modal-body">
+    <div id="pearlpbx_check_routing_result_window">
+
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Закрыть</a>
+  </div>
+</div>
+
+
+<!-- Конец: Окно результата проверки маршрутизации -->
 
 </body>
 </html>

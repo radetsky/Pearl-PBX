@@ -361,6 +361,163 @@ sub addrouting {
 
 }
 
+sub checkroute { 
+  my ($this, $peername, $extension) = @_; 
+  my $route_type = { 
+        trunk => 'Транк',
+        tgrp  => 'Транкгруппа',
+        user  => 'Конечный пользователь',
+        context => 'Сценарий IVR', 
+        lmask => 'Локальная маска',
+    }; 
+
+  my $out = '<ul>'; 
+  $out .= "<li> Проверяю права доступа: ";
+  my ($allow, $description) = $this->_get_permissions ($peername, $extension); 
+  unless ( defined ( $allow ) ) { 
+    $out .= "<span style=\"color: red;\">Нет прав доступа.</span> Причина: ".$description;
+    $out .= "<br>";
+    return $out; 
+  } else { 
+    $out .= "<span style=\"color: green;\">OK.</span>"; 
+  }
+
+  $out .= "<li>Конвертирую номер Б: ";
+  my($result, $extension1, $description2) = $this->_convert_extension ($extension); 
+  $extension = $extension1; 
+  unless ( defined ( $result ) ) { 
+    $out .= "<span style=\"color: red;\">Ошибка.</span> Причина: ".$description2;
+    $out .= "<br>";
+    return $out; 
+  } else { 
+    $out .= "<span style=\"color: green;\">ОК. Новый номер: $extension </span>"; 
+  }
+
+  my $tgrp_first;
+  # Get dial route
+  for ( my $current_try = 1 ; $current_try <= 5 ; $current_try++ ) {
+    my ($result,$dst_type,$dst_str,$try) = $this->_get_dial_route( $peername, $extension, $current_try );
+    unless ( defined($result) ) {
+      $out .= "<li><span style=\"color: red;\">".$dst_type."</span>";
+      return $out; 
+    }
+    $current_try = $try; 
+    $out.="<li>"."Тип маршрутизации: ".$route_type->{$dst_type}.". Цель -> $dst_str";
+    if ( $dst_type eq 'tgrp' ) {
+      unless ( defined($tgrp_first) ) {
+        $tgrp_first = $dst_str;
+        next;
+      }
+      if ( $dst_str eq $tgrp_first ) {
+        $current_try = $current_try + 1;
+        $tgrp_first  = undef;
+        next;
+      }
+      
+    }    # End of (if tgrp)
+  }    # End of for (1...5)
+  $out .= "<li>Playback pearlpbx-nomorelines";
+
+  return $out; 
+
+}
+
+# 
+# С этой строки идут внутренние методы, которые повторяют agi-bin/NetSDS-route.pl ,
+# В будущем, что бы не было копипаста надо удалить соответствующие методы из AGI-скрипта 
+# и использовать эти. Пока оставляю так как есть. 
+# 
+#     best, rad. 2012-09-23. use perl or die; 
+
+sub _get_permissions {
+    my $this     = shift;
+    my $peername = shift;
+    my $exten    = shift;
+
+    my $sth = $this->{dbh}->prepare("select * from routing.get_permission (?,?)");
+
+    eval { my $rv = $sth->execute( $peername, $exten ); };
+    if ($@) {
+        return (undef, $this->dbh->errstr);
+    }
+    my $result = $sth->fetchrow_hashref;
+    my $perm   = $result->{'get_permission'};
+    if ( $perm > 0 ) {
+        $this->{dbh}->commit();
+        return (1, "OK");
+    } else {
+        $this->{dbh}->rollback();  
+        return (undef, "$peername does not have permissions to $exten");
+    }
+}
+
+sub _convert_extension { 
+  my $this = shift;
+  my $input = shift; 
+
+  my $output = $input;  
+  my $result = undef; 
+
+    my $sth = $this->{dbh}->prepare ("select id,exten,operation,parameters,step from routing.convert_exten where ? ~ exten order by id,step"); 
+    eval { my $rv = $sth->execute($input); };
+    if ($@) {
+        return (undef, $input, $this->{dbh}->errstr); 
+    }
+    $result = $sth->fetchall_hashref ('id'); 
+    unless ( defined ( $result ) ) { 
+        return (1, $input, 'OK'); 
+    }
+
+    if ( $result == {} ) { 
+        return (1, $input, 'OK'); 
+    }
+
+    foreach my $id ( sort keys %$result ) { 
+        my $operation = $result->{$id}->{'operation'};
+        my $parameters = $result->{$id}->{'parameters'}; 
+        my ($param1,$param2) = split (':',$parameters);
+        if ($operation =~ /concat/ ) { 
+          # second param contains 'begin' or 'end'  
+          if ($param2 =~ /begin/) { 
+            $output = $param1 . $output;  
+          } 
+          if ($param2 =~ /end/ ) { 
+            $output = $output . $param1; 
+          }
+        }
+        if ($operation =~ /substr/ ) { 
+          # first param - position of beginning. Example: black : substr 2,3 = ack 
+          # second param - if empty substr till the end. 
+          
+          unless ( $param1 ) { 
+            $param1 = 0; 
+          } 
+          unless ( $param2 ) {
+            $output = substr($output,$param1);
+          } else {
+            $output = substr($output,$param1,$param2);
+          }
+        } 
+    }
+    return (1,$output, 'OK'); 
+}
+
+sub _get_dial_route {
+    my $this     = shift;
+    my $peername = shift;
+    my $exten    = shift;
+    my $try      = shift;
+
+    my $sth =
+      $this->{dbh}->prepare("select * from routing.get_dial_route4 (?,?,?)");
+    eval { my $rv = $sth->execute( $peername, $exten, $try ); };
+    if ($@) {
+      return (undef, $this->{dbh}->errstr, undef,undef);   
+    }
+    my $result = $sth->fetchrow_hashref;
+    return (1, $result->{'dst_type'}, $result->{'dst_str'}, $result->{'try'});
+}
+
 1;
 
 __END__
