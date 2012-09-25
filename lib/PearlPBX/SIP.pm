@@ -150,6 +150,24 @@ sub list_internalAsOption {
 
   return $this->_listAsOption($sql);  
 }
+
+sub list_internalAsJSON { 
+  my $this = shift; 
+  my $sql = "select id,comment,name from public.sip_peers where name ~ E'2\\\\d\\\\d' order by name";
+
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute();}; 
+  if ($@) { 
+    return $this->{dbh}->errstr; 
+  }
+  my @rows; 
+  while ( my $row = $sth->fetchrow_hashref) {
+    $row->{'comment'} = str_encode($row->{'comment'});  
+    push @rows, $row;
+  }
+  return encode_json(\@rows);
+
+}
 sub list_internalAsOptionIdValue { 
   my $this = shift;
   my $sql = "select id,comment,name from public.sip_peers where name ~ E'2\\\\d\\\\d' order by name";
@@ -168,6 +186,25 @@ sub list_external {
 
   return $this->_list($sql); 
 }
+sub list_externalAsJSON { 
+  my $this = shift; 
+  my $sql = "select id,comment,name from public.sip_peers where name !~ E'2\\\\d\\\\d' order by name";
+
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute();}; 
+  if ($@) { 
+    return $this->{dbh}->errstr; 
+  }
+  my @rows; 
+  while ( my $row = $sth->fetchrow_hashref) {
+    $row->{'comment'} = str_encode($row->{'comment'});  
+    push @rows, $row;
+  }
+  return encode_json(\@rows);
+
+}
+
+
 sub list_externalAsOption { 
   my $this = shift; 
   my $sql = "select id,name,comment from public.sip_peers where name !~ E'2\\\\d\\\\d' order by name"; 

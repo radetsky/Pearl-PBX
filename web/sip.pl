@@ -50,6 +50,8 @@ if ( $action eq 'list') {
 	if ($b eq 'externalAsOption') { print $sip->list_externalAsOption;}
 	if ($b eq 'internalAsOptionIdValue') { print $sip->list_internalAsOptionIdValue;}
 	if ($b eq 'externalAsOptionIdValue') { print $sip->list_externalAsOptionIdValue;}
+	if ($b eq 'internalAsJSON') { print $sip->list_internalAsJSON;}
+	if ($b eq 'externalAsJSON') { print $sip->list_externalAsJSON;}
 
 	exit(0); 
 }

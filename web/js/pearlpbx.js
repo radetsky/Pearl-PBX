@@ -1,3 +1,22 @@
+function pearlpbx_reload_permissions() { 
+	$('#pearlpbx_permissions_div').empty();
+	$.get("/route.pl", { 
+		a: "loadpermissions",
+	}, function (data) { 
+		$('#pearlpbx_permissions_div').append(data);
+	} );
+	$.getJSON("/route.pl", {
+		a: "loadpermissionsJSON",
+	}, function (json) { 
+		jQuery.each(json, function () {
+			var id = "#X"+this['peer_id']+"_Y"+this['direction_id']; 
+			if ( $(id).length>0 ) { 
+				$(id).attr('checked','checked'); 
+			}
+		} );
+	} ); 
+
+}
 function pearlpbx_check_routing() {
 	var channel = $('select#check_routing_channel option:selected').val();
 	var destination = $('#check_routing_destination').val(); 

@@ -165,6 +165,15 @@ if ($action eq 'checkroute') {
 	print $route->checkroute($b, $c); 
 	exit(0); 
 }
+if ($action eq 'loadpermissions') { 
+	print $route->loadpermissions();
+	exit(0);
+}
+
+if ($action eq 'loadpermissionsJSON') {
+	print $route->loadpermissionsJSON();
+	exit(0);
+}
 
 $pearl->htmlError("Action not found.");
 exit(0);

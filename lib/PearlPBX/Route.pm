@@ -417,10 +417,10 @@ sub checkroute {
     }    # End of (if tgrp)
   }    # End of for (1...5)
   $out .= "<li>Playback pearlpbx-nomorelines";
-
   return $out; 
 
 }
+
 
 # 
 # С этой строки идут внутренние методы, которые повторяют agi-bin/NetSDS-route.pl ,
@@ -516,6 +516,102 @@ sub _get_dial_route {
     }
     my $result = $sth->fetchrow_hashref;
     return (1, $result->{'dst_type'}, $result->{'dst_str'}, $result->{'try'});
+}
+
+#
+# Рисуем таблицу прав доступа 
+# 
+sub loadpermissions { 
+  my $this = shift; 
+  # Head
+  my $errout = "<p style=\"color: red;\">%s</p>"; 
+  my $out = "<table class=\"table table-bordered table-hover table-condensed\" id=\"pearlpbx_permissions_table\">"; 
+  $out .= "<thead><tr>";
+  my $directions = $this->_get_directions_list;
+  unless ( defined ( $directions ) ) { 
+    return sprintf ( $errout, $this->{dbh}->errstr ); 
+  }
+  # X 
+  $out .= "<th colspan=2>n/n</th>";
+  my $out2 .= "<tr><th colspan=2><input type=\"checkbox\" id=\"XYall\"></th>";
+  my $Xcount = @{$directions}; # Количество направлений
+  foreach my $dir ( @{$directions} ) { 
+    $out .= "<th>".$dir->{'dlist_name'}."</th>";
+    my $checkboxY = "<input type=\"checkbox\" id=\"Y".$dir->{'dlist_id'}."\">"; 
+    $out2 .= "<th style=\"background: grey;\">".$checkboxY."</th>";
+  }
+  $out2 .= "</tr>";
+  $out .= "</tr>".$out2."</thead>";
+
+  # Y 
+  my $sip_peers = $this->_get_sip_peers; 
+  unless ( defined ( $sip_peers )) { 
+    return sprintf ( $errout, $this->{dbh}->errstr );
+  }
+  my $Ycount = @{$sip_peers}; 
+  foreach my $sip_peer ( @{$sip_peers} ) { 
+    $out .= "<tr><th>".$sip_peer->{'name'}."</th>";
+    $out .= "<th style=\"background: grey;\"><input type=\"checkbox\" id=\"Xall".$sip_peer->{'id'}."\"></th>"; 
+    for (my $x = 0; $x < $Xcount; $x++) { 
+      $out .= "<td><input type=\"checkbox\" id=\"X".$sip_peer->{'id'}."_Y".${$directions}[$x]->{'dlist_id'}."\"></td>";
+    }
+  }
+
+  $out .= "</table>"; 
+  return $out; 
+}
+
+sub _get_directions_list { 
+  my $this = shift;
+  my $sql = "select dlist_id,dlist_name from routing.directions_list order by dlist_name";
+
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute(); }; 
+  if ( $@ ) {
+    return undef; 
+  }
+  my @d; 
+  while ( my $row = $sth->fetchrow_hashref ) {  
+    $row->{'dlist_name'} = str_encode($row->{'dlist_name'}); 
+    push @d,$row; 
+  }
+  return \@d; 
+}
+
+sub _get_sip_peers { 
+  my $this = shift; 
+
+  my $sql = "select id, name, comment from public.sip_peers order by name"; 
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute();}; 
+  if ($@) { 
+    return undef; 
+  }
+  my @rows; 
+  while (my $row = $sth->fetchrow_hashref) { 
+    $row->{'comment'} = str_encode ( $row->{'comment'}); 
+    push @rows,$row; 
+  }
+  return \@rows; 
+}
+
+sub loadpermissionsJSON { 
+  my $this = shift; 
+
+  my $sql = "select direction_id, peer_id from routing.permissions order by id";
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute; }; 
+  if ( $@ ) { 
+    return $this->{dbh}->errstr; 
+  }
+
+  my @rows; 
+
+  while (my $row = $sth->fetchrow_hashref) { 
+    push @rows,$row; 
+  }
+
+  return encode_json (\@rows); 
 }
 
 1;

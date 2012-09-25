@@ -84,8 +84,7 @@
 								<a href="javascript:void(0)" onClick="pearlpbx_show('#sip-connections')">SIP-подключения</a></li>
 							<li><a href="javascript:void(0)" onClick="pearlpbx_show_queues()">Группы/Очереди</a><li>
               <li><a href="javascript:void(0)" onClick="pearlpbx_show('#directions')">Направления</a></li>
-              <li><a href="#">Права доступа</a></li>
-							<li><a href="#">Маршрутизация</a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_reload_permissions(); pearlpbx_show('#pearlpbx_permissions');">Права доступа</a></li>
               <li><a href="#">Установка номеров А</a></li>
 							<li><a href="#">Интеграция</a><li>
               <li class="nav-header">Отчеты</li>
@@ -860,8 +859,27 @@ function cdrfilter_submit () {
   </div>
 </div>
 
-
 <!-- Конец: Окно результата проверки маршрутизации -->
+
+<!-- Страница @Права доступа --> 
+<div id="pearlpbx_permissions" style="display: none">
+ <div class="pearlpbx-main-container-header">
+  <h1><center> Права доступа </center></h1>
+ </div>
+ <div id="pearlpbx_permissions_div">
+
+ </div>
+ <div> 
+  <center> 
+  <a href="#" class="btn btn-primary" onClick="pearlpbx_save_permissions()">Сохранить</a>
+   <a href="#" class="btn" onClick="pearlpbx_reload_permissions()">Отменить</a>
+  </center>
+ </div>
+
+</div>
+<!-- Конец Страница Права доступа --> 
+
+
 
 </body>
 </html>
