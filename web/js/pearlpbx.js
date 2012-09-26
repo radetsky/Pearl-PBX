@@ -1,7 +1,66 @@
+function pearlpbx_save_permissions() { 
+	var matrix = new String;  
+	var regstr=/^X\d+.Y\d+/;
+	var count = 0;  
+
+	$('#pearlpbx_permissions_div').find('input[type=checkbox]').each(function() { 
+		//alert("id="+$(this).attr('id')+ " " + regstr.test( $(this).attr('id') ));
+		var id = $(this).attr('id');
+		if (regstr.test( id ) == true ) {
+			count = count + 1; 
+			if ($(this).attr('checked') == 'checked') { 
+				matrix = matrix +id+"=1,"; 
+			} else { 
+				matrix = matrix +id+"=0,"; 
+			}
+		} 
+
+	});
+	//alert("count="+count); 
+	$.post("/route.pl",
+	{
+		a:"savepermissions",
+		b: matrix,
+	}, function (data) { 
+		var result = data.split(":",2);
+			if (result[0] == "OK") {
+				alert("Права сохранены успешно!");
+				return true;
+			}
+			if (result[0] == "ERROR") { 
+				alert("Сервер вернул ошибку! : "+data);
+				return false;
+			}
+		}, "html");
+}
+
+function pearlpbx_permissions_selectall() {
+	var checked = $('#XYall').attr('checked');
+	$('#pearlpbx_permissions_div').find('input[type=checkbox]').each(function() { 
+			if (checked == 'checked') { 
+				$(this).attr('checked','checked'); 
+			} else {
+				$(this).attr('checked',false);
+			}
+	}); 
+}
 function pearlpbx_permissions_set_y(yid) {
 	var checked = $('#'+yid).attr('checked');
 	$('#pearlpbx_permissions_div').find('input[type=checkbox]').each(function() { 
-		if ($(this).attr('id').search(yid) > 0) {
+		if ($(this).attr('id').search(yid+'$') >= 0) {
+			if (checked == 'checked') { 
+				$(this).attr('checked','checked'); 
+			} else {
+				$(this).attr('checked',false);
+			}
+		}
+	}); 
+}
+function pearlpbx_permissions_set_x(x) {
+	var checked = $('#'+x).attr('checked');
+	$('#pearlpbx_permissions_div').find('input[type=checkbox]').each(function() { 
+		//alert("id:" + $(this).attr('id') + " search: " + $(this).attr('id').search(x)); 
+		if ($(this).attr('id').search(x) >= 0 ) { 
 			if (checked == 'checked') { 
 				$(this).attr('checked','checked'); 
 			} else {

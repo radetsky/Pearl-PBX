@@ -532,8 +532,8 @@ sub loadpermissions {
     return sprintf ( $errout, $this->{dbh}->errstr ); 
   }
   # X 
-  $out .= "<th colspan=2>n/n</th>";
-  my $out2 .= "<tr><th colspan=2><input type=\"checkbox\" id=\"XYall\"></th>";
+  $out .= "<th colspan=2>".str_encode("Выделить все")."</th>";
+  my $out2 .= "<tr><th colspan=2><input type=\"checkbox\" id=\"XYall\" onChange=\"pearlpbx_permissions_selectall()\"></th>";
   my $Xcount = @{$directions}; # Количество направлений
   foreach my $dir ( @{$directions} ) { 
     $out .= "<th>".$dir->{'dlist_name'}."</th>";
@@ -551,7 +551,7 @@ sub loadpermissions {
   my $Ycount = @{$sip_peers}; 
   foreach my $sip_peer ( @{$sip_peers} ) { 
     $out .= "<tr><th>".$sip_peer->{'name'}."</th>";
-    $out .= "<th style=\"background: grey;\"><input type=\"checkbox\" id=\"Xall".$sip_peer->{'id'}."\"></th>"; 
+    $out .= "<th style=\"background: grey;\"><input type=\"checkbox\" id=\"X".$sip_peer->{'id'}."\" onChange=\"pearlpbx_permissions_set_x('X".$sip_peer->{'id'}."')\"></th>"; 
     for (my $x = 0; $x < $Xcount; $x++) { 
       $out .= "<td><input type=\"checkbox\" id=\"X".$sip_peer->{'id'}."_Y".${$directions}[$x]->{'dlist_id'}."\"></td>";
     }
@@ -612,6 +612,45 @@ sub loadpermissionsJSON {
   }
 
   return encode_json (\@rows); 
+}
+
+sub savepermissions { 
+  my ($this, $permissions) = @_; 
+
+  my (@matrix) = split (',',$permissions); 
+  my $mat = @matrix; 
+  my $count = 0; 
+
+  # $this->{dbh}->begin_work; 
+
+  foreach my $element ( @matrix ) {
+    $element =~ /^X(\d+).Y(\d+)=(\d)$/; 
+    my $sip_peer = $1; 
+    my $direction_id = $2;
+    my $val = $3; 
+  
+    if ( ( $sip_peer > 0 ) and ( $direction_id > 0 ) ) { 
+      if ( $val > 0 ) { 
+        my $sql = "select * from routing.permissions where peer_id=? and direction_id=?"; 
+        my $sth = $this->{dbh}->prepare($sql); 
+        eval { $sth->execute ($sip_peer,$direction_id); }; 
+        if ($@) { 
+          return $this->{dbh}->errstr; 
+        } 
+        my $row = $sth->fetchrow_hashref; 
+        unless ( $row->{'id'} ) { 
+          $this->{dbh}->do ("insert into routing.permissions (peer_id,direction_id) values ($sip_peer,$direction_id)");
+        }
+      }
+      if ( $val == 0 ){ 
+        $this->{dbh}->do ("delete from routing.permissions where peer_id=".$sip_peer." and direction_id=".$direction_id); 
+      }
+      $count++;     
+    }
+
+  }
+  $this->{dbh}->commit; 
+  return "OK:".$count;  
 }
 
 1;

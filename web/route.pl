@@ -175,6 +175,15 @@ if ($action eq 'loadpermissionsJSON') {
 	exit(0);
 }
 
+if ($action eq 'savepermissions') { 
+	my $b = $pearl->{cgi}->param('b'); 
+	unless ( defined ( $b )) { 
+		$pearl->htmlError("ERROR: permissions is not defined."); 
+		exit(0); 
+	}
+	print $route->savepermissions($b); 
+	exit(0); 
+}
 $pearl->htmlError("Action not found.");
 exit(0);
 
