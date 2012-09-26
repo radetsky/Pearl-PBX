@@ -537,7 +537,7 @@ sub loadpermissions {
   my $Xcount = @{$directions}; # Количество направлений
   foreach my $dir ( @{$directions} ) { 
     $out .= "<th>".$dir->{'dlist_name'}."</th>";
-    my $checkboxY = "<input type=\"checkbox\" id=\"Y".$dir->{'dlist_id'}."\">"; 
+    my $checkboxY = "<input type=\"checkbox\" id=\"Y".$dir->{'dlist_id'}."\" onChange=\"pearlpbx_permissions_set_y('Y".$dir->{'dlist_id'}."')\">"; 
     $out2 .= "<th style=\"background: grey;\">".$checkboxY."</th>";
   }
   $out2 .= "</tr>";

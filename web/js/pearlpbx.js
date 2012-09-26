@@ -1,3 +1,16 @@
+function pearlpbx_permissions_set_y(yid) {
+	var checked = $('#'+yid).attr('checked');
+	$('#pearlpbx_permissions_div').find('input[type=checkbox]').each(function() { 
+		if ($(this).attr('id').search(yid) > 0) {
+			if (checked == 'checked') { 
+				$(this).attr('checked','checked'); 
+			} else {
+				$(this).attr('checked',false);
+			}
+		}
+	}); 
+}
+
 function pearlpbx_reload_permissions() { 
 	$('#pearlpbx_permissions_div').empty();
 	$.get("/route.pl", { 
