@@ -653,6 +653,54 @@ sub savepermissions {
   return "OK:".$count;  
 }
 
+sub list_trunkgroups_tab { 
+  my $this = shift;
+  my $sql = "select tgrp_id, tgrp_name from routing.trunkgroups order by tgrp_name";
+
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute(); }; 
+  if ( $@ ) {
+    print $this->{dbh}->errstr; 
+    return undef; 
+  }
+
+  my $out = '<ul class="nav nav-tabs">';
+  while ( my $row = $sth->fetchrow_hashref ) { 
+    $row->{'dlist_name'} = str_encode ($row->{'dlist_name'}); 
+    $out .= '<li><a href="#pearlpbx_trunkgroup_edit" data-toggle="modal" 
+         onClick="pearlpbx_trunkgroup_load_by_id(\''.$row->{'tgrp_id'}.'\',
+          \''.$row->{'tgrp_name'}.'\')">'.
+         $row->{'tgrp_name'}.'</a></li>';
+  }    
+  $out .= "</ul>";
+  return $out; 
+}
+
+sub gettrunkgroup_items { 
+  my $this = shift; 
+  my $tgrp_id = shift; 
+
+  my $sql = "select a.tgrp_item_id, a.tgrp_item_peer_id, b.name 
+    from routing.trunkgroup_items a , public.sip_peers b 
+      where a.tgrp_item_group_id = ? 
+        and a.tgrp_item_peer_id = b.id 
+          order by b.name";
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute($tgrp_id); }; 
+  if ( $@ ) {
+    print $this->{dbh}->errstr; 
+    return undef; 
+  }
+  my @rows; 
+
+  while (my $row = $sth->fetchrow_hashref) { 
+    push @rows,$row; 
+  }
+  return encode_json (\@rows); 
+
+}
+
+
 1;
 
 __END__

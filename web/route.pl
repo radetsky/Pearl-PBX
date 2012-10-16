@@ -51,6 +51,7 @@ if ( $action eq 'list-directions-tab') {
 	print $route->list_directions_tab;
 	exit(0); 
 }
+
 if ( $action eq 'getdirection' ) { 
 	my $b = $pearl->{cgi}->param('b');
 	unless ( defined ( $b ) ) { 
@@ -184,6 +185,20 @@ if ($action eq 'savepermissions') {
 	print $route->savepermissions($b); 
 	exit(0); 
 }
+if ( $action eq 'list-trunkgroups-tab') {
+	print $route->list_trunkgroups_tab;
+	exit(0); 
+}
+if ( $action eq 'gettrunkgroup-items') { 
+	my $b = $pearl->{cgi}->param('b'); 
+	unless ( defined ( $b )) { 
+		$pearl->htmlError ("ERROR: tgrp_id is not defined.");
+		exit(0);
+	}
+	print $route->gettrunkgroup_items($b);
+	exit(0);
+}
+
 $pearl->htmlError("Action not found.");
 exit(0);
 

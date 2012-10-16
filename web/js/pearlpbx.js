@@ -1,3 +1,33 @@
+function pearlpbx_empty_trunkgroup_edit_form() { 
+	$('#pearlpbx_edit_trunkgroup_items_list tbody').empty();
+	$('#input_trunkgroup_hidden_oldname').val('');
+	$('#input_trunkgroup_edit_name').val('');
+	$('#input_trunkgroup_hidden_id').val('');
+	
+}
+function pearlpbx_trunkgroup_load_by_id (tgrp_id, tgrp_name) {
+	$('#input_trunkgroup_hidden_oldname').val(tgrp_name);
+	$('#input_trunkgroup_hidden_id').val(tgrp_id); 
+	$('#input_trunkgroup_edit_name').val(tgrp_name);
+
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+	
+	$('#pearlpbx_edit_trunkgroup_items_list tbody').empty();
+	$.getJSON("/route.pl",
+	{
+		a: "gettrunkgroup-items",
+		b: tgrp_id,
+	},function (json) { 
+		jQuery.each(json, function () {
+			var remurl = '<td><a href="#" onClick="pearlpbx_tgrpitem_remove('+
+			this['tgrp_item_id']+')">'+remicon+'</a></td>';
+
+			$('#pearlpbx_edit_trunkgroup_items_list').append("<tr><td>"+this['name']+remurl+"</tr>");
+		}); 		
+	} );
+
+}
+
 function pearlpbx_save_permissions() { 
 	var matrix = new String;  
 	var regstr=/^X\d+.Y\d+/;

@@ -83,10 +83,12 @@
               <li>
 								<a href="javascript:void(0)" onClick="pearlpbx_show('#sip-connections')">SIP-подключения</a></li>
 							<li><a href="javascript:void(0)" onClick="pearlpbx_show_queues()">Группы/Очереди</a><li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#trunkgroups')">Транкгруппы</a></li>
               <li><a href="javascript:void(0)" onClick="pearlpbx_show('#directions')">Направления</a></li>
               <li><a href="javascript:void(0)" onClick="pearlpbx_reload_permissions(); pearlpbx_show('#pearlpbx_permissions');">Права доступа</a></li>
               <li><a href="#">Установка номеров А</a></li>
-							<li><a href="#">Интеграция</a><li>
+							<li><a href="#">Интеграция</a></li>
+              
               <li class="nav-header">Отчеты</li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-general')">Общие</a></li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#cdr-filter')">CDR-фильтр</a></li>
@@ -879,7 +881,92 @@ function cdrfilter_submit () {
 </div>
 <!-- Конец Страница Права доступа --> 
 
+<!-- Страница со списком транкгрупп --> 
+<div id="trunkgroups" style="display: none">
+ <div class="pearlpbx-main-container-header">
+  <h1><center> Транкгруппы </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader" id="pearlpbx_trunkgroups_list">
+ </div>
+ 
+ <div id="pearlpbx_button_add_trunkgroups"> 
+  <center> 
+   <a href="#pearlpbx_trunkgroup_edit" data-toggle="modal" class="btn btn-primary" onClick="pearlpbx_empty_trunkgroup_edit_form()">Добавить новую транкгруппу</a>
+  </center>
+ </div>
+<!-- Скрипт, который заполняет список транкгрупп -->
+<script type="text/javascript">
+    <!--
+ 
+      $('#pearlpbx_trunkgroups_list').load('/route.pl?a=list-trunkgroups-tab');
+      
+    -->
+</script>
 
+</div>
+<!-- Конец Страница со списком транкгрупп --> 
+
+<!-- Диалог редактирования транкгруппы. Модальный. -->
+<div class="modal fade" id="pearlpbx_trunkgroup_edit" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Редактирование транкгруппы</h3>
+  </div>
+  <div class="modal-body">
+    <form class="form-horizontal">
+      <fieldset>
+        <input type='hidden' id='input_trunkgroup_hidden_oldname' value=''>
+        <input type='hidden' id='input_trunkgroup_hidden_id' value=''>
+        
+        <div class="control-group">
+          <label class="control-label" for="input_trunkgroup_edit_name">Название транкгруппы</label>
+          <div class="controls">
+            <input type="text" class="input-xlarge" id="input_trunkgroup_edit_name">
+            <p class="help-block">Название транкгруппы состоит только из ЛАТИНСКИХ символов и цифр. Например: "trunkgroup123".</p>
+          </div>
+        </div>
+
+          <center>
+          <table class="table table-bordered" id="pearlpbx_edit_trunkgroup_items_list">
+            <thead>
+              <tr>
+                <th>Транк</th>
+              </tr>
+            </thead>
+            <!--  А здесь размещаются список транков, которые подгружаются автоматически --> 
+          </table>
+          </center>
+
+
+        <div class="control-group">
+          <div class="controls">
+            <select name="input_trunkgroup_edit_members"  
+            id="input_trunkgroup_edit_members" style="width: 300px;">
+            </select>
+            <a class="btn btn-inverse" onclick="pearlpbx_trunkgroup_add_member();">Добавить транк</a>
+            <p class="help-block">Выберите транк из списка внешних транков и нажмите кнопку "Добавить транк".</p>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+    
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Отменить</a>
+    <a href="#" class="btn btn-primary" onClick="pearlpbx_trunkgroup_update()">Сохранить</a>
+    <a href="#" class="btn btn-danger" onClick="pearlpbx_trunkgroup_remove()">Удалить транкгруппу</a>
+  </div>
+</div>
+
+<script type="text/javascript">
+    <!--
+
+      $('select#input_trunkgroup_edit_members').load("/sip.pl?a=list&b=externalAsOptionIdValue");
+      
+    -->
+</script>
+
+<!-- Конец диалога редактирования очереди --> 
 
 </body>
 </html>
