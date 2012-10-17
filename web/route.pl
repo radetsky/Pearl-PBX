@@ -199,6 +199,66 @@ if ( $action eq 'gettrunkgroup-items') {
 	exit(0);
 }
 
+if ( $action eq 'newtrunkgroup' ) {
+	my $b = $pearl->{cgi}->param('b'); 
+	unless ( defined ( $b )) { 
+		$pearl->htmlError("ERROR: tgrp_name is not defuned.");
+		exit(0);
+	}
+	print $route->newtrunkgroup($b);
+	exit(0);
+}
+
+if ( $action eq 'updatetrunkgroup') { 
+	my $b = $pearl->{cgi}->param('b');
+	my $c = $pearl->{cgi}->param('c'); 
+	unless ( defined ( $b )) {
+		$pearl->htmlError("ERROR: tgrp_id is not defined.");
+		exit(0);
+	}
+	unless ( defined ( $c )) { 
+		$pearl->htmlError("ERROR: tgrp_name is not defined.");
+		exit(0);
+	}
+	print $route->updatetrunkgroup($b,$c); 
+	exit(0);
+}
+
+if ( $action eq 'tgrp_addmember' ) { 
+	my $b = $pearl->{cgi}->param('newmember'); 
+	unless ( defined ( $b )) { 
+		$pearl->htmlError("ERROR: newmember is not defined."); 
+		exit(0);
+	}
+	my $c = $pearl->{cgi}->param('tgrp_id'); 
+	unless ( defined ( $c )) { 
+		$pearl->htmlError("ERROR: tgrp_id is not defined."); 
+		exit(0); 
+	}
+	print $route->tgrp_addmember($b,$c);
+	exit(0);
+}
+
+if ($action eq 'tgrp_removemember') {
+	my $b = $pearl->{cgi}->param('member');
+	unless ( defined ( $b )) {
+		$pearl->htmlError("ERROR: tgrp_item_id is not defined."); 
+		exit(0);
+	}
+	print $route->tgrp_removemember ($b); 
+	exit(0);
+}
+
+if ($action eq 'removetrunkgroup') { 
+	my $b = $pearl->{cgi}->param('b'); 
+	unless ( defined ( $b )) { 
+		$pearl->htmlError("ERROR: tgrp_id is not defined."); 
+		exit(0);
+	}
+	print $route->removetrunkgroup($b);
+	exit(0);
+}
+
 $pearl->htmlError("Action not found.");
 exit(0);
 

@@ -151,11 +151,10 @@ sub list_directions_tab {
 
 	my $out = '<ul class="nav nav-tabs">';
   while ( my $row = $sth->fetchrow_hashref ) { 
-    $row->{'dlist_name'} = str_encode ($row->{'dlist_name'}); 
+    my $dname = str_encode ($row->{'dlist_name'}); 
 	  $out .= '<li><a href="#pearlpbx_direction_edit" data-toggle="modal" 
          onClick="pearlpbx_direction_load_by_id(\''.$row->{'dlist_id'}.'\',
-          \''.$row->{'dlist_name'}.'\')">'.
-         $row->{'dlist_name'}.'</a></li>';
+          \''.$dname.'\')">'.$dname.'</a></li>';
 	}		 
   $out .= "</ul>";
 	return $out; 
@@ -698,6 +697,88 @@ sub gettrunkgroup_items {
   }
   return encode_json (\@rows); 
 
+}
+
+sub newtrunkgroup { 
+  my $this = shift; 
+  my $tgrp_name = shift; 
+
+  my $sql = "insert into routing.trunkgroups (tgrp_name) values (?)"; 
+  my $sth = $this->{dbh}->prepare($sql);
+  
+  eval { $sth->execute($tgrp_name);};
+  if ($@) { 
+    return $this->{dbh}->errstr;
+  }
+  $this->{dbh}->commit;
+  return "OK";
+}
+
+sub updatetrunkgroup { 
+  my $this = shift; 
+  my $tgrp_id = shift; 
+  my $tgrp_name = shift; 
+
+  my $sql = "update routing.trunkgroups set tgrp_name=? where tgrp_id=?"; 
+  my $sth = $this->{dbh}->prepare ($sql); 
+  eval { $sth->execute($tgrp_name,$tgrp_id);};
+  if ($@) { 
+    return $this->{dbh}->errstr;
+  }
+  $this->{dbh}->commit;
+  return "OK"; 
+}
+
+sub tgrp_addmember { 
+  my ($this, $newmember, $tgrp_id) = @_; 
+
+  #check for existing member in trunkgroup 
+  my $sql = "select tgrp_item_id from routing.trunkgroup_items where tgrp_item_peer_id=? and tgrp_item_group_id=?"; 
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute($newmember,$tgrp_id); }; 
+  if ($@) { 
+    return $this->{dbh}->errstr; 
+  }
+  my $row = $sth->fetchrow_hashref;
+  if ($row->{'tgrp_item_id'}) { 
+    return "ALREADY";
+  }
+  $sql = "insert into routing.trunkgroup_items (tgrp_item_peer_id,tgrp_item_group_id) values (?,?);";
+  $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute ($newmember, $tgrp_id); };
+  if ( $@ ) { 
+    return $this->{dbh}->errstr; 
+  }
+  $this->{dbh}->commit;
+  return "OK"; 
+} 
+
+sub tgrp_removemember { 
+  my ($this, $id) = @_; 
+
+  my $sql = "delete from routing.trunkgroup_items where tgrp_item_id=?"; 
+  my $sth = $this->{dbh}->prepare($sql); 
+
+  eval { $sth->execute($id); };
+  if ($@) { 
+    return $this->{dbh}->errstr; 
+  }
+  $this->{dbh}->commit;
+  return "OK"; 
+
+}
+
+sub removetrunkgroup { 
+  my ($this, $id) = @_; 
+
+  my $sql = "delete from routing.trunkgroups where tgrp_id=?"; 
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute($id);}; 
+  if ($@) { 
+    return $this->{dbh}->errstr; 
+  }
+  $this->{dbh}->commit; 
+  return "OK"; 
 }
 
 

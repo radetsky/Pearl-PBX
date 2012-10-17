@@ -1,9 +1,142 @@
+function pearlpbx_tgrpitem_remove (tgrp_item_id) { 
+
+	var confirmed = confirm ("Вы действительно уверены в том, что хотите удалить транк из группы ?");
+	if (confirmed == true) { 
+		$.get("/route.pl",
+		{ a: "tgrp_removemember",
+		  member: tgrp_item_id,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				var tgrp_id = $('#input_trunkgroup_hidden_id').val();
+				var tgrp_name = $('#input_trunkgroup_edit_name').val();
+				pearlpbx_trunkgroup_load_by_id(tgrp_id,tgrp_name);
+				return true;
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+	}
+}
+function pearlpbx_trunkgroup_add_member() { 
+	var member = $('select#input_trunkgroup_edit_members option:selected').val(); 
+	var tgrp_id = $('#input_trunkgroup_hidden_id').val();
+	var tgrp_name = $('#input_trunkgroup_edit_name').val();
+
+	$.get("/route.pl",
+		{ a: "tgrp_addmember",
+		  newmember: member, 
+		  tgrp_id: tgrp_id,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_trunkgroup_load_by_id(tgrp_id,tgrp_name);
+				return true;
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			if (data == "ALREADY") { 
+				alert ("Данный транк уже присутствует в группе.");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+
+}
+function pearlpbx_trunkgroup_add(tgrp_name) { 
+	var valid = pearlpbx_validate_russian_name(tgrp_name);
+	if (valid == false) { 
+		return false; 
+	}
+	$.get("/route.pl",
+		{ a: "newtrunkgroup",
+		  b: tgrp_name, 
+		},function(data) 
+		{
+			var result = data.split(":",2);
+			if (result[0] == "OK") {
+				$('#pearlpbx_trunkgroups_list').load('/route.pl?a=list-trunkgroups-tab');
+				$('#pearlpbx_trunkgroup_edit').modal('hide');
+				return true;
+			}
+			if (result[0] == "ERROR") { 
+				alert("Сервер вернул ошибку! : "+result[1]);
+				return false;
+			}
+		}, "html"); 
+	return false; 
+}
+
+function pearlpbx_trunkgroup_update() { 
+	var tgrp_id = $('#input_trunkgroup_hidden_id').val(); 
+	var tgrp_name = $('#input_trunkgroup_edit_name').val();
+	if (tgrp_id == '') {
+		// Добавляем новую группу 
+		return pearlpbx_trunkgroup_add(tgrp_name);
+	}
+	$.get("/route.pl",
+		{ a: "updatetrunkgroup",
+		  b: tgrp_id,
+		  c: tgrp_name 
+		},function(data) 
+		{
+			var result = data.split(":",2);
+			if (result[0] == "OK") {
+				$('#pearlpbx_trunkgroups_list').load('/route.pl?a=list-trunkgroups-tab');
+				$('#pearlpbx_trunkgroup_edit').modal('hide');
+				return true;
+			}
+			if (result[0] == "ERROR") { 
+				alert("Сервер вернул ошибку! : "+result[1]);
+				return false;
+			}
+		}, "html"); 
+	return false; 
+}
+function pearlpbx_trunkgroup_remove() { 
+	var tgrp_id = $('#input_trunkgroup_hidden_id').val(); 
+	if (tgrp_id == '') {
+		alert("Невозможно удалить несохраненную группу."); 
+		return false; 
+	}
+
+	var confirmed = confirm ("Вы уверены, что хотите удалить данную группу ?");
+	if (confirmed == false) { 
+		return false;
+	}
+
+	$.get("/route.pl",
+		{ a: "removetrunkgroup",
+		  b: tgrp_id, 
+		},function(data) 
+		{
+			var result = data.split(":",2);
+			if (result[0] == "OK") {
+				$('#pearlpbx_trunkgroups_list').load('/route.pl?a=list-trunkgroups-tab');
+				$('#pearlpbx_trunkgroup_edit').modal('hide');
+				return true;
+			}
+			if (result[0] == "ERROR") { 
+				alert("Сервер вернул ошибку! : "+result[1]);
+				return false;
+			}
+		}, "html"); 
+	return false; 
+
+}
 function pearlpbx_empty_trunkgroup_edit_form() { 
 	$('#pearlpbx_edit_trunkgroup_items_list tbody').empty();
 	$('#input_trunkgroup_hidden_oldname').val('');
 	$('#input_trunkgroup_edit_name').val('');
 	$('#input_trunkgroup_hidden_id').val('');
-	
+
 }
 function pearlpbx_trunkgroup_load_by_id (tgrp_id, tgrp_name) {
 	$('#input_trunkgroup_hidden_oldname').val(tgrp_name);
