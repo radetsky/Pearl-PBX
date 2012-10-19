@@ -54,7 +54,7 @@ if ( defined ( $execreport ) ) {
 	my $params = $pearl->cgi_params_to_hashref(); 
 
 	$pearl->htmlHeader;
-  $report->report ( $params );
+    $report->report ( $params );
 
 	exit(0); 
 }

@@ -1,3 +1,25 @@
+function pearlpbx_load_lost_calls (queuename, sincedatetime,tilldatetime) {
+	$('#pearlpbx_lost_calls_list tbody').empty();
+	$('#pearlpbx_lost_calls_list').append("<tr><td colspan=5>Request sent...</td></tr>");
+	$.getJSON("/reports.pl",
+	{
+		"exec-report": "listlostcalls",
+		queuename: queuename,
+		sincedatetime: sincedatetime,
+		tilldatetime: tilldatetime, 
+	},function (json) { 
+		$('#pearlpbx_lost_calls_list tbody').empty();
+		jQuery.each(json, function () {
+			$('#pearlpbx_lost_calls_list').append("<tr><td>"+this['msisdn']
+				+"</td><td>"+this['datetimelost']+"</td>"
+				+"<td>"+this['holdtime']+"</td>"
+				+"<td>"+this['lucky']+"</td>"
+				+"<td>"+this['luckyhold']+"</td>"
+				+"</tr>");
+		}); 		
+	} );	
+
+}
 function pearlpbx_tgrpitem_remove (tgrp_item_id) { 
 
 	var confirmed = confirm ("Вы действительно уверены в том, что хотите удалить транк из группы ?");
@@ -129,7 +151,6 @@ function pearlpbx_trunkgroup_remove() {
 			}
 		}, "html"); 
 	return false; 
-
 }
 function pearlpbx_empty_trunkgroup_edit_form() { 
 	$('#pearlpbx_edit_trunkgroup_items_list tbody').empty();

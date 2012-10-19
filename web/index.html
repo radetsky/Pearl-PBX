@@ -968,6 +968,34 @@ function cdrfilter_submit () {
 
 <!-- Конец диалога редактирования очереди --> 
 
+<!-- Модальный диалог списка пропущенных звонков по группе. -->
+<div class="modal fade" id="pearlpbx_lost_calls" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Пропущенные звонки</h3>
+  </div>
+  <div class="modal-body">
+    <table class="table table-bordered" id="pearlpbx_lost_calls_list">
+      <thead>
+        <tr>
+          <th>Номер А</th>
+          <th>Дата и время потерянного звонка</th>
+          <th>Время ожидания на линии</th>
+          <th>Дата и время принятого звонка</th>
+          <th>Время ожидания на линии</th>
+        </tr>
+      </thead>
+
+    </table>
+    
+
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn btn-primary" data-dismiss="modal">OK</a>
+  </div>
+</div>
+<!-- Конец модального диалога списка пропущенных звонков по группе. -->
+
 </body>
 </html>
 

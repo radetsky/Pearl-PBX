@@ -81,7 +81,7 @@ sub report {
     my $tilldatetime  = $this->filldatetime( $params->{'dateTo'},  $params->{'timeTo'} );
 
     my $sql =
-"select count(queuename) as s,queuename from queue_log where event='ABANDON' 
+"select count(queuename) as s,queuename from queue_log where event in ('ABANDON','EXITWITHKEY','EXITWITHTIMEOUT') 
     and time between ? and ? group by queuename order by count(queuename) desc"; 
     my $sth = $this->{dbh}->prepare($sql);
     eval { $sth->execute( $sincedatetime, $tilldatetime ); };
@@ -108,6 +108,8 @@ sub report {
 		my $template_vars = { 
 			cdr_keys => \@cdr_keys,
 			jdata => $jdata, 
+      sincedatetime => $sincedatetime,
+      tilldatetime => $tilldatetime,
 		};  
 		$template->process('LostInGroups.html', $template_vars) || die $template->error(); 
 		
