@@ -963,14 +963,18 @@ sub process {
                 next;
             }
             $this->agi->verbose("current_try = $current_try");
-            $res =
-              $this->agi->exec( "Dial", "SIP/$dst_str/$extension|120|tTg" );
+            $res = $this->agi->exec( "Dial", "SIP/$dst_str/$extension|120|tTg" );
             $this->agi->verbose( "result = $res", 3 );
             $dialstatus = $this->agi->get_variable("DIALSTATUS");
             $this->agi->verbose( "DIALSTATUS=" . $dialstatus, 3 );
             if ( $dialstatus =~ /^ANSWER/ ) {
                 exit(0);
             }
+						if ( $dialstatus =~ /^BUSY/ ) { 
+								$this->agi->exec ("Busy","8"); 
+								$this->agi->exec ("Hangup","17"); 
+								exit(0); 
+						}
 
         }    # End of (if tgrp)
 
