@@ -919,6 +919,10 @@ sub process {
             if ( $dialstatus =~ /^ANSWER/ ) {
                 exit(0);
             }
+						if ( $dialstatus =~ /^BUSY/ ) {
+                $this->agi->exec ("Hangup","17");
+                exit(0);
+            }
         }
         if ( $dst_type eq "trunk" ) {
             $this->agi->verbose( "Dial SIP/$dst_str/$extension", 3 );
@@ -930,7 +934,10 @@ sub process {
             if ( $dialstatus =~ /^ANSWER/ ) {
                 exit(0);
             }
-
+						if ( $dialstatus =~ /^BUSY/ ) {
+                $this->agi->exec ("Hangup","17");
+                exit(0);
+            }
         }
 
         if ( $dst_type eq 'context' ) {
@@ -952,7 +959,10 @@ sub process {
                 if ( $dialstatus =~ /^ANSWER/ ) {
                     exit(0);
                 }
-
+								if ( $dialstatus =~ /^BUSY/ ) {
+               		$this->agi->exec ("Hangup","17");
+               	 	exit(0);
+           		 	}
                 next;
             }
             if ( $dst_str eq $tgrp_first ) {
@@ -971,7 +981,6 @@ sub process {
                 exit(0);
             }
 						if ( $dialstatus =~ /^BUSY/ ) { 
-								$this->agi->exec ("Busy","8"); 
 								$this->agi->exec ("Hangup","17"); 
 								exit(0); 
 						}

@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Radetsky PearlPBX - вход</title>
+		<link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.png">
+		<link type="text/css" href="css/bootstrap.css" rel="stylesheet" />
+		<link type="text/css" href="css/pearlpbx.css" media="all" rel="stylesheet" />  
+
+
+		<script type="text/javascript" src="/js/jquery.js"></script>
+		<script type="text/javascript">
+		
+			$(document).ready(function(){
+				$('#login').css({
+			        position:'absolute',
+			        left: ($(window).width() - ($('#login').outerWidth())/2)-100,
+			        top: ($(window).height() - $('#login').outerHeight())/2
+			    });
+
+				$('#loginSubmit').click(function(){
+					$('#loginForm').submit();
+				});
+
+				if(location.hash.indexOf('no') != -1) {
+					$('#err').fadeIn('slow').delay(2000).fadeOut('slow');
+				}
+			});
+		</script>
+	</head>
+	<body>
+	 <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="/login.html">Radetsky Pearl PBX</a>
+          <p class="navbar-text pull-right">&copy; by Alex Radetsky 2011 - 2012 <a href="http://www.pearlpbx.com">www.pearlpbx.com</a></p>
+        </div>
+      </div>
+    </div>
+
+		<div id="login">
+			<form method="post" action="/login.pl" id="loginForm">
+				<div id="err" style="color:red;font-weight:bold;text-align:center;padding:4px;display:none">Ошибка: неверное имя или пароль!</div>
+				<table width="100%" border="0" cellpadding="0" cellspacing="8" class='table table-bordered'>
+					<tr>
+						<td>Логин</td>
+						<td align="right"><input id='log_username' type="text" name="log_username" value="" /></td>
+					</tr>
+					<tr>
+						<td>Пароль</td>
+						<td align="right"><input id='log_password' type="password" name="log_password" value="" /></td>
+					</tr>
+					<tr>
+						<td colspan="2"><center>
+							<button id="loginSubmit" class="btn-primary">Войти</button>
+						</center>
+					</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+	</body>
+</html>

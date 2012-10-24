@@ -2165,3 +2165,8 @@ COMMENT ON FUNCTION get_route_list_gui() IS 'Возвращает таблицу
 ';
 
 
+create schema auth; 
+ALTER SCHEMA auth OWNER TO asterisk;
+create table auth.sysusers (id bigserial primary key, login varchar(32), passwd_hash varchar(32)); 
+
+

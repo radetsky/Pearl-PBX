@@ -1,3 +1,7 @@
+function pearlpbx_logout() {
+	window.location.assign('/login.pl?logout=1'); 
+	return true; 
+}
 function pearlpbx_load_lost_calls (queuename, sincedatetime,tilldatetime) {
 	$('#pearlpbx_lost_calls_list tbody').empty();
 	$('#pearlpbx_lost_calls_list').append("<tr><td colspan=5>Request sent...</td></tr>");
