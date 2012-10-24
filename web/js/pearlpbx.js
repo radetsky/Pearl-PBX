@@ -1,3 +1,18 @@
+function pearlpbx_authentication() { 
+	$.get("/login.pl", { 
+		authentication: 1, 
+	}, function(data) { 
+		var result = data.split(":",2);
+			if (result[0] == "OK") {
+				$('#pearlpbx_username').text(result[1]); 
+				return true;
+			}
+			if (result[0] == "ERROR") { 
+				window.location.assign("/login.html");
+				return false;
+			}
+	}, "html"); 
+}
 function pearlpbx_logout() {
 	window.location.assign('/login.pl?logout=1'); 
 	return true; 

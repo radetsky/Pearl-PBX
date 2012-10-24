@@ -22,7 +22,10 @@ use Pearl::Auth;
 my $pearl = Pearl->new();
 
 my $cgi = $pearl->{cgi}; 
-my $auth = Pearl::Auth->new ( { config => "/etc/PearlPBX/asterisk-router.conf"} );
+my $auth = Pearl::Auth->new ( { config => "/etc/PearlPBX/asterisk-router.conf", 
+                                cgi => $cgi,
+                            } );
+
 my $proto = $cgi->https ? 'https' : 'http';
 
 if ( defined ( $pearl->{cgi}->param('logout') ) )  { 
@@ -36,9 +39,17 @@ if ( defined ( $pearl->{cgi}->param('logout') ) )  {
     exit(0);
 }
 
-unless ( defined ( $auth->db_connect() ) ) {
+
+if ( defined ( $pearl->{cgi}->param('authentication') ) ) { 
+    my $loggedIn = $auth->authenticate($cgi); 
+    unless ( defined ( $loggedIn) ) {
+        $pearl->htmlHeader; 
+        print "ERROR:ACCESS DENIED.";
+        exit(0);  
+    }
     $pearl->htmlHeader;
-    $pearl->htmlError("Can't connect to database.");
+    print "OK:$loggedIn";
+    exit(0); 
 }
 
 my $login = $auth->login($pearl->{cgi}, 1);

@@ -57,6 +57,7 @@ sub new {
 	my ( $class, $params ) = @_;
 
   my $conf = $params->{'config'}; 
+  my $cgi = $params->{'cgi'}; 
 
   unless ( defined ( $conf ) ) {
      $conf = '/etc/PearlPBX/asterisk-router.conf';
@@ -86,6 +87,37 @@ sub new {
   $this->{dbh} = undef;     # DB handler 
   $this->{error} = undef;   # Error description string  
   $this->{auth} = undef;    # Pearl::Session   
+
+  my $session = new CGI::Session (undef, $cgi, {Directory=>'/tmp'});
+
+    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'dsn'} ) ) {
+        $this->{error} = "Can't find \"db main->dsn\" in configuration.";
+        return undef;  
+    }
+
+    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'login'} ) ) {
+        $this->{error} = "Can't find \"db main->login\" in configuraion.";
+        return undef;
+    }
+
+    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'password'} ) ) {
+        $this->{error} = "Can't find \"db main->password\" in configuraion.";
+        return undef;
+    }
+
+    my $dsn    = $this->{conf}->{'db'}->{'main'}->{'dsn'};
+    my $user   = $this->{conf}->{'db'}->{'main'}->{'login'};
+    my $passwd = $this->{conf}->{'db'}->{'main'}->{'password'};
+
+    $this->{dbh} = 
+            DBI->connect_cached( $dsn, $user, $passwd, { RaiseError => 1, AutoCommit => 0 } );
+    
+    if ( !$this->{dbh} ) {
+        $this->{error} = "Cant connect to DBMS!";
+        return undef;
+    }
+
+  $this->{auth} = new Pearl::Session({ CGI => $cgi, Session => $session, dbh => $this->{dbh} });
 
   bless ($this, $class); 
 	return $this;
@@ -144,9 +176,6 @@ sub db_connect {
 sub login {
   my ( $this, $cgi, $nofail ) = @_;
 
-  my $session = new CGI::Session (undef, $cgi, {Directory=>'/tmp'});
-  
-  $this->{auth} = new Pearl::Session({ CGI => $cgi, Session => $session, dbh => $this->{dbh} });
   $this->{auth}->logout(); 
   $this->{auth}->authenticate();
 
@@ -162,9 +191,21 @@ sub login {
 }
 
 sub logout {
-  my $this = shift;
-  return 0 unless defined $this->{auth}; # Если не аутентифицировали, закрывать нечего
+  my $this = shift; 
+
+  #return 0 unless defined $this->{auth}; # Если не аутентифицировали, закрывать нечего
   $this->{auth}->logout();
+}
+
+sub authenticate { 
+  my ( $this, $cgi ) = @_; 
+
+  $this->{auth}->authenticate();
+
+  if ($this->{auth}->loggedIn) {
+    return $this->{auth}->profile('username'); 
+  } 
+  return undef; 
 }
 
 =item $cookie = cookie();
