@@ -160,6 +160,28 @@ sub list_directions_tab {
 	return $out; 
 }
 
+sub list_directions_options { 
+
+  my $this = shift;
+  my $sql = "select dlist_id,dlist_name from routing.directions_list order by dlist_name";
+
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute(); }; 
+  if ( $@ ) {
+    print $this->{dbh}->errstr; 
+    return undef; 
+  }
+
+  my $out = '';
+  while ( my $row = $sth->fetchrow_hashref ) { 
+    my $dname = str_encode ($row->{'dlist_name'}); 
+    $out .= '<option value="'.$row->{'dlist_id'}.'">'.$dname.'</option>'; 
+  }    
+ 
+  return $out; 
+}
+
+
 sub getdirectionAsJSON { 
   my ($this, $dlist_id) = @_; 
   my $sql = "select dr_id, dr_prefix, dr_prio from routing.directions where dr_list_item=? order by dr_id"; 
@@ -781,6 +803,70 @@ sub removetrunkgroup {
   return "OK"; 
 }
 
+sub loadcallerid { 
+  my $this = shift; 
+
+  my $sql = "select a.id, a.direction_id, b.dlist_name,  a.sip_id, c.name,  a.set_callerid from routing.callerid a, routing.directions_list b, public.sip_peers c   where a.direction_id=b.dlist_id and a.sip_id=c.id order by c.name, b.dlist_name;";
+  my $sql2 = "select a.id, a.direction_id, b.dlist_name,  a.sip_id, a.set_callerid from routing.callerid a, routing.directions_list b where a.direction_id=b.dlist_id and a.sip_id is null order by b.dlist_name;";
+
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute; }; 
+  if ( $@ ) { 
+    return $this->{dbh}->errstr; 
+  }
+
+  my @rows; 
+
+  while (my $row = $sth->fetchrow_hashref) { 
+    $row->{'dlist_name'} = str_encode ($row->{'dlist_name'}); 
+    push @rows,$row; 
+  }
+
+  $sth = $this->{dbh}->prepare($sql2);
+  eval { $sth->execute; }; 
+  if ( $@ ) { 
+    return $this->{dbh}->errstr; 
+  }
+  
+  while (my $row = $sth->fetchrow_hashref) { 
+    $row->{'dlist_name'} = str_encode ($row->{'dlist_name'}); 
+    $row->{'name'} = ''; 
+    push @rows,$row; 
+  }
+
+  return encode_json (\@rows); 
+}
+
+sub setcallerid_remove_id { 
+  my ($this, $id) = @_; 
+
+  my $sql = "delete from routing.callerid where id=?"; 
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute($id);}; 
+  if ($@) { 
+    return $this->{dbh}->errstr; 
+  }
+  $this->{dbh}->commit; 
+  return "OK"; 
+}
+
+sub setcallerid_add { 
+  my ($this, $direction_id, $sip_id, $callerid ) = @_; 
+
+  if ($sip_id =~ /^Anybody/i ) {
+    $sip_id = undef; 
+  }
+
+  my $sql = "insert into routing.callerid (direction_id, sip_id, set_callerid) values (?,?,?)"; 
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute($direction_id, $sip_id, $callerid );}; 
+  if ($@) { 
+    return $this->{dbh}->errstr; 
+  }
+  $this->{dbh}->commit; 
+  return "OK"; 
+
+}
 
 1;
 

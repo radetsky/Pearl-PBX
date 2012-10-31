@@ -258,6 +258,39 @@ if ($action eq 'removetrunkgroup') {
 	print $route->removetrunkgroup($b);
 	exit(0);
 }
+if ($action eq 'loadcallerid') { 
+	print $route->loadcallerid; 
+	exit(0);
+}
+
+if ($action eq 'setcallerid_remove_id') { 
+	my $b = $pearl->{cgi}->param('b'); 
+	unless ( defined ( $b )) { 
+		$pearl->htmlError("ERROR: set_callerid_id is not defined."); 
+		exit(0);
+	}
+	print $route->setcallerid_remove_id($b);
+	exit(0);
+}
+
+if ($action eq 'list-directions-options') { 
+	print $route->list_directions_options; 
+	exit(0); 
+}
+
+if ($action eq 'setcallerid_add') { 
+	my $direction_id = $pearl->{cgi}->param('direction_id'); 
+	my $sip_id = $pearl->{cgi}->param('sip_id'); 
+	my $callerid = $pearl->{cgi}->param('callerid'); 
+
+	unless ( defined ( $direction_id )) { print "ERROR: direction_id not defined."; exit(0); }
+	unless ( defined ( $sip_id )) { print "ERROR: sip_id not defined."; exit(0); }
+	unless ( defined ( $callerid )) { print "ERROR: callerid not defined."; exit(0); }
+
+	print $route->setcallerid_add($direction_id, $sip_id, $callerid); 
+	exit(0); 
+	
+}
 
 $pearl->htmlError("Action not found.");
 exit(0);

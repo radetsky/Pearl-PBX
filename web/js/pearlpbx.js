@@ -1,3 +1,136 @@
+function pearlpbx_load_peers_as_options () { 
+
+	$.get("/sip.pl", {
+		a: "list",
+		b: "internalAsOption" 
+	}, function (data) {
+		$('select#pearlpbx_setcallerid_src_sip').empty();
+		var x = '<optgroup><option value="Anybody">Для всех</option></optgroup>'; 
+		$('select#pearlpbx_setcallerid_src_sip').append(x);
+		$('select#pearlpbx_setcallerid_src_sip').append('<optgroup>');	
+	
+		$('select#pearlpbx_setcallerid_src_sip').append(data);
+		$('select#pearlpbx_setcallerid_src_sip').append('</optgroup><optgroup>');
+		$.get("/sip.pl", {
+			a: "list",
+			b: "externalAsOption" 
+		}, function (data) {
+			$('select#pearlpbx_setcallerid_src_sip').append(data);
+			$('select#pearlpbx_setcallerid_src_sip').append('</optgroup>');
+		});
+	});
+}
+
+function pearlpbx_load_directions_as_options() { 
+
+	$.get("/route.pl", {
+		a: "list-directions-options",
+	}, function (data) {
+		$('select#pearlpbx_setcallerid_dest_direction').empty();
+		$('select#pearlpbx_setcallerid_dest_direction').append(data);
+	});
+
+}
+function pearlpbx_add_newcallerid () { 
+	var direction_id = $('select#pearlpbx_setcallerid_dest_direction option:selected').val(); 
+	var sip_id = $('select#pearlpbx_setcallerid_src_sip option:selected').val(); 
+	var callerid = $('#pearlpbx_setcallerid_value').val(); 
+
+	if (direction_id == 'help') { 
+		alert("Пожалуйста, выберите направление.");
+		return false; 
+	}
+	if (sip_id == 'help') { 
+		alert("Пожалуйста, выберите подключение или пункт 'Для всех'."); 
+		return false; 
+	}
+	//alert("direction_id="+direction_id+" sip_id="+sip_id+" callerid="+callerid); 
+
+	$.get("/route.pl",
+		{ a: "setcallerid_add",
+		  direction_id: direction_id,
+		  sip_id: sip_id,
+		  callerid: callerid, 
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_load_callerid();
+				return true;
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+
+}
+function pearlpbx_setcallerid_remove (setcallerid_id) { 
+
+	var confirmed = confirm ("Вы действительно уверены в том, что хотите данную установку номера А ?");
+	if (confirmed == true) { 
+		$.get("/route.pl",
+		{ a: "setcallerid_remove_id",
+		  b: setcallerid_id,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_load_callerid();
+				return true;
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+	}
+
+}
+function pearlpbx_load_callerid() { 
+	pearlpbx_load_directions_as_options();
+	pearlpbx_load_peers_as_options();
+	
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+	$('#pearlpbx_callerid_table tbody').empty();
+	$('#pearlpbx_callerid_table').append("<tr><td colspan=5>Request sent...</td></tr>");
+	$.getJSON("/route.pl",
+	{
+		a: "loadcallerid",
+	},function (json) { 
+		$('#pearlpbx_callerid_table tbody').empty();
+		jQuery.each(json, function () {
+			var remurl = '<td><a href="javascript:void(0)" onClick="pearlpbx_setcallerid_remove('+
+			this['id']+')">'+remicon+'</a></td>';
+
+			$('#pearlpbx_callerid_table').append("<tr><td>"+this['name']
+				+"</td><td>"+this['dlist_name']+"</td>"
+				+"<td>"+this['set_callerid']+"</td>"
+				+remurl
+				+"</tr>");
+		}); 	
+
+	} );	
+
+
+	return true; 
+}
+
+function pearlpbx_start_me_up() { 
+	var authenticated = pearlpbx_authentication(); 
+	if ( authenticated == false ) { 
+		return false; 
+	}
+	var callerid = pearlpbx_load_callerid(); 
+	if ( callerid == false ) { 
+		alert ("Загрузка таблицы преобразований номеров А закончилось с ошибкой! "); 
+		return false; 
+	}
+
+}
+
 function pearlpbx_authentication() { 
 	$.get("/login.pl", { 
 		authentication: 1, 
@@ -13,10 +146,12 @@ function pearlpbx_authentication() {
 			}
 	}, "html"); 
 }
+
 function pearlpbx_logout() {
 	window.location.assign('/login.pl?logout=1'); 
 	return true; 
 }
+
 function pearlpbx_load_lost_calls (queuename, sincedatetime,tilldatetime) {
 	$('#pearlpbx_lost_calls_list tbody').empty();
 	$('#pearlpbx_lost_calls_list').append("<tr><td colspan=5>Request sent...</td></tr>");

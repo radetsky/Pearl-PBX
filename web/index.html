@@ -47,7 +47,7 @@
 		<script src="jPlayer/jquery.jplayer.min.js"></script>
  		<script language="javascript" type="text/javascript" src="/js/jqPlot/jquery.jqplot.min.js"></script>
     <script language="javascript" type="text/javascript"> 
-      $(document).ready(pearlpbx_authentication());
+      $(document).ready(pearlpbx_start_me_up());
     </script>
   
     <div class="navbar navbar-fixed-top">
@@ -90,7 +90,7 @@
               <li><a href="javascript:void(0)" onClick="pearlpbx_show('#trunkgroups')">Транкгруппы</a></li>
               <li><a href="javascript:void(0)" onClick="pearlpbx_show('#directions')">Направления</a></li>
               <li><a href="javascript:void(0)" onClick="pearlpbx_reload_permissions(); pearlpbx_show('#pearlpbx_permissions');">Права доступа</a></li>
-              <li><a href="#">Установка номеров А</a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#pearlpbx_set_callerid')">Установка номеров А</a></li>
 							<li><a href="#">Интеграция</a></li>
               
               <li class="nav-header">Отчеты</li>
@@ -1005,6 +1005,60 @@ function cdrfilter_submit () {
   </div>
 </div>
 <!-- Конец модального диалога списка пропущенных звонков по группе. -->
+
+<!-- Страница "Установка номеров А" --> 
+<div id="pearlpbx_set_callerid" style="display: none">
+ <div class="pearlpbx-main-container-header">
+  <h1><center>Установка номеров А</center></h1>
+ </div>
+ <div id="pearlpbx_setcallerid_div">
+  <table class='table table-bordered' id='pearlpbx_callerid_table'> 
+    <thead>
+    <tr>
+      <th>Имя подключения</th>
+      <th>Направление</th>
+      <th>Устанавливаемое значение</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+ </div>
+
+ <div> 
+  <form class="form-horizontal">
+  <fieldset>
+  
+    <div class="control-group">
+    <div style="float: left;" class="controls">
+ 
+ <!-- <label class="control-label" for="pearlpbx_setcallerid_src_sip">Подключение:</label> -->
+    <select name="pearlpbx_setcallerid_src_sip" id="pearlpbx_setcallerid_src_sip" style="width: 200px;">
+      <option value="help">Выберите подключение</option>
+    </select>
+
+    <!-- <label class="control-label" for="pearlpbx_setcallerid_dest_direction">Направление:</label>-->
+    <select name="pearlpbx_setcallerid_dest_direction" id="pearlpbx_setcallerid_dest_direction" style="width: 200px;">
+      <option value="help">Выберите направление</option>
+    </select>
+    
+     
+   <!-- <label class="control-label" for="pearlpbx_setcallerid_value">Значение:</label> -->
+    <input type="text" class="input-small" id="pearlpbx_setcallerid_value" value="NAME">
+    <p class="help-block">Если Вам надо поменять callerid(num) на callerid(name) aka display name, то в поле "Значение" установите значение NAME, иначе номер телефона нужном формате, который надо подставить.</p>
+
+  </div>
+   <center>
+      <a href="javascript:void(0)" class="btn btn-primary" onClick="pearlpbx_add_newcallerid()">Добавить</a>
+    </center>
+   
+  </div>
+  </fieldset>
+  </form>
+  </div>
+</div>
+<!-- Конец Страница Права доступа --> 
+
 
 </body>
 </html>
