@@ -1041,6 +1041,10 @@ function pearlpbx_sip_update_user(){
 	var terminal = $('select#input_sip_edit_terminal option:selected').val();
 	var macaddr = $('#input_sip_edit_macaddr').val();
 	var secret = $('#input_sip_edit_secret').html(); 
+	var integration_type = $('select#input_sip_edit_integration_type option:selected').val();
+	var tcp_port = $('#input_sip_edit_tcp_port').val();
+	var ip_addr_tel = $('#input_sip_edit_ip_addr_tel').val();
+	var ip_addr_pc = $('#input_sip_edit_ip_addr_pc').val();
  
  // Submit 
 	$.get("/sip.pl",
@@ -1050,6 +1054,11 @@ function pearlpbx_sip_update_user(){
 		  terminal: terminal,
 		  macaddr: macaddr,
 		  secret: secret,
+		  integration_type: integration_type,
+		  tcp_port: tcp_port,
+		  ip_addr_tel: ip_addr_tel,
+		  ip_addr_pc:ip_addr_pc,
+		  
 		},function(data) 
 		{
 			if (data == "OK") { 
@@ -1077,6 +1086,10 @@ function pearlpbx_sip_load_id(sip_id) {
 		$('#input_sip_edit_secret').html(json.secret);
 		$('#input_sip_edit_macaddr').val(json.mac_addr_tel);
 		$('#input_sip_edit_terminal').val(json.teletype);
+		$('#input_sip_edit_integration_type').val(json.integration_type); 
+		$('#input_sip_edit_ip_addr_tel').val(json.ip_addr_tel); 
+		$('#input_sip_edit_ip_addr_pc').val(json.ip_addr_pc); 
+		$('#input_sip_edit_tcp_port').val(json.tcp_port); 
 	});
 }
 function pearlpbx_sip_add_user(){ 
@@ -1085,6 +1098,10 @@ function pearlpbx_sip_add_user(){
 	var terminal = $('select#input_sip_add_terminal option:selected').val();
 	var macaddr = $('#input_sip_add_macaddr').val();
 	var secret = $('#input_sip_add_secret').html(); 
+	var integration_type = $('select#input_sip_add_integration_type option:selected').val();
+	var tcp_port = $('#input_sip_add_tcp_port').val();
+	var ip_addr_tel = $('#input_sip_add_ip_addr_tel').val();
+	var ip_addr_pc = $('#input_sip_add_ip_addr_pc').val();
 
 	// FIXME: validate 
 
@@ -1096,6 +1113,10 @@ function pearlpbx_sip_add_user(){
 		  terminal: terminal,
 		  macaddr: macaddr,
 		  secret: secret,
+		  integration_type: integration_type, 
+		  tcp_port: tcp_port,
+		  ip_addr_pc: ip_addr_pc,
+		  ip_addr_tel: ip_addr_tel,
 		},function(data) 
 		{
 			if (data == "OK") { 

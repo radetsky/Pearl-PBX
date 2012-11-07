@@ -331,8 +331,8 @@ sub adduser {
   my ($this, $params) = @_;
 
   my $sql  = "insert into public.sip_peers (name, comment, secret, host, context ) values (?,?,?,?,?) returning id"; 
-  my $sql2 = "insert into integration.workplaces (sip_id, teletype, autoprovision, mac_addr_tel ) 
-    values (?,?,?,?)"; 
+  my $sql2 = "insert into integration.workplaces (sip_id, teletype, autoprovision, mac_addr_tel, integration_type, tcp_port, ip_addr_tel, ip_addr_pc ) 
+    values (?,?,?,?,?,?,?,?)"; 
 
   unless ( defined ( $params->{'extension'} ) or 
          defined ( $params->{'comment'} ) or 
@@ -369,9 +369,13 @@ sub adduser {
     $autoprovision = 'false';  
   } 
 
+  $params->{'tcp_port'} = undef if $params->{'tcp_port'} eq ''; 
+
   eval { 
     $sth2->execute( 
-      $sip_id, $teletype, $autoprovision, $params->{'macaddr'}
+      $sip_id, $teletype, $autoprovision, $params->{'macaddr'}, 
+      $params->{'integration_type'}, $params->{'tcp_port'}, 
+      $params->{'ip_addr_tel'}, $params->{'ip_addr_pc'}
     ); 
   };
 
@@ -393,7 +397,8 @@ sub getuser {
   my ($this,$id) = @_; 
 
   my $sql = "select a.id, a.name as extension, a.comment, a.secret,
-  b.teletype, b.mac_addr_tel from public.sip_peers a,
+  b.teletype, b.mac_addr_tel, b.integration_type, b.tcp_port,
+  b.ip_addr_tel, b.ip_addr_pc from public.sip_peers a,
   integration.workplaces b where a.id=? and a.id=b.sip_id;";
 
   my $sth = $this->{dbh}->prepare($sql);
@@ -412,7 +417,9 @@ sub setuser {
 my ($this, $params) = @_;
 
   my $sql  = "update public.sip_peers set comment=?, secret=? where id=? "; 
-  my $sql2 = "update integration.workplaces set teletype=?, autoprovision=?, mac_addr_tel=? where sip_id=?"; 
+  my $sql2 = "update integration.workplaces set teletype=?, autoprovision=?, mac_addr_tel=?, 
+                integration_type=?,tcp_port=?,ip_addr_tel=?,ip_addr_pc=? 
+                  where sip_id=?"; 
 
   my $autoprovision = 'true'; 
 
@@ -427,10 +434,16 @@ my ($this, $params) = @_;
   my $sth  = $this->{dbh}->prepare($sql);
   my $sth2 = $this->{dbh}->prepare($sql2);
 
+  $params->{'tcp_port'} = undef if $params->{'tcp_port'} eq ''; 
+
   eval {$sth->execute($params->{'comment'}, $params->{'secret'}, $params->{'id'});};
   if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
 
-  eval { $sth2->execute($params->{'terminal'}, $autoprovision, $params->{'macaddr'}, $params->{'id'});}; 
+  eval { $sth2->execute($params->{'terminal'}, $autoprovision, $params->{'macaddr'}, 
+    $params->{'integration_type'}, $params->{'tcp_port'}, 
+    $params->{'ip_addr_tel'}, $params->{'ip_addr_pc'},
+    $params->{'id'} );
+  }; 
   if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
 
   $this->{dbh}->commit;

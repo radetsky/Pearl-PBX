@@ -91,7 +91,6 @@
               <li><a href="javascript:void(0)" onClick="pearlpbx_show('#directions')">Направления</a></li>
               <li><a href="javascript:void(0)" onClick="pearlpbx_reload_permissions(); pearlpbx_show('#pearlpbx_permissions');">Права доступа</a></li>
               <li><a href="javascript:void(0)" onClick="pearlpbx_show('#pearlpbx_set_callerid')">Установка номеров А</a></li>
-							<li><a href="#">Интеграция</a></li>
               
               <li class="nav-header">Отчеты</li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-general')">Общие</a></li>
@@ -487,7 +486,7 @@ function cdrfilter_submit () {
 
 <!-- Диалог добавления SIP-пользователя. Модальный. -->
 
-<div class="modal fade" id="add_sip_user" style="width: 800px; max-height: 900px;">
+<div class="modal fade" id="add_sip_user" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Добавление пользователя SIP</h3>
@@ -513,7 +512,7 @@ function cdrfilter_submit () {
           </div>
         </div>
 
-        <div class="control-group">
+        <div class="control-group" style="float: left;">
           <label class="control-label" for="input_sip_add_comment">Модель терминала</label>
           <div class="controls">
             <select name="input_sip_add_terminal_type" class="pearlpbx_terminal_list" id="input_sip_add_terminal">
@@ -544,6 +543,42 @@ function cdrfilter_submit () {
           </div>
         </div>
 
+        <div class="control-group">
+          <label class="control-label" for="input_sip_add_integration_type">Тип интеграции</label>
+          <div class="controls">
+            <select name="input_sip_add_integration_type" class="pearlpbx_integration_list" id="input_sip_add_integration_type">
+              <option value="nointegration">Нет интеграции</option>
+              <option value="TaxiOffice">Такси "Диспетчер"</option>
+              <option value="TaxiNavigator">Такси "Навигатор"</option>
+            </select>
+            <p class="help-block">Выберите тип интеграции. Если Radetsky Pearl PBX не поддерживает интеграции с Вашей CRM/ERP системой, сообщите об этом по адресу rad@rad.kiev.ua</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;" >
+          <label class="control-label" for="input_sip_add_tcp_port">TCP port</label>
+          <div class="controls">
+            <input type="text" class="input-small" id="input_sip_add_tcp_port" placeholder="335">
+            <p class="help-block">Порт, на котором ожидает ввода клиентская CRM-система.</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;" >
+          <label class="control-label" for="input_sip_add_ip_addr_tel">IP-адрес терминала</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_sip_add_ip_addr_tel" placeholder="">
+            <p class="help-block">Введите IP-адрес терминала</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;">
+          <label class="control-label" for="input_sip_add_ip_addr_pc">IP-адрес ПК</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_sip_add_ip_addr_pc" placeholder="">
+            <p class="help-block">Введите IP-адрес соответствующего ПК</p>
+          </div>
+        </div>      
+
       </fieldset>
     </form>
     
@@ -561,7 +596,7 @@ function cdrfilter_submit () {
 
 <!-- Диалог редактирования SIP-пользователя. Модальный. -->
 
-<div class="modal fade" id="pearlpbx_sip_edit_user" style="width: 800px; max-height: 900px;">
+<div class="modal fade" id="pearlpbx_sip_edit_user" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Редактирование пользователя SIP</h3>
@@ -570,6 +605,7 @@ function cdrfilter_submit () {
     <form class="form-horizontal">
       <fieldset>
         <input type='hidden' id='input_sip_edit_id' value=''>
+
         <div class="control-group">
           <label class="control-label" for="input_sip_edit_comment">Описание пользователя</label>
           <div class="controls">
@@ -586,7 +622,7 @@ function cdrfilter_submit () {
           </div>
         </div>
 
-        <div class="control-group">
+        <div class="control-group" style="float: left;">
           <label class="control-label" for="input_sip_edit_terminal">Модель терминала</label>
           <div class="controls">
             <select name="input_sip_edit_terminal" class="pearlpbx_terminal_list" id="input_sip_edit_terminal">
@@ -608,7 +644,7 @@ function cdrfilter_submit () {
           </div>
         </div>
 
-        <div class="control-group">
+        <div class="control-group" style="float: left;">
           <label class="control-label">Пароль</label>
           <div class="controls">
             <span class="input-xlarge uneditable-input" id="input_sip_edit_secret"></span>
@@ -616,6 +652,44 @@ function cdrfilter_submit () {
             <p class="help-block">Вводить свой пароль запрещено. Нажмите кнопку "Поменять", если текущий пароль не устраивает.</p>
           </div>
         </div>
+
+        <div class="control-group" style="float: left;">
+          <label class="control-label" for="input_sip_edit_integration_type">Тип интеграции</label>
+          <div class="controls">
+            <select name="input_sip_edit_integration_type" class="pearlpbx_integration_list" id="input_sip_edit_integration_type">
+              <option value="nointegration">Нет интеграции</option>
+              <option value="TaxiOffice">Такси "Диспетчер"</option>
+              <option value="TaxiNavigator">Такси "Навигатор"</option>
+            </select>
+            <p class="help-block">Выберите тип интеграции. Если Radetsky Pearl PBX не поддерживает интеграции с Вашей CRM/ERP системой, сообщите об этом по адресу rad@rad.kiev.ua</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;" >
+          <label class="control-label" for="input_sip_edit_tcp_port">TCP port</label>
+          <div class="controls">
+            <input type="text" class="input-small" id="input_sip_edit_tcp_port" placeholder="335">
+            <p class="help-block">Порт, на котором ожидает ввода клиентская CRM-система.</p>
+          </div>
+        </div>
+
+
+        <div class="control-group" style="float: left;" >
+          <label class="control-label" for="input_sip_edit_ip_addr_tel">IP-адрес терминала</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_sip_edit_ip_addr_tel" placeholder="">
+            <p class="help-block">Введите IP-адрес терминала</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;">
+          <label class="control-label" for="input_sip_edit_ip_addr_pc">IP-адрес ПК</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_sip_edit_ip_addr_pc" placeholder="">
+            <p class="help-block">Введите IP-адрес соответствующего ПК</p>
+          </div>
+        </div>      
+
 
       </fieldset>
     </form>
