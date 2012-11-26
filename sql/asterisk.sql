@@ -2169,4 +2169,7 @@ create schema auth;
 ALTER SCHEMA auth OWNER TO asterisk;
 create table auth.sysusers (id bigserial primary key, login varchar(32), passwd_hash varchar(32)); 
 
+set search_path to integration;
+create index prev_record_idx on recordings(previous_record); 
+
 

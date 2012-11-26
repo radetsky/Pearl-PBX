@@ -122,7 +122,7 @@ sub _get_next_record {
 
     # remember - transaction already began;
     my $sth = $this->dbh->prepare(
-        "select * from integration.recordings where previous_record=? and next_record is not null");
+        "select * from integration.recordings where next_record=?");
     eval { $sth->execute($current_id); };
     if ($@) {
         $this->_exit( $this->dbh->errstr );
@@ -255,6 +255,26 @@ sub _fix_very_old_talks {
 
 }
 
+sub _is_must_be_fixed { 
+    my ($this, $record) = @_; 
+
+    my $sth2 = $this->dbh->prepare(
+        "select (now()::timestamp - ?::timestamp) > '01:00:00' as interval"); 
+    eval { $sth2->execute($record->{'cdr_start'}); };
+    if ($@) {
+        $this->dbh->rollback;
+        $this->log("warning",$this->dbh->errstr);
+        return undef; 
+    }
+
+    my $interval = $sth2->fetchrow_hashref; 
+    if ($interval->{'interval'} == 0) {
+        return 0; # Исправлять не надо.
+    }
+
+    return 1; 
+}
+
 sub process {
     my $this = shift;
 
@@ -274,13 +294,9 @@ sub process {
 	
 	# Prepare the query for finding 1st unconverted record in the database. 
     my $sth = $this->dbh->prepare(
-        "select * from integration.recordings 
-			where concatenated=false 
-				and result_file is null
-				and next_record is not null 
-				and previous_record=0 
-				and id > ? 
-                    order by id asc limit 1 for update"
+        "select * from integration.recordings where concatenated=false and result_file is null
+			and next_record is not null and previous_record=0 and id > ? 
+                order by id asc limit 1 for update"
     );
 
 	# Execute it. 
@@ -353,9 +369,8 @@ sub process {
 
     # Find the next record in the chain
     while (1) {
-        my $next_record = $this->_get_next_record($id);
-
-        unless ( defined($next_record) ) {
+        my $result = $this->_get_next_record($next_record);
+        unless ( defined($result) ) {
 						# FIXME: Лечим баг, когда он будет закрыт, убрать этот код. 
 						# Баг состоит в том, что NetSDS-route ставит next_record = текущий ID
 					    # каким-то очень старым записям. Подозреваю дело в том, что hangupd не выставляет
@@ -374,36 +389,47 @@ sub process {
 
         }
 
+
         # Лечим баг с "длинными" разговорами. Проверяем разницу между записями. Если она больше часа, 
         # то разделяем цепочку. Предыдущий разговор фиксируем последним, а текущий первым в новой цепочке. 
 
-        my $fixed = $this->_fix_very_old_talks( $next_record->{'id'}, 
-                                                $next_record->{'cdr_start'},
-                                                $next_record->{'previous_record'});
+        my $fixed = $this->_fix_very_old_talks( $result->{'id'}, 
+                                                $result->{'cdr_start'},
+                                                $result->{'previous_record'});
         unless ( defined ( $fixed ) ) { 
             $this->_exit("_fix_very_old_talks returns undef.");
         }
+
         if ($fixed == 1) { 
             return 1; 
         }
 
         $strlog = sprintf(
             "Got ID=%s ULINE=%s FILE=%s NEXT=%s",
-            $next_record->{'id'},            $next_record->{'uline_id'},
-            $next_record->{'original_file'}, $next_record->{'next_record'}
+            $result->{'id'},            $result->{'uline_id'},
+            $result->{'original_file'}, $result->{'next_record'}
         );
 
-		$this->{'bad_id'} = $next_record->{'id'}; 
+		$this->{'bad_id'} = $result->{'id'}; 
         $this->log( "info", $strlog );
         $this->speak($strlog);
 
-        push @nexts, $next_record;
-        $id = $next_record->{'id'};
+        push @nexts, $result;
+        $id = $result->{'id'};
+        $next_record = $result->{'next_record'};
 		
-		    if ($next_record->{'next_record'} == 0) { 
-		    	last; 
-		    } 
-	  }
+		if ($next_record == 0) { 
+		  	last; 
+		} 
+        unless ( defined ( $next_record ) ) { 
+            # Проверяем на временной интервал. Если запись сделана давно, то фиксируем ее.  
+            # Иначе пропускаем. 
+            if ( $this->_is_must_be_fixed ( $result ) > 0 ) { 
+                $this->_fix_pseudo_active_talk( $result );
+                last; 
+            } 
+        }
+	}
 
 	my @infiles = ();
 	my @nexts_copy = @nexts; 	
