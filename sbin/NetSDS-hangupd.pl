@@ -339,29 +339,31 @@ sub _recording_set_final {
 
     $this->_begin;
 
-    my $sth = $this->dbh->prepare(
-"select id from integration.recordings where uline_id=? and next_record is NULL order by id desc limit 1"
-    );
+    my $sth = $this->dbh->prepare (
+    "select id from integration.recordings where uline_id=? and next_record is NULL 
+        order by id");
+
     eval { my $rv = $sth->execute($uline_id); };
     if ($@) {
         $this->_exit( $this->dbh->errstr );
     }
-    my $result = $sth->fetchrow_hashref;
-    unless ( defined($result) ) {
-        $this->log( "warning",
-            "Can't find recordings for uline_id=$uline_id. Very strange." );
-        $this->dbh->rollback;
-        return undef;
-    }
-    my $rec_id = $result->{'id'};
+    my @ids = (); 
+
+    while  ( my $result = $sth->fetchrow_hashref ) { 
+        push @ids, $result->{'id'}; 
+    } 
     $sth = $this->dbh->prepare(
-        "update integration.recordings set next_record=0 where id=?");
-    eval { my $rv = $sth->execute($rec_id); };
-    if ($@) {
-        $this->_exit( $this->dbh->errstr );
+            "update integration.recordings set next_record=0 where id=?");
+
+    foreach my $rec_id ( @ids ) { 
+        eval { my $rv = $sth->execute($rec_id); };
+        if ($@) {
+            $this->_exit( $this->dbh->errstr );
+        }
+        $this->log( "info", "Record # $rec_id for line # $uline_id set as final." );
     }
+    
     $this->dbh->commit;
-    $this->log( "info", "Record # $rec_id for line # $uline_id set as final." );
     return 1;
 
 }
@@ -440,7 +442,6 @@ sub process {
             next;
         }
         if ( $event->{'Event'} =~ /Hangup/i ) {
-
             $channel = $event->{'Channel'};
 			$this->log("info","Got hangup for $channel"); 
 			$uline = $this->_get_uline_by_channel ($channel); 
