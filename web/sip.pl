@@ -82,6 +82,22 @@ if ($action eq 'getuser') {
 	exit(0);
 }
 
+if ($action eq 'getpeer') { 
+	my $id = $pearl->{cgi}->param('id'); 
+	unless ( defined ( $id )) { 
+		print "ERROR: id is undefuned"; 
+		exit(0); 
+	}
+	print $sip->getpeer($id); 
+	exit(0); 
+}
+
+if ($action eq 'setpeer') {
+	my $params = $pearl->cgi_params_to_hashref();
+	print $sip->setpeer ( $params );
+	exit(0);
+}
+
 
 
 1;

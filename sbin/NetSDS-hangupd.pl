@@ -61,6 +61,8 @@ sub start {
     $this->_db_connect();
     $this->_clear_ulines();
 
+    $this->{'count'} = 0; 
+ 
     $this->_el_connect();
 
 }
@@ -142,6 +144,7 @@ sub _el_connect {
 sub _clear_ulines {
     my $this = shift;
 
+    $this->log("warning","Start clear ulines procedure."); 
     # connect
     unless ( defined( $this->conf->{'el'}->{'host'} ) ) {
         $this->speak("Can't file el->host in configuration.");
@@ -207,6 +210,8 @@ sub _clear_ulines {
             $this->_free_uline($channel);
         }
     }
+    $manager->sendcommand('Action' => "Logoff"); 
+    $manager->receive_answer();
     # clear offline channels
     $this->speak("Ulines cleared. Going to process().");
 }
@@ -362,7 +367,7 @@ sub _recording_set_final {
         }
         $this->log( "info", "Record # $rec_id for line # $uline_id set as final." );
     }
-    
+
     $this->dbh->commit;
     return 1;
 
@@ -406,8 +411,8 @@ sub _expire_ulines {
 		$t = time(); 
 		$item = shift @expire_list; 
 		unless ( $item ) { 
-			$this->log("info","Empty expire list");
-			return undef; 
+			# $this->log("info","Empty expire list");
+			last; 
 		} 
 		if ($item->{'expire_time'} < $t ) {
 			$this->log("info","Time: $t to free uline $item->{'uline'} with $item->{'channel'}"); 
@@ -415,10 +420,16 @@ sub _expire_ulines {
 		} else { 
 			$this->log("info","First item in the expire_list has time in future. "); 
 			unshift @expire_list,$item; 
-			return 1; 
+			last; 
 		} 
 	} 
-
+    
+    $this->{'count'} = $this->{'count'} + 1; 
+    if ($this->{'count'} >= 36000 ) { 
+        $this->_clear_ulines(); 
+        $this->{'count'} = 0; 
+    } 
+    return 1; 
 
 }
 sub process {

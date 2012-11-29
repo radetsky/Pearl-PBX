@@ -21,4 +21,6 @@
 .input-date { 
 	width: 90px; 
 }
-
+.form-horizontal .control-group { 
+  margin-bottom: 1px; 
+}

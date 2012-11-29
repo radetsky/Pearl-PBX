@@ -30,6 +30,7 @@ use DBI;
 use Config::General; 
 use JSON;
 use NetSDS::Util::String; 
+use Data::Dumper; 
 
 use version; our $VERSION = "1.00";
 our @EXPORT_OK = qw();
@@ -141,7 +142,7 @@ sub list_internal {
 	my $this = shift;
 	my $sql = "select id,comment,name from public.sip_peers where name ~ E'2\\\\d\\\\d' order by name";
 
-	return $this->_list($sql);
+	return $this->_list($sql,undef);
 }
 
 sub list_internalAsOption { 
@@ -184,7 +185,7 @@ sub list_external {
 	my $this = shift; 
 	my $sql = "select id,name,comment from public.sip_peers where name !~ E'2\\\\d\\\\d' order by name"; 
 
-  return $this->_list($sql); 
+  return $this->_list($sql,1); 
 }
 sub list_externalAsJSON { 
   my $this = shift; 
@@ -219,7 +220,17 @@ sub list_externalAsOptionIdValue {
 }
 
 sub _list { 
-	my ($this, $sql) = @_; 
+	my ($this, $sql, $external) = @_; 
+
+  my $js_func_name = sub { 
+    return 'pearlpbx_sip_load_external_id' if $external;
+    return 'pearlpbx_sip_load_id'; 
+  }; 
+
+  my $dialog_name = sub { 
+    return 'pearlpbx_sip_edit_peer' if $external;
+    return 'pearlpbx_sip_edit_user'; 
+  };
 
 	my $sth = $this->{dbh}->prepare($sql); 
 	eval { $sth->execute(); }; 
@@ -233,7 +244,7 @@ sub _list {
 		 unless ( defined ( $row->{'comment'} ) ) { 
 		 	$row->{'comment'} = ''; 
 		 } 
-	   $out .= '<li><a href="#pearlpbx_sip_edit_user" data-toggle="modal" onClick="pearlpbx_sip_load_id('.$row->{'id'}.')">'.$row->{'comment'}.'&lt;'.$row->{'name'}.'&gt;'.'</a></li>';
+	   $out .= '<li><a href="#'.&$dialog_name.'" data-toggle="modal" onClick="'.&$js_func_name.'('.$row->{'id'}.')">'.$row->{'comment'}.'&lt;'.$row->{'name'}.'&gt;'.'</a></li>';
 	}		 
   $out .= "</ul>";
 	return $out; 
@@ -412,6 +423,39 @@ sub getuser {
 
 }
 
+sub getpeer { 
+  my ($this,$id) = @_; 
+
+  my $sql = "select id, name, comment, secret, context, host, insecure, nat, permit, deny, qualify, 
+  type, username, ipaddr, \"call-limit\" as cl  
+  from public.sip_peers where id = ?"; 
+
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute($id); }; 
+  if ( $@ ) {
+    return "ERROR:". $this->{dbh}->errstr;  
+  }
+  my $row = $sth->fetchrow_hashref; 
+  $row->{'comment'} = str_encode($row->{'comment'}); 
+
+  my $username = $row->{'username'};
+
+  $sql = "select id, var_val,commented from public.sip_conf where var_name='register' and var_val like '".$username.":%' "; 
+  $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute();}; 
+  if ($@) { 
+    return "ERROR:". $this->{dbh}->errstr; 
+  } 
+  my $row2 = $sth->fetchrow_hashref; 
+  $row->{'regstr'} = $row2->{'var_val'}; 
+  $row->{'regstr_id'} = $row2->{'id'};
+  $row->{'regstr_commented'} = $row2->{'commented'};  
+
+  return encode_json($row);
+
+}
+
+
 sub setuser {
 
 my ($this, $params) = @_;
@@ -451,6 +495,112 @@ my ($this, $params) = @_;
 
 }
 
+sub setpeer { 
+  my ($this, $params) = @_; 
+
+  my $sip_id = $params->{'sip_id'}; 
+  my $sip_comment = $params->{'sip_comment'}; 
+  my $sip_name = $params->{'sip_name'};  
+  my $sip_username = $params->{'sip_username'};  
+  my $sip_secret = $params->{'sip_secret'}; 
+  my $sip_remote_register = $params->{'sip_remote_register'}; 
+  my $sip_regstr_id = $params->{'sip_remote_regstr_id'};  
+  my $sip_remote_regstr = $params->{'sip_remote_regstr'}; 
+  my $sip_local_register = $params->{'sip_local_register'}; 
+  my $sip_nat = $params->{'sip_nat'};  
+  my $sip_ipaddr = $params->{'sip_ipaddr'}; 
+  my $sip_call_limit = $params->{'sip_call_limit'}; 
+  if ($sip_call_limit eq '') { $sip_call_limit = 2; }
+
+  my $sip_host = 'dynamic'; 
+  my $sip_type = 'friend'; 
+  my $sip_insecure = ''; 
+  my $sip_permit = ''; 
+  my $sip_deny = ''; 
+
+
+  if ($sip_nat eq 'true') { $sip_nat = 'yes'; } else { $sip_nat = 'no'; }  
+  if ($sip_local_register eq 'false') { 
+    $sip_insecure = 'invite,port'; 
+    $sip_permit = $sip_ipaddr."/255.255.255.255"; 
+    $sip_deny = "0.0.0.0/0.0.0.0"; 
+    $sip_type = "peer"; 
+  }
+
+  my @sip_params; 
+  my $sql; 
+
+
+  if ($sip_id ne '') { 
+    $sql = "update public.sip_peers set name=?,username=?,secret=?,
+                      comment=?,nat=?,\"call-limit\"=?,
+                      type=?,host=?,permit=?,deny=?,ipaddr=?,insecure=? where id=?"; 
+    push @sip_params, $sip_name, $sip_username, $sip_secret, $sip_comment, $sip_nat, 
+        $sip_call_limit, $sip_type, $sip_host, $sip_permit, $sip_deny, 
+        $sip_ipaddr, $sip_insecure, $sip_id ; 
+  } 
+  if ($sip_id eq '' ) { 
+    $sql = "insert into public.sip_peers (name,username,secret,comment,nat,\"call-limit\",
+    type,host,permit,deny,ipaddr,insecure) values (?,?,?,?,?,?,?,?,?,?,?,?)"; 
+
+    push @sip_params, $sip_name, $sip_username, $sip_secret, $sip_comment, $sip_nat, 
+        $sip_call_limit, $sip_type, $sip_host, $sip_permit, $sip_deny, 
+        $sip_ipaddr, $sip_insecure;
+     
+  }
+  my $sth = $this->{dbh}->prepare($sql); 
+
+  eval { $sth->execute ( @sip_params ); };
+
+  if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
+
+  my $doreg = undef; 
+
+  if ( $sip_remote_register eq 'true') { 
+    $doreg = $this->_add_or_replace_regstr ($sip_remote_regstr, $sip_regstr_id); 
+  } else { 
+    $doreg = $this->_remove_regstr ($sip_regstr_id); 
+  }
+
+  if ($doreg =~ /^ERROR/ ) { return $doreg; }
+
+  $this->{dbh}->commit; 
+  return "OK"; 
+}
+
+sub _add_or_replace_regstr { 
+  my ($this, $regstr, $regstr_id) = @_; 
+
+  my $sql = ''; 
+
+  if ($regstr_id eq '') {
+    $sql = "select max(var_metric)+1 as next_metric from public.sip_conf"; 
+    my $row = $this->{'dbh'}->selectrow_hashref($sql); 
+    $sql = "insert into public.sip_conf ( cat_metric, var_metric, commented, filename, category, var_name, var_val ) 
+      values ( 0,?,0,'sip.conf','general','register',?)"; 
+    my $sth = $this->{dbh}->prepare ($sql); 
+    eval { $sth->execute ($row->{'next_metric'}, $regstr ); }; 
+    if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
+    return "OK"; 
+  }
+  
+  $sql = "update public.sip_conf set var_val=?, commented=0 where id=?"; 
+  my $sth = $this->{dbh}->prepare ($sql); 
+  eval { $sth->execute ($regstr, $regstr_id ); }; 
+  if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
+  return "OK"; 
+
+}
+
+sub _remove_regstr { 
+  my ($this, $sip_regstr_id) = @_; 
+
+  my $sql = "update public.sip_conf set commented = 1 where id = ?"; 
+  my $sth = $this->{dbh}->prepare ($sql); 
+  eval { $sth->execute ( $sip_regstr_id );  }; 
+  if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
+
+}
 
 1;
 

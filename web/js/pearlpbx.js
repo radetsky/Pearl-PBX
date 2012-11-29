@@ -1,8 +1,147 @@
+function pearlpbx_sip_add_trunk() {
+	$('#input_peer_edit_id').val(''); 
+	$('#input_peer_edit_regstr_id').val(''); 
+	$('#input_peer_edit_comment').val(''); 
+	$('#input_peer_edit_name').val(''); 
+	$('#input_peer_edit_username').val(''); 
+	$('#input_peer_edit_secret').val(''); 
+	$('#input_peer_edit_registration').attr('checked',false); 
+	$('#input_peer_edit_regstr').val('');
+	$('#input_peer_edit_is_dynamic').attr('checked',false);
+	$('#input_peer_edit_nat').attr('checked',false); 
+	$('#input_peer_edit_ipaddr').val('');
+	$('#input_peer_edit_call_limit').val('');
+} 
+
+function pearlpbx_sip_update_peer() { 
+	var sip_id = $('#input_peer_edit_id').val(); 
+	var sip_comment = $('#input_peer_edit_comment').val();
+	var sip_name = $('#input_peer_edit_name').val();
+	var sip_username = $('#input_peer_edit_username').val();
+	var sip_secret = $('#input_peer_edit_secret').val(); 
+	var sip_remote_register = false;
+	var sip_remote_regstr = $('#input_peer_edit_regstr').val(); 
+	var sip_remote_regstr_id = $('#input_peer_edit_regstr_id').val();  
+
+	if ($('#input_peer_edit_registration').attr('checked') == 'checked') { 
+		sip_remote_register = true; 
+	} 
+	
+	var sip_local_register = false; 
+	if ( $('#input_peer_edit_is_dynamic').attr('checked') == 'checked') {
+		sip_local_register = true; 
+	}
+	var sip_nat = false; 
+	if ( $('#input_peer_edit_nat').attr('checked') == 'checked') { 
+		sip_nat = true; 
+	}
+	var sip_ipaddr = $('#input_peer_edit_ipaddr').val(); 
+	var sip_call_limit = $('#input_peer_edit_call_limit').val(); 
+
+// Submit 
+	$.get("/sip.pl",
+		{ a: "setpeer",
+		  sip_id: sip_id,
+		  sip_comment: sip_comment, 
+		  sip_name: sip_name, 
+		  sip_username: sip_username, 
+		  sip_secret: sip_secret, 
+		  sip_remote_register: sip_remote_register, 
+		  sip_remote_regstr_id: sip_remote_regstr_id,
+		  sip_remote_regstr: sip_remote_regstr, 
+		  sip_local_register: sip_local_register,
+		  sip_nat: sip_nat, 
+		  sip_ipaddr: sip_ipaddr, 
+		  sip_call_limit: sip_call_limit, 
+		},function(data) 
+		{
+			if (data == "OK") { 
+				$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=external');
+				$('#pearlpbx_sip_edit_peer').modal('hide');
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+
+}
+function pearlpbx_edit_peer_is_dynamic() { 
+	if ($('#input_peer_edit_is_dynamic').attr('checked') == 'checked') { 
+		$('#div_input_peer_edit_ipaddr').hide(); 
+		$('#input_peer_edit_registration').attr('checked',false); 
+		$('#div_input_peer_edit_regstr').hide();
+	} else { 
+		$('#div_input_peer_edit_ipaddr').show(); 
+
+	}
+}
+function pearlpbx_edit_peer_registration() { 
+	if ($('#input_peer_edit_registration').attr('checked') == 'checked' ) { 
+		$('#div_input_peer_edit_regstr').show();
+		$('#input_peer_edit_is_dynamic').attr('checked',false); 
+		$('#div_input_peer_edit_ipaddr').show(); 
+	} else { 
+		$('#div_input_peer_edit_regstr').hide();
+	}
+
+}
+function pearlpbx_sip_load_external_id (sip_id) { 
+	$.getJSON("/sip.pl", 
+	{ 
+		a: "getpeer", 
+		id: sip_id, 
+	}, function (json) { 
+		$('#input_peer_edit_id').val(json.id); 
+		$('#input_peer_edit_comment').val(json.comment);
+		$('#input_peer_edit_name').val(json.name); 
+		$('#input_peer_edit_secret').val(json.secret); 
+		
+		$('#input_peer_edit_call_limit').val(json.cl); 
+		$('#input_peer_edit_username').val(json.username);
+
+		if (json.nat == 'yes') { 
+			$('#input_peer_edit_nat').attr('checked','checked'); 
+		} else { 
+			$('#input_peer_edit_nat').attr('checked',false); 
+		}
+
+		if ( (json.type == 'friend') && ( json.host=='dynamic') )  {
+			$('#div_input_peer_edit_ipaddr').hide();
+			$('#input_peer_edit_ipaddr').val('');
+			$('#input_peer_edit_is_dynamic').attr('checked','checked');
+			$('#div_input_peer_edit_regstr').hide();
+		} else { 
+			$('#div_input_peer_edit_ipaddr').show();
+			$('#input_peer_edit_ipaddr').val(json.ipaddr);
+			$('#input_peer_edit_is_dynamic').attr('checked',false);
+			$('#div_input_peer_edit_regstr').show();
+			// FIXME: найти и добавить строку регистрации, если таковая есть. 
+		}
+		$('#input_peer_edit_regstr').val(json.regstr); 
+		$('#input_peer_edit_regstr_id').val(json.regstr_id); 
+
+		if ( ( json.regstr_id != null ) && ( json.regstr_commented != 1 ) ) { 
+			$('#div_input_peer_edit_regstr').show();	
+			$('#input_peer_edit_registration').attr('checked','checked'); 
+			
+		} else { 
+			$('#div_input_peer_edit_regstr').hide(); 
+			$('#input_peer_edit_registration').attr('checked',false);
+		}
+
+
+	}); 
+}
+
 function pearlpbx_load_peers_as_options () { 
 
 	$.get("/sip.pl", {
 		a: "list",
-		b: "internalAsOption" 
+		b: "internalAsOptionIdValue" 
 	}, function (data) {
 		$('select#pearlpbx_setcallerid_src_sip').empty();
 		var x = '<optgroup><option value="Anybody">Для всех</option></optgroup>'; 
@@ -13,7 +152,7 @@ function pearlpbx_load_peers_as_options () {
 		$('select#pearlpbx_setcallerid_src_sip').append('</optgroup><optgroup>');
 		$.get("/sip.pl", {
 			a: "list",
-			b: "externalAsOption" 
+			b: "externalAsOptionIdValue" 
 		}, function (data) {
 			$('select#pearlpbx_setcallerid_src_sip').append(data);
 			$('select#pearlpbx_setcallerid_src_sip').append('</optgroup>');
@@ -469,11 +608,11 @@ function pearlpbx_fill_check_routing_channel () {
 }
 function pearlpbx_validate_routing ( dlist_id, route_step, route_type, route_dest, route_src) { 
 
-	alert ("dlist_id: "+dlist_id + "\n" + "route_step: " + route_step + "\n" + 
-		"route_type: "+route_type + "\n" + "route_dest: " + route_dest + "\n" +
-		"route_src: "+route_src 
-
-		);
+	// alert ("dlist_id: "+dlist_id + "\n" + "route_step: " + route_step + "\n" + 
+	//	"route_type: "+route_type + "\n" + "route_dest: " + route_dest + "\n" +
+	//	"route_src: "+route_src 
+	//
+	//	);
 
 	return true; 
 }
@@ -1092,6 +1231,8 @@ function pearlpbx_sip_load_id(sip_id) {
 		$('#input_sip_edit_tcp_port').val(json.tcp_port); 
 	});
 }
+
+
 function pearlpbx_sip_add_user(){ 
 	var comment = $('#input_sip_add_comment').val(); 
 	var extension = $('select#input_sip_add_extension option:selected').val();
@@ -1167,10 +1308,6 @@ function pearlpbx_today() {
 	$('.input-date').datepicker();
 }
 
-function pearlpbx_sip_add_trunk() {
-	alert ("called sip_add_trunk()"); 
-
-} 
 
 function pearlpbx_sip_edit_id(sip_id) { 
 	alert("called sip_edit_id ( "+sip_id+" )"); 
