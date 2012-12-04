@@ -263,6 +263,8 @@ if ($action eq 'loadcallerid') {
 	exit(0);
 }
 
+
+
 if ($action eq 'setcallerid_remove_id') { 
 	my $b = $pearl->{cgi}->param('b'); 
 	unless ( defined ( $b )) { 
@@ -290,6 +292,34 @@ if ($action eq 'setcallerid_add') {
 	print $route->setcallerid_add($direction_id, $sip_id, $callerid); 
 	exit(0); 
 	
+}
+
+if ($action eq 'load_convert_exten') { 
+	print $route->load_convert_exten; 
+	exit(0);
+}
+
+if ($action eq 'add_convert_exten') { 
+	my $exten = $pearl->{cgi}->param('exten'); 
+	my $operation = $pearl->{cgi}->param('operation');
+	my $param = $pearl->{cgi}->param('param'); 
+	my $step = $pearl->{cgi}->param('step'); 
+
+	unless ( defined ( $exten )) { print "ERROR: exten not defined. "; exit(0); }
+	unless ( defined ( $operation )) { print "ERROR: operation not defined. "; exit(0); }
+	unless ( defined ( $param )) { print "ERROR: param not defined. "; exit (0); }
+	unless ( defined ( $step )) { print "ERROR: step not defined. "; exit(0); }
+
+	print $route->add_convert_exten ($exten, $operation, $param, $step); 
+	exit(0); 
+}
+
+if ($action eq 'remove_convert_exten') { 
+	my $id = $pearl->{cgi}->param('id'); 
+
+	unless ( defined ( $id )) { print "ERROR: id not defined."; exit (0); }
+	print $route->remove_convert_exten ( $id ); 
+	exit(0); 
 }
 
 $pearl->htmlError("Action not found.");

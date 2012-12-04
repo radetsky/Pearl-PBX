@@ -868,6 +868,52 @@ sub setcallerid_add {
 
 }
 
+sub load_convert_exten { 
+  my $this = shift; 
+
+  my $sql = "select * from routing.convert_exten order by exten,step"; 
+  my $sth = $this->{dbh}->prepare($sql);
+  eval { $sth->execute; }; 
+  if ( $@ ) { 
+    return $this->{dbh}->errstr; 
+  }
+
+  my @rows; 
+
+  while (my $row = $sth->fetchrow_hashref) { 
+    push @rows,$row; 
+  }
+
+  return encode_json (\@rows); 
+}
+
+sub add_convert_exten { 
+  my ($this, $exten, $operation, $param, $step ) = @_; 
+
+  my $sql = "insert into routing.convert_exten ( exten,operation,parameters,step ) values ( ?, ?, ?, ?)"; 
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute ($exten,  $operation, $param, $step ); }; 
+  if ( $@ ) { 
+    return $this->{dbh}->errstr; 
+  }
+  $this->{dbh}->commit; 
+  return "OK"; 
+}
+
+sub remove_convert_exten { 
+  my ($this, $id) = @_; 
+
+  my $sql = "delete from routing.convert_exten where id=?"; 
+  my $sth = $this->{dbh}->prepare ($sql); 
+
+  eval { $sth->execute ($id); }; 
+  if ($@) { return $this->{dbh}->errstr; }
+
+  $this->{dbh}->commit; 
+  return "OK"; 
+}
+
+
 1;
 
 __END__

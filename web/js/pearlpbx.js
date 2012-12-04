@@ -1,3 +1,75 @@
+function pearlpbx_add_convert_exten() { 
+	var exten = $('#pearlpbx_convert_exten').val(); 
+	var operation = $('select#pearlpbx_convert_exten_operation option:selected').val();
+	var param = $('#pearlpbx_convert_exten_param').val(); 
+	var step = $('#pearlpbx_convert_exten_step').val(); 
+
+	$.get("/route.pl", { 
+		a: "add_convert_exten", 
+		exten: exten, 
+		operation: operation,
+		param: param, 
+		step: step 
+	}, function (data) { 
+		if (data == "OK") { 
+				pearlpbx_load_convert_exten();
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+	}, "html"); 
+}
+function pearlpbx_convert_exten_remove (id) { 
+	var confirmed = confirm ("Вы действительно хотите удалить это преобразование ?");
+	if (confirmed == true ) { 
+		$.get("/route.pl", { 
+			a: "remove_convert_exten",
+			id: id, 
+		}, function (data) { 
+			if (data == "OK") { 
+				pearlpbx_load_convert_exten();
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+	}
+}
+function pearlpbx_load_convert_exten() { 
+
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+	$('#pearlpbx_convert_exten_table tbody').empty();
+	$('#pearlpbx_convert_exten_table').append("<tr><td colspan=5>Request sent...</td></tr>");
+	$.getJSON("/route.pl",
+	{
+		a: "load_convert_exten",
+	},function (json) { 
+		$('#pearlpbx_convert_exten_table tbody').empty();
+		jQuery.each(json, function () {
+			var remurl = '<td><a href="javascript:void(0)" onClick="pearlpbx_convert_exten_remove('+
+			this['id']+')">'+remicon+'</a></td>';
+
+			$('#pearlpbx_convert_exten_table').append("<tr><td>"+this['exten']
+				+"</td><td>"+this['operation']+"</td>"
+				+"<td>"+this['parameters']+"</td>"
+				+"<td>"+this['step']+"</td>"
+				+remurl
+				+"</tr>");
+		}); 	
+
+	} );	
+
+	return true; 
+
+}
 function pearlpbx_sip_add_trunk() {
 	$('#input_peer_edit_id').val(''); 
 	$('#input_peer_edit_regstr_id').val(''); 
@@ -265,6 +337,11 @@ function pearlpbx_start_me_up() {
 	var callerid = pearlpbx_load_callerid(); 
 	if ( callerid == false ) { 
 		alert ("Загрузка таблицы преобразований номеров А закончилось с ошибкой! "); 
+		return false; 
+	}
+	var convert = pearlpbx_load_convert_exten(); 
+	if ( convert == false ) { 
+		alert ("Загрузка таблицы преобразований номеров Б закончилось с ошибкой!"); 
 		return false; 
 	}
 

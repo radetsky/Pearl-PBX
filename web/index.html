@@ -1242,6 +1242,57 @@ function cdrfilter_submit () {
 
 <!-- Конец диалога редактирования подключения по SIP  --> 
 
+<!-- Страница "Установка номеров Б" --> 
+<div id="pearlpbx_convert_extension" style="display: none">
+ <div class="pearlpbx-main-container-header">
+  <h1><center>Установка номеров Б</center></h1>
+ </div>
+ <div id="pearlpbx_setcallerid_div">
+  <table class='table table-bordered' id='pearlpbx_convert_exten_table'> 
+    <thead>
+    <tr>
+      <th>Маска номера Б</th>
+      <th>Операция</th>
+      <th>Параметры</th>
+      <th>Шаг</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+ </div>
+
+ <div> 
+  <form class="form-horizontal">
+  <fieldset>
+  
+    <div class="control-group">
+    <div style="float: left;" class="controls">
+ 
+    <input type="text" class="input-medium" id="pearlpbx_convert_exten" value="" placeholder="^...$">
+
+    <select name="pearlpbx_convert_exten_operation" id="pearlpbx_convert_exten_operation" style="width: 200px;">
+      <option value="substr">Удалить подстроку</option>
+      <option value="concat">Добавить строку</option>
+    </select> 
+
+    <input type="text" class="input-medium" id="pearlpbx_convert_exten_param" value="" placeholder="Параметры А:Б">
+    <input type="text" class="input-small" id="pearlpbx_convert_exten_step" value="" placeholder="Шаг 1..5">
+    
+    <p class="help-block">Если операция "удаление подстроки", то параметры вида "А:Б", где А позиция, с которой надо вычислить подстроку, а Б - длина. Б - необзятательный параметр. Пример: "2:", означает, что первые два символа надо обрезать. Если операция "добавить строку", то А - принимает значение "begin" или "end", что означает в начало или в конец строки надо добавить значение параметра Б.</p>
+
+  </div>
+   <center>
+      <a href="javascript:void(0)" class="btn btn-primary" onClick="pearlpbx_add_convert_exten()">Добавить</a>
+    </center>
+   
+  </div>
+  </fieldset>
+  </form>
+  </div>
+</div>
+<!-- Конец Страница "Установка номеров Б" --> 
+
 
 </body>
 </html>
