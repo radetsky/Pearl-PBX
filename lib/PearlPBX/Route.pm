@@ -405,13 +405,13 @@ sub checkroute {
 
   $out .= "<li>Конвертирую номер Б: ";
   my($result, $extension1, $description2) = $this->_convert_extension ($extension); 
-  $extension = $extension1; 
+  # $extension = $extension1; 
   unless ( defined ( $result ) ) { 
     $out .= "<span style=\"color: red;\">Ошибка.</span> Причина: ".$description2;
     $out .= "<br>";
     return $out; 
   } else { 
-    $out .= "<span style=\"color: green;\">ОК. Новый номер: $extension </span>"; 
+    $out .= "<span style=\"color: green;\">ОК. Новый номер: $extension1 </span>"; 
   }
 
   my $tgrp_first;
