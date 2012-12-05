@@ -124,8 +124,12 @@
           </div>
           <div class="row-fluid">
             <div class="span4">
-              <h2>SIP</h2>
+              <h2 style='float: left;'>SIP</h2>
+              <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_monitor_get_sip_status()'>⟳</a>
               <table class="table bordered" id="pearlpbx_monitor_sip"> 
+                <thead>
+                  <tr><th>Name</th><th>count</th></tr>
+                </thead>
                 <tbody>
                 <tr><td>В базе данных</td>     <td id="pearlpbx_monitor_sip_db"></td></tr>
                 <tr><td>Realtime asterisk</td> <td id="pearlpbx_monitor_sip_peers"></td></tr>
@@ -137,8 +141,22 @@
               <p><a class="btn" href="#">View details &raquo;</a></p>
             </div><!--/span-->
             <div class="span4">
-              <h2>Queues</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <h2 style='float: left;'>Queues</h2>
+              <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_monitor_get_queue_status()'>⟳</a>
+              <table class='table bordered' id="pearlpbx_monitor_queue"> 
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Wait</th>
+                    <th>Use</th>
+                    <th>Not</th>
+                    <th>Ring</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+              </table>
               <p><a class="btn" href="#">View details &raquo;</a></p>
             </div><!--/span-->
             <div class="span4">
