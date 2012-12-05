@@ -43,6 +43,7 @@
     <script src="js/jquery.js"></script>
     <script src="js/bootstrap.js"></script>
 		<script src="js/bootstrap-datepicker.js"></script>
+    <script src="js/astman-jah.js"></script>
 		<script src="js/pearlpbx.js"></script>
 		<script src="jPlayer/jquery.jplayer.min.js"></script>
  		<script language="javascript" type="text/javascript" src="/js/jqPlot/jquery.jqplot.min.js"></script>
@@ -124,7 +125,15 @@
           <div class="row-fluid">
             <div class="span4">
               <h2>SIP</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <table class="table bordered" id="pearlpbx_monitor_sip"> 
+                <tbody>
+                <tr><td>В базе данных</td>     <td id="pearlpbx_monitor_sip_db"></td></tr>
+                <tr><td>Realtime asterisk</td> <td id="pearlpbx_monitor_sip_peers"></td></tr>
+                <tr><td>Online </td>           <td id="pearlpbx_monitor_sip_online"></td></tr>
+                <tr><td>Неизвестно</td>        <td id="pearlpbx_monitor_sip_unknown"></td></tr>
+                <tr><td>Недоступен</td>        <td id="pearlpbx_monitor_sip_offline"></td></tr>
+              </tbody>
+              </table>
               <p><a class="btn" href="#">View details &raquo;</a></p>
             </div><!--/span-->
             <div class="span4">

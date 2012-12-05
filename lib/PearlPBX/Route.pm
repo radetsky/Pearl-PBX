@@ -913,6 +913,12 @@ sub remove_convert_exten {
   return "OK"; 
 }
 
+sub get_monitor_credentials { 
+  my $this = shift; 
+
+  return encode_json($this->{conf}->{webuser}->{manager}); 
+
+}
 
 1;
 

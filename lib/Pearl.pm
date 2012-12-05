@@ -116,7 +116,7 @@ sub htmlError {
   my $this = shift; 
 	my $str = shift; 
 
-	$this->htmlHeader; 
+	#$this->htmlHeader; 
 	my $out = "<font color=#ff0000>".$str."</font>";
 	print $out; 
 };

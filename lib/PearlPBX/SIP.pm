@@ -602,6 +602,20 @@ sub _remove_regstr {
 
 }
 
+sub monitor_get_sip_db { 
+  my $this = shift; 
+
+  my $sql = "select count(id) as monitor from public.sip_peers"; 
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute(); }; 
+  if ( $@ ) { return $this->{dbh}->errstr; }
+  my $row = $sth->fetchrow_hashref; 
+  my $monitor = $row->{'monitor'}; 
+  unless ( defined ( $monitor )) { $monitor = "undef"; } 
+  return $monitor; 
+
+}
+
 1;
 
 __END__

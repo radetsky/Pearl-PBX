@@ -322,6 +322,11 @@ if ($action eq 'remove_convert_exten') {
 	exit(0); 
 }
 
+if ($action eq 'get_monitor_credentials') { 
+	print $route->get_monitor_credentials; 
+	exit(0);
+}
+
 $pearl->htmlError("Action not found.");
 exit(0);
 

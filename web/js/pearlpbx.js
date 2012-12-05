@@ -1,3 +1,134 @@
+var pearlpbx_monitor_connected = false; 
+
+function pearlpbx_monitor_failed() { 
+	var failed = "<font color=\"#FF0000\"> X </font>";
+	$('#pearlpbx_monitor_sip_peers').html(failed); 
+	$('#pearlpbx_monitor_sip_online').html(failed);
+	$('#pearlpbx_monitor_sip_unknown').html(failed);
+	$('#pearlpbx_monitor_sip_offline').html(failed); 
+	pearlpbx_monitor_connected = false; 
+}
+
+function pearlpbx_monitor_login(msgs, callback_dest) { 
+
+	var response = msgs[0].headers['response']; 
+	var message  = msgs[0].headers['message']; 
+
+	//alert (response + " " + message); 
+	if ( response != 'Success') { 
+		pearlpbx_monitor_failed();
+		return false;
+	}
+	pearlpbx_monitor_connected = true;
+	//alert('connected1');  
+	callback_dest(); 
+
+}
+function pearlpbx_monitor_connect( callback_dest ) { 
+	var username = ""; 
+	var secret = ""; 
+
+	$.getJSON('/route.pl', { 
+		a: "get_monitor_credentials",
+	}, function (json) { 
+		username = json.username; 
+		secret = json.secret; 
+		// alert (username + ":" + secret ); 
+		astmanEngine.setURL("/asterisk/rawman");
+    	astmanEngine.sendRequest('action=login&username=' + username + "&secret=" + secret, 
+    		pearlpbx_monitor_login, callback_dest );
+
+	},"html"); 
+
+
+  }
+
+function pearlpbx_monitor_get_sip_status() { 
+	if ( pearlpbx_monitor_connected == false ) {
+		pearlpbx_monitor_connect (pearlpbx_monitor_get_sip_status); 
+	} else { 
+		astmanEngine.sendRequest('action=SIPPeers', 
+			pearlpbx_monitor_set_sip_status,
+			pearlpbx_monitor_fake_callback
+		); 
+	}
+}
+function pearlpbx_monitor_set_sip_status(msgs) { 
+
+	var peers = 0; 
+	var online = 0;
+	var unknown = 0; 
+	var unreachable = 0;  
+
+	if ( msgs[0].headers['response'] != 'Success') { 
+		pearlpbx_monitor_failed();
+		return false; 
+	} 
+	for (i = 1; i < msgs.length; i++ ) {
+		
+		if ( msgs[i].headers['event'] == 'PeerEntry') { 
+			peers = peers + 1; 
+		
+			var status = msgs[i].headers['status']; 
+			//alert(status + ':' + status.search('OK')); 
+			if ( status.search('OK') > -1) { 
+				online = online + 1; 
+			}
+			if ( status.search('LAGGED') > -1) { 
+				unknown = unknown + 1; 
+			}
+			if ( status.search('Unmonitored') > -1) { 
+				unknown = unknown + 1; 
+			}
+			if ( status.search ('UNREACH') > -1 ) { 
+				unreachable = unreachable + 1; 
+			}	
+		}
+
+	}
+	$('#pearlpbx_monitor_sip_peers').html(peers);
+	$('#pearlpbx_monitor_sip_online').html(online);
+	$('#pearlpbx_monitor_sip_unknown').html(unknown);
+	$('#pearlpbx_monitor_sip_offline').html(unreachable);
+
+}
+
+function pearlpbx_monitor_fake_callback() { 
+
+}
+
+function pearlpbx_monitor_get_sip_db() { 
+	$.get('/sip.pl',{ 
+		a: "monitor_get_sip_db",
+	},function(data) { 
+		$('#pearlpbx_monitor_sip_db').html(data);
+	}, "html");
+
+}
+
+function pearlpbx_start_me_up() { 
+
+	var authenticated = pearlpbx_authentication(); 
+	if ( authenticated == false ) { 
+		return false; 
+	}
+	var callerid = pearlpbx_load_callerid(); 
+	if ( callerid == false ) { 
+		alert ("Загрузка таблицы преобразований номеров А закончилось с ошибкой! "); 
+		return false; 
+	}
+	var convert = pearlpbx_load_convert_exten(); 
+	if ( convert == false ) { 
+		alert ("Загрузка таблицы преобразований номеров Б закончилось с ошибкой!"); 
+		return false; 
+	}
+	
+	//alert($('a#pearlpbx_username').text());  
+	pearlpbx_monitor_get_sip_db(); 
+	pearlpbx_monitor_get_sip_status();
+	
+}
+
 function pearlpbx_add_convert_exten() { 
 	var exten = $('#pearlpbx_convert_exten').val(); 
 	var operation = $('select#pearlpbx_convert_exten_operation option:selected').val();
@@ -329,23 +460,6 @@ function pearlpbx_load_callerid() {
 	return true; 
 }
 
-function pearlpbx_start_me_up() { 
-	var authenticated = pearlpbx_authentication(); 
-	if ( authenticated == false ) { 
-		return false; 
-	}
-	var callerid = pearlpbx_load_callerid(); 
-	if ( callerid == false ) { 
-		alert ("Загрузка таблицы преобразований номеров А закончилось с ошибкой! "); 
-		return false; 
-	}
-	var convert = pearlpbx_load_convert_exten(); 
-	if ( convert == false ) { 
-		alert ("Загрузка таблицы преобразований номеров Б закончилось с ошибкой!"); 
-		return false; 
-	}
-
-}
 
 function pearlpbx_authentication() { 
 	$.get("/login.pl", { 

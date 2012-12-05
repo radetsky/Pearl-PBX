@@ -98,6 +98,14 @@ if ($action eq 'setpeer') {
 	exit(0);
 }
 
+if ($action eq 'monitor_get_sip_db') { 
+	print $sip->monitor_get_sip_db; 
+	exit(0);
+}
+
+$pearl->htmlError("Action not found.");
+exit(0);
+
 
 
 1;
