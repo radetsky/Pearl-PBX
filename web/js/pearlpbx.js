@@ -43,8 +43,12 @@ function pearlpbx_monitor_set_active_channels (msgs) {
 		return;		
 	}
 
+	var achannels = 0; 
+	var atalks = 0; 
+
 	for (var i = 0; i < msgs.length; i++ ) { 
 		if (msgs[i].headers['event'] == 'Status') { 
+			achannels++; 
 			var channel = msgs[i].headers['channel'].split('-'); 
 			var callerid = msgs[i].headers['callerid']; 
 			var state = msgs[i].headers['state'];
@@ -54,6 +58,7 @@ function pearlpbx_monitor_set_active_channels (msgs) {
 				link = new Array (" ", " "); 
 			} else { 
 				link = msgs[i].headers['link'].split('-');
+				atalks++; 
 			}
 			
 			var tstr = "<tr><td>"+channel[0]+"</td>"
@@ -63,6 +68,8 @@ function pearlpbx_monitor_set_active_channels (msgs) {
 			$('#pearlpbx_monitor_active_channels tbody').append(tstr);			
 		}
 	}
+	$('#pearlpbx_monitor_zagalom_channels').html(achannels); 
+	$('#pearlpbx_monitor_zagalom_talks').html(atalks/2); 
 
 	pearlpbx_monitor_get_ulines();
 
@@ -94,8 +101,10 @@ function pearlpbx_monitor_set_parkedcalls (msgs) {
 		return;		
 	}
 
+	var parked = 0; 
 	for (var i=0; i < msgs.length; i++ ) { 
 		if ( msgs[i].headers['event'] == 'ParkedCall') { 
+			parked++; 
 			var callerid = msgs[i].headers['callerid']; 
 			var exten = msgs[i].headers['exten']; 
 			var channel = msgs[i].headers['channel'].split("-");
@@ -109,7 +118,7 @@ function pearlpbx_monitor_set_parkedcalls (msgs) {
 			$('#pearlpbx_monitor_parkedcalls tbody').append(tstr);
 		}
 	}
-
+	$('#pearlpbx_monitor_zagalom_parked').html(parked); 
 	pearlpbx_monitor_get_active_channels();
 
 }
@@ -141,6 +150,8 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 	}
 
 	var queues = new Array(); 
+	var qmembers = new Array(); 
+	var qcalls = 0; 
 
 	for (var i=1; i < msgs.length; i++) { 
 		var queue = new Object(); 
@@ -148,6 +159,7 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 		if ( msgs[i].headers['event'] == 'QueueParams') { 
 			queue.name  = msgs[i].headers['queue'];
 			queue.calls = msgs[i].headers['calls']; 
+			qcalls = qcalls+parseInt(queue.calls,10); 
 			queue.inuse    = 0;
 			queue.notinuse = 0; 
 			queue.ringing   = 0;
@@ -156,7 +168,7 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 	} 
 
 	for (var i=1; i < msgs.length; i++) { 
-		
+		var queuemember = new Object(); 		
 		if ( msgs[i].headers['event'] == 'QueueMember') { 
 			var name = msgs[i].headers['queue'];
 
@@ -185,6 +197,7 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 		//alert(table_string);
 		$('#pearlpbx_monitor_queue tbody').append(table_string); 
 	}
+	$('#pearlpbx_monitor_zagalom_qcalls').html(qcalls);
 	pearlpbx_monitor_get_parkedcalls();
 
 }
