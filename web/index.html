@@ -99,20 +99,30 @@
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-general')">Общие</a></li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#cdr-filter')">CDR-фильтр</a></li>
 							<li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-summary')">Количественные</a></li>
-              <li class="nav-header">Состояние</li>
+<!--              <li class="nav-header">Состояние</li>
               <li><a href="#">Очереди</a></li>
               <li><a href="#">УПАТС</a></li>
               <li><a href="#">Отзвон</a></li>
 							<li><a href="#">Внутренние линии</a></li>
-
+-->
               <li class='nav-header'> Пользователь </li>
               <li> <button class='btn btn-info'>Мой профиль</button>
               <li> <button class='btn btn-danger' onClick='pearlpbx_logout()'>Закончить сессию</button>
             </ul>
+          </div><!--/.well -->   
 
-            
-          </div><!--/.well -->
-        </div><!--/span-->
+        <div class="span3">
+              <h2>Проверка маршрутизации</h2>
+              <form>
+              <label>Канал А</label>
+              <select id="check_routing_channel" name="check_routing_channel">
+              </select>
+              <label>Номер Б</label>
+              <input id="check_routing_destination" type="text" placeholder="Введите номер">
+              <p><a class="btn btn-success" href="#" onClick="pearlpbx_check_routing();">Проверить</a></p>
+            </form>
+            </div><!--/span-->
+         </div><!--/span-->
 
 				<!-- Здесь начинается div с "телом" кредита :)-->
 
@@ -138,7 +148,7 @@
                 <tr><td>Недоступен</td>        <td id="pearlpbx_monitor_sip_offline"></td></tr>
               </tbody>
               </table>
-              <p><a class="btn" href="#">View details &raquo;</a></p>
+              <!-- <p><a class="btn" href="#">View details &raquo;</a></p> -->
             </div><!--/span-->
             <div class="span4">
               <h2 style='float: left;'>Queues</h2>
@@ -157,36 +167,74 @@
 
                 </tbody>
               </table>
-              <p><a class="btn" href="#">View details &raquo;</a></p>
+              <!-- <p><a class="btn" href="#">View details &raquo;</a></p>-->
             </div><!--/span-->
             <div class="span4">
-              <h2>Проверка маршрутизации</h2>
-              <form>
-              <label>Канал А</label>
-              <select id="check_routing_channel" name="check_routing_channel">
-              </select>
-              <label>Номер Б</label>
-              <input id="check_routing_destination" type="text" placeholder="Введите номер">
-              <p><a class="btn btn-success" href="#" onClick="pearlpbx_check_routing();">Проверить</a></p>
-            </form>
+              <h2 style='float: left;'>Парковка</h2>
+              <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_monitor_get_parkedcalls()'>⟳</a>
+              <table id="pearlpbx_monitor_parkedcalls" class="table bordered">
+                <thead>
+                  <tr>
+                    <th>Номер A</th>
+                    <th>Линия</th>
+                    <th>Канал А</th>
+                    <th>Таймаут</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+              </table>
+
             </div><!--/span-->
           </div><!--/row-->
           <div class="row-fluid">
+            
             <div class="span4">
-              <h2>UINL</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-              <p><a class="btn" href="#">View details &raquo;</a></p>
+              <h2 style='float: left;'>Активные каналы</h2>
+              <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_monitor_get_active_channels()'>⟳</a>
+              <table class='table bordered' id='pearlpbx_monitor_active_channels'>
+                <thead>
+                  <tr>
+                    <th>Канал</th>
+                    <th>Номер</th>
+                    <th>State</th>
+                    <th>Link</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+              
             </div><!--/span-->
             <div class="span4">
-              <h2>Memory/CPU</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-              <p><a class="btn" href="#">View details &raquo;</a></p>
+              <h2 style='float: left;' >Внутренние линии</h2>
+              <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_monitor_get_ulines()'>⟳</a>
+              <table class='table bordered' id='pearlpbx_monitor_ulines'> 
+                <thead>
+                  <tr>
+                    <th>id</th>
+                    <th>Номер</th>
+                    <th>Начало</th>
+                    <th>Канал</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
             </div><!--/span-->
+
             <div class="span4">
-              <h2>Disk</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-              <p><a class="btn" href="#">View details &raquo;</a></p>
+              <h2>Callback</h2>
+              <table class='table bordered'> 
+                <thead>
+                  <tr>
+                    <th> Номер </th>
+                  </tr>
+                </thead>
+              </table>
             </div><!--/span-->
+            
           </div><!--/row-->
         </div><!--/span-->
       </div><!--/row-->

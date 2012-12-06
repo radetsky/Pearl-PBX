@@ -920,6 +920,23 @@ sub get_monitor_credentials {
 
 }
 
+sub getulines { 
+  my $this = shift; 
+
+  my $sql = "select * from integration.ulines where status='busy' order by id"; 
+  my $sth = $this->{dbh}->prepare($sql); 
+  eval { $sth->execute; }; 
+  if ( $@ ) { return $this->{dbh}->errstr; }
+
+  my @rows;  
+
+  while (my $row = $sth->fetchrow_hashref) { 
+    push @rows, $row; 
+  }
+  return encode_json(\@rows); 
+
+}
+
 1;
 
 __END__

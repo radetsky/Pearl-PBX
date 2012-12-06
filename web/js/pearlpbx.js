@@ -9,6 +9,121 @@ Array.prototype.indexOfQueue = function ( name ) {
 	return -1; 
 }
 
+function pearlpbx_monitor_get_ulines() { 
+	$('#pearlpbx_monitor_ulines tbody').empty(); 
+	$.getJSON('/route.pl', { 
+		a: "getulines", 
+	}, function (json) { 
+		jQuery.each(json, function () {
+			var timt = this['cdr_start'].split(' '); 
+			var channel = this['channel_name'].split('-'); 
+
+			$('#pearlpbx_monitor_ulines tbody').append("<tr><td>"+this['id']
+				+"</td><td>"+this['callerid_num']+"</td>"
+				+"<td>"+timt[1]+"</td>"
+				+"<td>"+channel[0]+"</td></tr>");
+		}); 		
+
+	}, "html"); 
+
+
+}
+function pearlpbx_monitor_set_active_channels (msgs) { 
+	$('#pearlpbx_monitor_active_channels tbody').empty();
+
+	if (msgs[0].headers['response'] != 'Success') { 
+		if ( msgs[0].headers['response'] == 'Error') { 
+			if ( msgs[0].headers['message'] == 'Authentication Required') { 
+				pearlpbx_monitor_connected = false; 
+				pearlpbx_monitor_connect (pearlpbx_monitor_get_active_channels); 
+			}
+		}
+
+		$('#pearlpbx_monitor_active_channels tbody').append("Can't get info!"); 
+		return;		
+	}
+
+	for (var i = 0; i < msgs.length; i++ ) { 
+		if (msgs[i].headers['event'] == 'Status') { 
+			var channel = msgs[i].headers['channel'].split('-'); 
+			var callerid = msgs[i].headers['callerid']; 
+			var state = msgs[i].headers['state'];
+			var link = msgs[i].headers['link']; 
+
+			if (link == undefined) { 
+				link = new Array (" ", " "); 
+			} else { 
+				link = msgs[i].headers['link'].split('-');
+			}
+			
+			var tstr = "<tr><td>"+channel[0]+"</td>"
+						+"<td>"+callerid+"</td>"
+						+"<td>"+state+"</td>"
+						+"<td>"+link[0]+"</td></tr>";
+			$('#pearlpbx_monitor_active_channels tbody').append(tstr);			
+		}
+	}
+
+	pearlpbx_monitor_get_ulines();
+
+}
+
+function pearlpbx_monitor_get_active_channels () { 
+	if ( pearlpbx_monitor_connected == false ) {
+		pearlpbx_monitor_connect (pearlpbx_monitor_get_active_channels); 
+	} else { 
+		astmanEngine.sendRequest('action=status', 
+			pearlpbx_monitor_set_active_channels,
+			pearlpbx_monitor_fake_callback
+		); 
+	}
+}
+
+function pearlpbx_monitor_set_parkedcalls (msgs) { 
+	$('#pearlpbx_monitor_parkedcalls tbody').empty();
+
+	if (msgs[0].headers['response'] != 'Success') { 
+		if ( msgs[0].headers['response'] == 'Error') { 
+			if ( msgs[0].headers['message'] == 'Authentication Required') { 
+				pearlpbx_monitor_connected = false; 
+				pearlpbx_monitor_connect (pearlpbx_monitor_get_parkedcalls); 
+			}
+		}
+
+		$('#pearlpbx_monitor_parkedcalls tbody').append("Can't get info!"); 
+		return;		
+	}
+
+	for (var i=0; i < msgs.length; i++ ) { 
+		if ( msgs[i].headers['event'] == 'ParkedCall') { 
+			var callerid = msgs[i].headers['callerid']; 
+			var exten = msgs[i].headers['exten']; 
+			var channel = msgs[i].headers['channel'].split("-");
+			var timeout = msgs[i].headers['timeout']; 
+
+			var tstr = "<tr><td>"+callerid+"</td>"
+						+"<td>"+exten+"</td>"
+						+"<td>"+channel[0]+"</td>"
+						+"<td>"+timeout+"</td></tr>"; 
+
+			$('#pearlpbx_monitor_parkedcalls tbody').append(tstr);
+		}
+	}
+
+	pearlpbx_monitor_get_active_channels();
+
+}
+function pearlpbx_monitor_get_parkedcalls () { 
+	if ( pearlpbx_monitor_connected == false ) {
+		pearlpbx_monitor_connect (pearlpbx_monitor_get_parkedcalls); 
+	} else { 
+		astmanEngine.sendRequest('action=ParkedCalls', 
+			pearlpbx_monitor_set_parkedcalls,
+			pearlpbx_monitor_fake_callback
+		); 
+	}
+}
+
 function pearlpbx_monitor_set_queue_status(msgs) { 
 
 	$('#pearlpbx_monitor_queue tbody').empty();
@@ -70,6 +185,7 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 		//alert(table_string);
 		$('#pearlpbx_monitor_queue tbody').append(table_string); 
 	}
+	pearlpbx_monitor_get_parkedcalls();
 
 }
 function pearlpbx_monitor_get_queue_status() { 
@@ -144,8 +260,14 @@ function pearlpbx_monitor_set_sip_status(msgs) {
 	var unknown = 0; 
 	var unreachable = 0;  
 
-	if ( msgs[0].headers['response'] != 'Success') { 
-		pearlpbx_monitor_failed();
+	if ( msgs[0].headers['response'] != 'Success') {  
+		if ( msgs[0].headers['response'] == 'Error') { 
+			if ( msgs[0].headers['message'] == 'Authentication Required') { 
+				pearlpbx_monitor_connected = false; 
+				pearlpbx_monitor_connect (pearlpbx_monitor_get_sip_status); 
+			}
+		}
+
 		return false; 
 	} 
 	for (i = 1; i < msgs.length; i++ ) {
@@ -211,6 +333,7 @@ function pearlpbx_start_me_up() {
 	//alert($('a#pearlpbx_username').text());  
 	pearlpbx_monitor_get_sip_db(); 
 	pearlpbx_monitor_get_sip_status();
+
 	
 }
 
