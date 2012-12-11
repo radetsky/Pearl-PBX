@@ -424,12 +424,7 @@ sub _expire_ulines {
 		} 
 	} 
     
-    $this->{'count'} = $this->{'count'} + 1; 
-    if ($this->{'count'} >= 36000 ) { 
-        $this->_clear_ulines(); 
-        $this->{'count'} = 0; 
-    } 
-    return 1; 
+   return 1; 
 
 }
 sub process {
@@ -443,8 +438,14 @@ sub process {
 
         $event = $this->el->_getEvent();
         unless ($event) {
-            sleep(1);
-			$this->_expire_ulines();
+	    $this->log("info","No event from AMI. Sleeping."); 
+            $this->{'count'} = $this->{'count'} + 1; 
+    	    if ($this->{'count'} >= 300 ) { 
+                $this->_clear_ulines(); 
+                $this->{'count'} = 0; 
+            } 
+	    sleep(1);
+	    $this->_expire_ulines();
             next;
         }
 
