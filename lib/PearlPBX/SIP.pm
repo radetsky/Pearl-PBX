@@ -559,7 +559,9 @@ sub setpeer {
   if ( $sip_remote_register eq 'true') { 
     $doreg = $this->_add_or_replace_regstr ($sip_remote_regstr, $sip_regstr_id); 
   } else { 
-    $doreg = $this->_remove_regstr ($sip_regstr_id); 
+    if ( ($sip_regstr_id+0) > 0) { 
+			$doreg = $this->_remove_regstr ($sip_regstr_id); 
+		} 
   }
 
   if ($doreg =~ /^ERROR/ ) { return $doreg; }

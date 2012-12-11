@@ -152,6 +152,9 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 	var queues = new Array(); 
 	var qmembers = new Array(); 
 	var qcalls = 0; 
+	var inuse = new Array(); 
+	var notinuse = new Array();
+
 
 	for (var i=1; i < msgs.length; i++) { 
 		var queue = new Object(); 
@@ -175,15 +178,19 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 			var j = queues.indexOfQueue(name); 
 			// alert (i + ': indexOfQueue: '+ name + '=' + j); 
 			queue = queues[j]; 
+			var name = msgs[i].headers['name'];
 			var status = msgs[i].headers['status']; 
 			if ( status == 2 ) { 
 				queue.inuse = queue.inuse + 1; 
+				inuse[name] = 1; 
 			}
 			if ( status == 1 ) { 
 				queue.notinuse = queue.notinuse + 1; 
+				notinuse[name] = 1; 
 			}
 			if ( status == 6 ) { 
 				queue.ringing = queue.ringing + 1; 
+				notinuse[name] = 1; 
 			}
 		}
 	}
@@ -198,6 +205,23 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 		$('#pearlpbx_monitor_queue tbody').append(table_string); 
 	}
 	$('#pearlpbx_monitor_zagalom_qcalls').html(qcalls);
+
+	var zagalom_inuse = 0;
+	for (var i in inuse) { 
+		if (inuse.hasOwnProperty(i)) {
+			zagalom_inuse++;
+		}
+	}
+
+	var zagalom_notinuse = 0; 
+	for (var i in notinuse) { 
+		if (notinuse.hasOwnProperty(i)) {
+			zagalom_notinuse++;
+		}
+	}
+
+	$('#pearlpbx_monitor_zagalom_inuse').html(zagalom_inuse);
+	$('#pearlpbx_monitor_zagalom_notinuse').html(zagalom_notinuse);
 	pearlpbx_monitor_get_parkedcalls();
 
 }
