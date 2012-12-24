@@ -414,7 +414,7 @@ sub _expire_ulines {
 			# $this->log("info","Empty expire list");
 			last; 
 		} 
-		if ($item->{'expire_time'} < $t ) {
+		if ($item->{'expire_time'} <= $t ) {
 			$this->log("info","Time: $t to free uline $item->{'uline'} with $item->{'channel'}"); 
 			$this->_free_uline ($item->{'channel'}); 
 		} else { 
@@ -460,7 +460,7 @@ sub process {
 			unless ( defined ( $uline ) ) { 
 				next; 
 			}
-			$this->_add_2_expire ($channel, $uline , time()+5);
+			$this->_add_2_expire ($channel, $uline , time()+3);
 		}
 		$this->_expire_ulines();
     }

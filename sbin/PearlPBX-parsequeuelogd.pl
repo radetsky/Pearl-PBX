@@ -19,7 +19,7 @@
 #      VERSION:  2.0
 #      CREATED:  19/12/2010
 #     REVISION:  001
-#     MODIFIED:  16/01/2012
+#     MODIFIED:  12/12/2012 :) CAUSE: Add insert into VoiceInformer feature in case of ABANDON and tail
 #===============================================================================
 
 =item queue_log
@@ -102,8 +102,11 @@ sub start {
 	my $notail = undef; 
 
 	GetOptions ('notail!' => \$notail); 
-	
 	$this->{'notail'} = $notail; 
+
+    my $callback = undef; 
+    GetOptions ('callback' => \$callback); 
+    $this->{'callback'} = $callback; 
 
 }
 
@@ -156,8 +159,15 @@ sub _db_connect {
     $this->{'st_connect'} = $this->dbh->prepare(
 "update queue_parsed set holdtime=?,agentid=?,success=1,status='CONNECT' where callid=?"
     );
+    $this->{'st_callback'} = $this->dbh->prepare(
+        "insert into public.voiceinformer ( destination, userfield, till ) values ( ?, ?, ?)" ); 
+
+    $this->{'st_callback_getinfo'} = $this->dbh->prepare ( 
+        "select * from public.queue_parsed where callid=?"
+        );
 
     return 1;
+
 }
 
 sub _exit {
@@ -170,6 +180,23 @@ sub _exit {
     exit(-1);
 }
 
+sub _callback { 
+    my $this = shift; 
+    my $callid = shift; 
+
+    $this->{'st_callback_getinfo'}->execute($callid); 
+    my $row = $this->{'st_callback_getinfo'}->fetchrow_hashref; 
+    unless ( defined ( $row->{'callid'})) { 
+        $this->log("warning","Can't find queue_parsed:callid=".$callid); 
+        return undef; 
+    }
+    my $destination = $row->{'callerid'}; 
+    my $queue = "QUEUE=".$row->{'queue'}; 
+    my $interval = "now()+'10 minutes'::interval"; # FIXME  - it's a hardcode. 
+
+    $this->{'st_callback'}->execute($destination,$queue,$interval); 
+
+}
 sub process {
     my ($this,%params) = @_;
 
@@ -185,6 +212,11 @@ sub process {
     my $tail = 1;
     if ( defined( $this->{'notail'} ) ) {
         $tail = 0;
+    }
+
+    my $callback = 1; 
+    unless ( defined ( $this->{'callback'})) { 
+        $callback = 0;
     }
 
     my $ref = undef;
@@ -225,10 +257,16 @@ sub process {
       # The caller was exited from the queue forcefully because the queue had no
       # reachable members and it's configured to do that to callers when there
       # are no reachable members.
+
             my ( $pos, $origpos, $waittime ) = @par;
             $pos      += 0;
             $waittime += 0;
             $this->{'st_abandon'}->execute( $pos, $waittime, $event, $callid );
+
+            if ( ( $tail > 0 ) and ( $callback > 0) ) { 
+                $this->_callback($callid); # Там уже из базы вытащим все необходимые параметры
+            }
+
         }
         elsif (( $event eq 'COMPLETEAGENT' )
             or ( $event eq 'COMPLETECALLER' ) )

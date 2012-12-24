@@ -80,9 +80,16 @@ sub report {
 		my $src = $params->{'src'}; 
 		my $dst = $params->{'dst'}; 
 
-    my $sql = "select id,uline_id,original_file,result_file, cdr_start, cdr_src, cdr_dst from integration.recordings where cdr_start = ? and cdr_src = ? and cdr_dst = ? order by id"; 
+    my $sql = "select id,uline_id,original_file,result_file, cdr_start, cdr_src, cdr_dst from \
+        integration.recordings where cdr_start = ? and cdr_src = ? and cdr_dst = ? order by id"; 
+
+    my $sql2 = "select id,uline_id,original_file,result_file, cdr_start, cdr_src, cdr_dst from \
+        integration.recordings where cdr_start = ? and cdr_src = ? order by id"; 
+
 
     my $sth = $this->{dbh}->prepare($sql);
+    my $sth2 = $this->{dbh}->prepare($sql2); 
+
     eval { $sth->execute( $start, $src, $dst ); };
     if ($@) {
         $this->{error} = $this->{dbh}->errstr;
@@ -90,8 +97,16 @@ sub report {
     }
 
     my $hash_ref = $sth->fetchall_hashref('id');
-    unless ($hash_ref) {
-        return 0;
+    unless (%{$hash_ref}) {
+        eval { $sth2->execute ( $start, $src ); }; 
+        if ( $@ ) { 
+            $this->{error} = $this->{dbh}->errstr;
+            return undef;
+        }   
+        $hash_ref = $sth2->fetchall_hashref('id'); 
+        unless ( %{$hash_ref} ) { 
+            return 0; 
+        }
     }
 
 		my $template = Template->new( { 
