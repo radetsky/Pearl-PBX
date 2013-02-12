@@ -326,7 +326,9 @@ sub list_internal_free {
 sub newsecret { 
   my $this = shift; 
 
-  return `pwgen -c 16`;
+  my $pw = `pwgen -c 16`;
+	chomp $pw; 
+	return $pw; 
 
 }
 

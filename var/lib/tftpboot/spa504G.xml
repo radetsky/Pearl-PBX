@@ -385,7 +385,5 @@
 <Server_Type group="Attendant_Console/General">Broadsoft</Server_Type>
 <Test_Mode_Enable group="Attendant_Console/General">No</Test_Mode_Enable>
 <Attendant_Console_Call_Pickup_Code group="Attendant_Console/General">*98</Attendant_Console_Call_Pickup_Code>
-<XML_Directory_Service_Name ua="ro">Phone Book</XML_Directory_Service_Name>
-<XML_Directory_Service_URL ua="ro">http://192.168.172.10/ukravto.xml</XML_Directory_Service_URL>
 </flat-profile>
 
