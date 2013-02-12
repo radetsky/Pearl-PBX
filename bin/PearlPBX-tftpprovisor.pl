@@ -143,11 +143,9 @@ sub read_fromdb {
 
 sub save_config { 
 	my $this = shift; 
-	my $struct = shift; 
+	my $struct = shift; # name,secret,mac_addr_tel. 
+    my $tftpdir = "/var/lib/tftpboot";
 
-	# Открыть шаблон с соответствующим именем 
-    # Сгенерировать текст 
-    # Записать в файл. 
     my $teletype = $struct->{'teletype'}; 
     if ($teletype =~ /softphone/) { 
         # Простые софтфоны не провижионим.
@@ -187,7 +185,7 @@ sub save_config {
         sipserv => $sipserv, 
     };
 
-    my $output = $struct->{'mac_addr_tel'}.".cfg"; # Grandstream 
+    my $output = $struct->{'mac_addr_tel'}.".txt"; # Grandstream 
     if ($teletype =~ /^SPA/) { 
         $output = $teletype.'/'.$struct->{'mac_addr_tel'}.".xml"; 
     }
@@ -199,6 +197,10 @@ sub save_config {
         $this->log("error","Can't process $tpl_file " . $template->error()); 
         return undef; 
     } 
+    if ($teletype =~ /^GrandStreamGXP/i ) { 
+        system "grandstream-config.pl ".$struct->{'mac_addr_tel'}." $tftpdir".'/'.$output." $tftpdir/cfg".$struct->{'mac_addr_tel'};
+        unlink $tftpdir.'/'.$output; 
+    }
 
     return 1; 
 
