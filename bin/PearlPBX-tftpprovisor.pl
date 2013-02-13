@@ -50,11 +50,11 @@ sub start {
 
 	
     my $fromdb  = undef; GetOptions ( 'fromdb' => \$fromdb );   $this->{'fromdb'} = $fromdb; 
-    my $macaddr = undef; GetOptions ( 'macaddr' => \$macaddr ); $this->{'macaddr'} = $macaddr; 
-    my $exten   = undef; GetOptions ( 'exten' => \$exten );     $this->{'exten'} = $exten; 
-    my $secret  = undef; GetOptions ( 'secret' => \$secret );  $this->{'secret'} = $secret; 
-    my $sipserv = undef; GetOptions ( 'sipserv' => \$sipserv ); $this->{'sipserv'} = $sipserv; 
-    my $model   = undef; GetOptions ( 'model' => \$model );     $this->{'model'} = $model; 
+    my $macaddr = undef; GetOptions ( 'macaddr=s' => \$macaddr ); $this->{'macaddr'} = $macaddr; 
+    my $exten   = undef; GetOptions ( 'exten=s' => \$exten );     $this->{'exten'} = $exten; 
+    my $secret  = undef; GetOptions ( 'secret=s' => \$secret );   $this->{'secret'} = $secret; 
+    my $sipserv = undef; GetOptions ( 'sipserv=s' => \$sipserv ); $this->{'sipserv'} = $sipserv; 
+    my $model   = undef; GetOptions ( 'model=s' => \$model );     $this->{'model'} = $model; 
 
     $this->mk_accessors('dbh');
     $this->_db_connect();
@@ -110,11 +110,33 @@ sub process {
 
 	if ( $this->{'fromdb'} ) { 
 		# Non interactive mode 
-		$this->read_fromdb();
+	    print "Reading from database.\n";
+    	$this->read_fromdb();
         return 1; 
-	}
+	} 
+    warn Dumper ($this);
 
-
+    if ( $this->{'macaddr'} ) {
+        if ( $this->{'exten'} ) { 
+            if ( $this->{'secret'} ) { 
+                if ( $this->{'model'}) { 
+                    my $struct = { 
+                        name => $this->{'exten'},
+                        secret => $this->{'secret'},
+                        mac_addr_tel => $this->{'macaddr'},
+                        teletype => $this->{'model'}
+                    };
+                    if ($this->{'sipserv'} ) { 
+                        $struct->{'sipserv'} = $this->{'sipserv'}; 
+                    } else { 
+                        $struct->{'sipserv'} = $this->{conf}->{'provision'}->{'sipserv'}; 
+                    }
+                    $this->save_config($struct);
+                    return 1; 
+                }
+            }
+        }
+    }
 
 	$this->usage();
 
