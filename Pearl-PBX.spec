@@ -83,6 +83,9 @@ install -D -m 755  etc/cron.d/* %buildroot/etc/cron.d/
 install -d -m 755  %buildroot/etc/NetSDS/asterisk
 install -D -m 755  etc/asterisk1.8/* %buildroot/etc/NetSDS/asterisk/
 
+install -d -m 755 %buildroot/etc/NetSDS/sql
+install -D -m 644 sql/* %buildroot/etc/NetSDS/sql/
+
 install -d -m 755  %buildroot/usr/share/perl5
 install -D -m 644  lib/*.pm %buildroot/usr/share/perl5/
 
@@ -121,13 +124,13 @@ chkconfig monit on
 mv /var/tmp/pg_hba.conf /var/lib/pgsql/data/
 /etc/init.d/postgresql start 
 
-psql -U postgres -f /usr/share/doc/Pearl-PBX-1.0/create_user_asterisk.sql
-psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/asterisk.sql 
-psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/directions_list.sql
-psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/directions.sql 
-psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/sip_conf.sql 
-psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/extensions_conf.sql 
-psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/route.sql 
+psql -U postgres -f /etc/NetSDS/sql/create_user_asterisk.sql
+psql -U postgres -f /etc/NetSDS/sql/asterisk.sql 
+psql -U asterisk -f /etc/NetSDS/sql/directions_list.sql
+psql -U asterisk -f /etc/NetSDS/sql/directions.sql 
+psql -U asterisk -f /etc/NetSDS/sql/sip_conf.sql 
+psql -U asterisk -f /etc/NetSDS/sql/extensions_conf.sql 
+psql -U asterisk -f /etc/NetSDS/sql/route.sql 
 
 mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/ 
 
@@ -135,11 +138,12 @@ mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/
 
 %files
 %defattr(-,root,root,-)
-%doc README* *.txt sql/*.sql
+%doc README* *.txt 
 
 %{_initrddir}/pearlpbx-parsequeuelogd
 %{_initrddir}/pearlpbx-hangupd
 %config /etc/NetSDS/asterisk/* 
+%config /etc/NetSDS/sql/*
 %config(noreplace) /etc/NetSDS/asterisk-router.conf
 %config /etc/cron.d/pearlpbx
 %config /etc/httpd/conf.d/pearlpbx.conf
