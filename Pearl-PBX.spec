@@ -67,20 +67,21 @@ install -m 644  etc/NetSDS/asterisk-router.conf %buildroot/etc/NetSDS
 
 install -D -m 644  etc/apache2/sites-available/pearlpbx %buildroot/etc/httpd/conf.d/pearlpbx.conf 
 
-install -d -m 755  %buildroot/etc/monit.d
-install -D -m 755  etc/init.d/pearlpbx-parsequeuelogd %buildroot/etc/init.d 
+install -d -m 755 %buildroot/etc/monit.d
+install -d -m 755 %{buildroot}%{_initrddir} 
+install -D -m 755  etc/init.d/pearlpbx-parsequeuelogd %{buildroot}%{_initrddir}/ 
 install -D -m 644  etc/monit.d/* %buildroot/etc/monit.d/
 
-install -D -m 755  etc/init.d/pearlpbx-hangupd %buildroot/etc/init.d
-install -D -m 755  etc/monit.d/pearlpbx-hangupd %buildroot/etc/monit.d
+install -D -m 755  etc/init.d/pearlpbx-hangupd %{buildroot}%{_initrddir}/
+install -D -m 755  etc/monit.d/pearlpbx-hangupd %buildroot/etc/monit.d/
 
 install -D -m 755  etc/monit.d/asterisk %buildroot/etc/monit.d/
 
 install -d -m 755  %buildroot/etc/cron.d
 install -D -m 755  etc/cron.d/* %buildroot/etc/cron.d/ 
 
-install -d -m 755  %buildroot/etc/asterisk
-install -D -m 755  etc/asterisk1.8/* %buildroot/etc/asterisk
+install -d -m 755  %buildroot/etc/NetSDS/asterisk
+install -D -m 755  etc/asterisk1.8/* %buildroot/etc/NetSDS/asterisk/
 
 install -d -m 755  %buildroot/usr/share/perl5
 install -D -m 644  lib/*.pm %buildroot/usr/share/perl5/
@@ -101,7 +102,7 @@ cp -a var/lib/tftpboot/* %buildroot/var/lib/tftpboot
 
 install -D -d -m 755  %buildroot/var/www/pearlpbx 
 cp -a web/* %buildroot/var/www/pearlpbx/ 
-install -D -m 644  var/lib/pgsql/data/pg_hba.conf %buildroot/var/lib/pgsql/data/pg_hba.conf 
+install -D -m 644 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf 
 
 %pre
 
@@ -116,41 +117,35 @@ chkconfig postgresql on
 chkconfig httpd on 
 chkconfig monit on 
 
-/usr/sbin/PearlPBX-gui-passwd.pl admin admin 
-
 /etc/init.d/postgresql initdb
+mv /var/tmp/pg_hba.conf /var/lib/pgsql/data/
 /etc/init.d/postgresql start 
-psql -U postgres -f sql/create_user_asterisk.sql
-psql -U asterisk -f sql/asterisk.sql 
-psql -U asterisk -f sql/directions_list.sql
-psql -U asterisk -f sql/directions.sql 
-psql -U asterisk -f sql/sip_conf.sql 
-psql -U asterisk -f sql/extensions_conf.sql 
-psql -U asterisk -f sql/route.sql 
 
+psql -U postgres -f /usr/share/doc/Pearl-PBX-1.0/create_user_asterisk.sql
+psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/asterisk.sql 
+psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/directions_list.sql
+psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/directions.sql 
+psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/sip_conf.sql 
+psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/extensions_conf.sql 
+psql -U asterisk -f /usr/share/doc/Pearl-PBX-1.0/route.sql 
+
+mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/ 
+
+/usr/sbin/PearlPBX-gui-passwd.pl admin admin 
 
 %files
 %defattr(-,root,root,-)
-%doc README* *.txt 
+%doc README* *.txt sql/*.sql
 
-/etc/NetSDS/asterisk-router.conf
-/etc/asterisk/cdr_pgsql.conf
-/etc/asterisk/extconfig.conf
-/etc/asterisk/extensions.conf
-/etc/asterisk/features.conf
-/etc/asterisk/http.conf
-/etc/asterisk/logger.conf
-/etc/asterisk/manager.conf
-/etc/asterisk/modules.conf
-/etc/asterisk/queues.conf
-/etc/asterisk/res_pgsql.conf
-/etc/asterisk/say.conf
-/etc/cron.d/pearlpbx
-/etc/httpd/conf.d/pearlpbx.conf
-/etc/init.d
-/etc/monit.d/asterisk
-/etc/monit.d/pearlpbx-hangupd
-/etc/monit.d/pearlpbx-parsequeuelogd
+%{_initrddir}/pearlpbx-parsequeuelogd
+%{_initrddir}/pearlpbx-hangupd
+%config /etc/NetSDS/asterisk/* 
+%config(noreplace) /etc/NetSDS/asterisk-router.conf
+%config /etc/cron.d/pearlpbx
+%config /etc/httpd/conf.d/pearlpbx.conf
+%config /etc/monit.d/asterisk
+%config /etc/monit.d/pearlpbx-hangupd
+%config /etc/monit.d/pearlpbx-parsequeuelogd
 /usr/bin/PearlPBX-tftpprovisor.pl
 /usr/bin/ffmpeg-any-to-alaw.sh
 /usr/bin/grandstream-config.pl
@@ -241,7 +236,7 @@ psql -U asterisk -f sql/route.sql
 /usr/share/perl5/PearlPBX/SIP.pm
 /var/lib/asterisk/agi-bin/NetSDS-AGI-integration.pl
 /var/lib/asterisk/agi-bin/NetSDS-route.pl
-/var/lib/pgsql/data/pg_hba.conf
+/var/tmp/pg_hba.conf
 /var/lib/tftpboot/lang/spa502g_en.xml
 /var/lib/tftpboot/lang/spa502g_ru.xml
 /var/lib/tftpboot/spa502G.cfg
