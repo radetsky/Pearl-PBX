@@ -108,117 +108,6 @@ COMMENT ON FUNCTION get_free_uline() IS 'Изначально просто  sele
 
 
 SET search_path = public, pg_catalog;
-
---
--- Name: uuid_generate_v1(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION uuid_generate_v1() RETURNS uuid
-    LANGUAGE c STRICT
-    AS '$libdir/uuid-ossp', 'uuid_generate_v1';
-
-
-ALTER FUNCTION public.uuid_generate_v1() OWNER TO postgres;
-
---
--- Name: uuid_generate_v1mc(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION uuid_generate_v1mc() RETURNS uuid
-    LANGUAGE c STRICT
-    AS '$libdir/uuid-ossp', 'uuid_generate_v1mc';
-
-
-ALTER FUNCTION public.uuid_generate_v1mc() OWNER TO postgres;
-
---
--- Name: uuid_generate_v3(uuid, text); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION uuid_generate_v3(namespace uuid, name text) RETURNS uuid
-    LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/uuid-ossp', 'uuid_generate_v3';
-
-
-ALTER FUNCTION public.uuid_generate_v3(namespace uuid, name text) OWNER TO postgres;
-
---
--- Name: uuid_generate_v4(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION uuid_generate_v4() RETURNS uuid
-    LANGUAGE c STRICT
-    AS '$libdir/uuid-ossp', 'uuid_generate_v4';
-
-
-ALTER FUNCTION public.uuid_generate_v4() OWNER TO postgres;
-
---
--- Name: uuid_generate_v5(uuid, text); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION uuid_generate_v5(namespace uuid, name text) RETURNS uuid
-    LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/uuid-ossp', 'uuid_generate_v5';
-
-
-ALTER FUNCTION public.uuid_generate_v5(namespace uuid, name text) OWNER TO postgres;
-
---
--- Name: uuid_nil(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION uuid_nil() RETURNS uuid
-    LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/uuid-ossp', 'uuid_nil';
-
-
-ALTER FUNCTION public.uuid_nil() OWNER TO postgres;
-
---
--- Name: uuid_ns_dns(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION uuid_ns_dns() RETURNS uuid
-    LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/uuid-ossp', 'uuid_ns_dns';
-
-
-ALTER FUNCTION public.uuid_ns_dns() OWNER TO postgres;
-
---
--- Name: uuid_ns_oid(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION uuid_ns_oid() RETURNS uuid
-    LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/uuid-ossp', 'uuid_ns_oid';
-
-
-ALTER FUNCTION public.uuid_ns_oid() OWNER TO postgres;
-
---
--- Name: uuid_ns_url(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION uuid_ns_url() RETURNS uuid
-    LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/uuid-ossp', 'uuid_ns_url';
-
-
-ALTER FUNCTION public.uuid_ns_url() OWNER TO postgres;
-
---
--- Name: uuid_ns_x500(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION uuid_ns_x500() RETURNS uuid
-    LANGUAGE c IMMUTABLE STRICT
-    AS '$libdir/uuid-ossp', 'uuid_ns_x500';
-
-
-ALTER FUNCTION public.uuid_ns_x500() OWNER TO postgres;
-
 SET search_path = routing, pg_catalog;
 
 --
@@ -2168,6 +2057,7 @@ COMMENT ON FUNCTION get_route_list_gui() IS 'Возвращает таблицу
 create schema auth; 
 ALTER SCHEMA auth OWNER TO asterisk;
 create table auth.sysusers (id bigserial primary key, login varchar(32), passwd_hash varchar(32)); 
+alter table sysusers owner to asterisk;
 
 set search_path to integration;
 create index prev_record_idx on recordings(previous_record); 

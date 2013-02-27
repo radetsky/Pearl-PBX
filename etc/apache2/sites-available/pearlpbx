@@ -21,9 +21,9 @@
         </Directory>
 
 
-        ErrorLog /var/log/apache2/pearlpbx-error.log
+        ErrorLog /var/log/httpd/pearlpbx-error.log
         LogLevel warn
-        CustomLog /var/log/apache2/pearlpbx-access.log combined
+        CustomLog /var/log/httpd/pearlpbx-access.log combined
 
         ProxyRequests Off 
         <Proxy *>
@@ -32,7 +32,7 @@
         </Proxy>
 
         ProxyPass /asterisk http://localhost:8088/asterisk
-        ProxyPassReverse /asterisk http://localhost:8081/asterisk
+        ProxyPassReverse /asterisk http://localhost:8088/asterisk
 
 </VirtualHost>
 
