@@ -1,26 +1,20 @@
+Name: Pearl-PBX
+Version: 1.0
+Release: centos6
 
-%define streamdir /opt/sms-stream
-
-%define _perl_lib_path %streamdir/lib
-
-Name: sms-stream
-Version: 2.0
-Release: alt1
-
-Summary: SMS Stream bulk SMS gateway platform
+Summary: Web GUI for Asterisk written by Alex Radetsky <rad@rad.kiev.ua> 
 
 License: GPL
 
 Group: Networking/Other
-Url: http://www.netstyle.com.ua/
+Url: http://www.pearlpbx.com/
 
-Packager: Michael Bochkaryov <misha@altlinux.ru>
+Packager: Alex Radetsky <rad@rad.kiev.ua>
 
 BuildArch: noarch
 Source0: %name-%version.tar
 
 BuildRequires: make
-
 BuildRequires: perl-CGI perl-Class-Accessor-Class perl-Config-General perl-DBI perl-Encode perl-FCGI perl-Unix-Syslog
 BuildRequires: perl-NetSDS perl-Class-Accessor-Class perl-Class-Accessor
 
@@ -44,10 +38,8 @@ Requires: perl-CGI-Session-Auth
 Requires: system-config-network-tui 
 Requires: monit 
 
-
-
 %description
-SMS Stream bulk SMS gateway platform
+Web GUI for Asterisk written by Alex Radetsky <rad@rad.kiev.ua>
 
 %prep
 %setup -n %name-%version
@@ -55,19 +47,15 @@ SMS Stream bulk SMS gateway platform
 %build
 
 %install
-%makeinstall_std
 
 %pre
 
 %files
-%streamdir
-#%%doc README samples
-#%%dir %%attr(0755,root,root)  %%_sysconfdir/NetSDS/admin/mgr
-#%%config(noreplace) %%attr(0755,root,root) %%_sysconfdir/rc.d/init.d/kannel.send-*
 
 %changelog
-* Tue Jul 17 2012 Michael Bochkaryov <misha@altlinux.ru> 2.0-alt1
-- Initial build of SMS Stream 2.0
+* Wed Feb 27 2013 Alex Radetsky <rad@rad.kiev.ua> 1.0-centos6
+- Initial build of Pearl-PBX 1.0 
+
 
 
 
