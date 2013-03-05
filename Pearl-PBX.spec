@@ -38,6 +38,7 @@ Requires: perl-CGI-Session-Auth
 Requires: system-config-network-tui 
 Requires: monit 
 Requires: pwgen 
+Requires: perl-File-Tail 
 
 %description
 Web GUI for Asterisk written by Alex Radetsky <rad@rad.kiev.ua>

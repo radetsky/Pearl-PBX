@@ -16,10 +16,10 @@
 . /etc/rc.d/init.d/functions
 
 PATH=/opt/NetSDS/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-NAME="nibelite-parsequeuelogd "
-DAEMON=/usr/sbin/NetSDS-parsequeuelogd.pl  
-DESC="Nibelite Queue Log parser v.1.1."
-PIDFILE="/var/run/NetSDS/NetSDS-parsequeuelogd.pid"
+NAME="PearlPBX-parsequeuelogd "
+DAEMON=/usr/sbin/PearlPBX-parsequeuelogd.pl  
+DESC="PearlPBX Queue Log parser v.2.0."
+PIDFILE="/var/run/NetSDS/PearlPBX-parsequeuelogd.pid"
 UMASK=007 # by default
 #MAXFILES=1024 # (the system default)
 
