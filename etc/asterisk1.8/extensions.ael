@@ -1,0 +1,94 @@
+context Echo { 
+	_X! => { 
+		Answer();
+		Wait(1);
+		Playback(beep);
+		Echo();
+		Hangup();
+	}
+}
+context PearlPBX_Demo { 	
+	_X! => { 
+		Answer();
+		Wait(1);
+		Playback(privet);
+		Playback(checking_blacklist);
+		AGI(PearlPBX-blacklist.pl,${CALLERID(num)});
+		if ( ${BLACKLISTED} > 0) { 
+			Hangup(17);
+		} 
+		Playback(checking_whitelist);
+		AGI(PearlPBX-whitelist.pl,${CALLERID(num)});  // Set(QUEUE_PRIO=10) when whitelisted. 
+
+		Playback(checking_calendar);
+		AGI(PearlPBX-calendar.pl,general); 
+		if ( ${WORKMODE}==1) { 
+			NoOp("PABOTAEM!");
+			Playback(calendar_workday); 
+		} else { 
+			NoOp("HE PABOTAEM!"); 
+			Playback(calendar_vacation); 
+		} 
+
+		Playback(checking_hint);
+		AGI(PearlPBX-hint.pl,${CALLERID(num)}); 
+		Set(CALLERID(name)=${CALLERID(name)}${HINT}); 
+
+		Playback(checking_language);
+		AGI(PearlPBX-language.pl,get,${CALLERID(num)},ru);
+		NoOp(LANGCODE=${LANGCODE});
+		if (${LANGCODE}==none) { 
+			&PearlPBX-setlangcode();
+		}
+
+		NoOp(LANGCODE=${LANGCODE}); 
+		Set(CHANNEL(language)=${LANGCODE});	
+		Playback(${CHANNEL(language)}_selected_language);	
+		
+		Playback(checking_advfilter);
+		AGI(PearlPBX-advfilter.pl,${CALLERID(num)});
+		NoOp(ADVFILTER=${ADVFILTER}); 
+		if ("${ADVFILTER}"!="") { 
+			Playback(${ADVFILTER});
+		} 
+
+		Playback(checking_addressbook);  
+		AGI(PearlPBX-addressbook.pl,${CALLERID(num)});
+		Set(CALLERID(name)=${CALLERID(name)}${DISPLAYNAME});  	
+	
+		Playback(checking_personal_operator);
+		AGI(PearlPBX-poperator.pl,get,${CALLERID(num)}); 
+		NoOp(POPERATOR=${POPERATOR});
+		OPERATOR = ${SHIFT(${POPERATOR})};
+		if ("${OPERATOR}"=="") { 
+			OPERATOR=${POPERATOR}; 
+		}		  
+		while ( "${OPERATOR}" != "") {
+			NoOp(OPERATOR=${OPERATOR}); 
+			Dial(SIP/${OPERATOR},120,rtT);
+			OPERATOR = ${SHIFT(${POPERATOR})};
+		}
+
+		Queue(PearlPBX);
+		Hangup();
+	 }
+}
+macro PearlPBX-setlangcode() {
+	LGCODE=0; 
+	Read(LGCODE,ru_choice_language&ua_choice_language,1,s,1,10); 
+	NoOp(LGCODE=${LGCODE});
+	if ("${LGCODE}"=="") {
+		Set(LANGCODE=ru); 
+		return;
+	}
+	if (${LGCODE}==1) { 
+		// Russian 
+		AGI(PearlPBX-language.pl,set,${CALLERID(num)},ru);
+	}
+	if (${LGCODE}==2) { 
+		// Ukrainian 
+		AGI(PearlPBX-language.pl,set,${CALLERID(num)},ua);
+	}
+	return; 
+}
+

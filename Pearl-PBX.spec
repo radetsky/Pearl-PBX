@@ -39,6 +39,7 @@ Requires: system-config-network-tui
 Requires: monit 
 Requires: pwgen 
 Requires: perl-File-Tail 
+Requires: rpmforge-release
 
 %description
 Web GUI for Asterisk written by Alex Radetsky <rad@rad.kiev.ua>
@@ -55,9 +56,9 @@ rm -rf %{buildroot}
 mkdir -p %buildroot/var/run/NetSDS
 chmod 777 %buildroot/var/run/NetSDS
 
-mkdir -p %buildroot/var/lib/asterisk/agi-bin
-install -m 755  agi-bin/NetSDS-AGI-integration.pl %buildroot/var/lib/asterisk/agi-bin
-install -m 755  agi-bin/NetSDS-route.pl %buildroot/var/lib/asterisk/agi-bin
+mkdir -p %buildroot/usr/share/asterisk/agi-bin
+install -m 755  agi-bin/NetSDS-AGI-integration.pl %buildroot/usr/share/asterisk/agi-bin
+install -m 755  agi-bin/NetSDS-route.pl %buildroot/usr/share/asterisk/agi-bin
 
 mkdir -p %buildroot/usr/bin
 mkdir -p %buildroot/usr/sbin
@@ -132,7 +133,10 @@ psql -U asterisk -f /etc/NetSDS/sql/directions_list.sql
 psql -U asterisk -f /etc/NetSDS/sql/directions.sql 
 psql -U asterisk -f /etc/NetSDS/sql/sip_conf.sql 
 psql -U asterisk -f /etc/NetSDS/sql/extensions_conf.sql 
-psql -U asterisk -f /etc/NetSDS/sql/route.sql 
+psql -U asterisk -f /etc/NetSDS/sql/route.sql
+psql -U asterisk -f /etc/NetSDS/sql/cal.sql 
+psql -U asterisk -f /etc/NetSDS/sql/ivr.sql 
+
 
 mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/ 
 
@@ -240,8 +244,8 @@ mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/
 /usr/share/perl5/PearlPBX/Report/outgoingToCustomer.pm
 /usr/share/perl5/PearlPBX/Route.pm
 /usr/share/perl5/PearlPBX/SIP.pm
-/var/lib/asterisk/agi-bin/NetSDS-AGI-integration.pl
-/var/lib/asterisk/agi-bin/NetSDS-route.pl
+/usr/share/asterisk/agi-bin/NetSDS-AGI-integration.pl
+/usr/share/asterisk/agi-bin/NetSDS-route.pl
 /var/tmp/pg_hba.conf
 /var/lib/tftpboot/lang/spa502g_en.xml
 /var/lib/tftpboot/lang/spa502g_ru.xml
