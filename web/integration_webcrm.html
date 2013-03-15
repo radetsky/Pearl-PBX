@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Radetsky PearlPBX - интеграция с любой WebCRM </title>
+		<link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.png">
+		<link type="text/css" href="css/bootstrap.css" rel="stylesheet" />
+		<link type="text/css" href="css/pearlpbx.css" media="all" rel="stylesheet" /> 
+
+		
+		<script type="text/javascript" src="/js/jquery.js"></script>
+		<script src="js/bootstrap.js"></script>
+		<script type="text/javascript" src="/js/astman-jah.js"></script>
+		<script type="text/javascript">  $(document).ready(function(){ localajaminit();  }); </script>
+
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+/* Base class */
+.bs-docs-example {
+  position: relative;
+  margin: 15px 0;
+  padding: 39px 19px 14px;
+  *padding-top: 19px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
+}
+
+/* Echo out a label for the example */
+.bs-docs-example:after {
+  content: "Events";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  padding: 3px 7px;
+  font-size: 12px;
+  font-weight: bold;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #9da0a4;
+  -webkit-border-radius: 4px 0 4px 0;
+     -moz-border-radius: 4px 0 4px 0;
+          border-radius: 4px 0 4px 0;
+}
+
+/* Remove spacing between an example and it's code */
+.bs-docs-example + .prettyprint {
+  margin-top: -20px;
+  padding-top: 15px;
+}
+    </style>
+
+</head>
+<body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+	<img style="float: left; margin-right: 5px;" width="40" src="/img/PearlPBX-logo.png">
+          <a class="brand" href="/integration_webcrm.html">Radetsky Pearl PBX - демо интеграции с WebCRM</a>
+          <p class="navbar-text pull-right">&copy; Alexey Radetsky 2011 - 2013 <a href="http://www.pearlpbx.com">www.pearlpbx.com</a></p>
+        </div>
+      </div>
+    </div>
+
+<div class="container-fluid">
+  <div class="row-fluid">
+    <div class="span2">
+     <div id='statusbar'> 
+    	<div class='btn btn-danger' id='loggedin'>Not Logged In</div>
+	<div class='btn' id='eventsbar'>Got 0 events</div>
+    </div>
+     <!--Sidebar content-->
+    </div>
+    <div class="span10">
+      <p class='lead'>В окне "события" должны отображаться нужные для интеграции события.</p>
+      <div class='bs-docs-example' id='eventslist'>
+      </div>
+      <p class='lead'>В окне "все события" должны отображаться нужные для интеграции события.</p>
+      <div class='bs-docs-example' id='alleventslist'>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade hide" id="demo_user" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; over
+flow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Демонстрация открытия окна пользователя</h3>
+  </div>
+  <div class="modal-body">
+        <div class="control-group">
+          <label class="control-label" for="demo_comment">Описание пользователя</label>
+          <div class="controls">
+            <input type="text" class="input-xlarge" id="demo_comment">
+            <p class="help-block">Это может быть описание рабочего места "Оператор №1" или ФИО "Иванова И.И."</p>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" for="demo_callerid">Номер</label>
+          <div class="controls">
+	    <input type="text" class="input-xlarge" id="demo_callerid">
+            <p class="help-block">Номер телефона абонента.</p>
+          </div>
+        </div>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Отменить</a>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+	var logins = new Object;
+	var logoffs = new Object;
+	var channels = new Object;
+	var pongs = new Object;
+	var loggedon = -1;
+	var demo = new Object;
+
+	var myoperator = "SIP/201"; 
+ 	var calleridnum = '';  
+	var calleridname = ''; 
+
+	// Эта функция будет вызвана, когда придет ответ на запрос аутентификации 	
+	demo.logins = function(msgs) {
+		response = msgs[0].headers['response'];
+		$('#loggedin').attr("class","btn btn-success");
+		$('#loggedin').html( "Logged in: "+ msgs[0].headers['message'] );
+		if (response !='Error') {
+			// Вроде удачно зашли. Вызываем цикл получения событий. 
+			astmanEngine.pollEvents();
+		}
+	}
+	
+	demo.eventCB  = function(msgs) {
+
+		var test = '';
+		var myevent = ''; 
+		var extension = ''; 
+		var uniqueid = ''; 
+ 
+  		for (x=0;x<msgs.length;x++) {
+
+		    eventname = msgs[x].headers['event'];
+
+		    if (eventname == 'AgentCalled' ) {
+			calleridnum = msgs[x].headers['calleridnum'];   // Номер телефона абонента: 0443039338
+			calleridname = msgs[x].headers['calleridname']; // DisplayName : Line 1 Alex Radetsky ru 
+			extension = msgs[x].headers['extension'];       // На какой номер звонит абонент
+			uniqueid = msgs[x].headers['uniqueid'];         // Уникальный ID звонка в терминологии астерика 
+	
+		        myevent = myevent + "Звонит клиент!!!<br>";
+			myevent = myevent + "Номер телефона: "+ calleridnum + "</br>"; 
+			myevent = myevent + "Доп. информация: "+ calleridname + "</br>"; 
+			myevent = myevent + "Звонит на внешный номер: " + extension + "</br>"; 
+			myevent = myevent + "Уникальный ID звонка: " + uniqueid + "</br></br>";  	
+			 
+	    	    }
+
+		    if (eventname == 'AgentConnect') { 
+			myevent = myevent + "Оператор ответил на звонок!</br>"; 
+			myevent = myevent + "Какой оператор ответил на звонок ? - " + msgs[x].headers['member'] + "</br></br>";		
+			if (msgs[x].headers['member'] == myoperator ) {  // Кто взял трубку ? Я взял трубку ? Ну ладно! 
+				$('#demo_comment').val(calleridname);
+				$('#demo_callerid').val(calleridnum);
+				$('#demo_user').modal('show');  
+			}
+		    } 
+ 
+      	    	    if (eventname == 'Hangup') {
+			
+                        calleridnum = msgs[x].headers['calleridnum'];   // Номер телефона абонента: 0443039338
+                        calleridname = msgs[x].headers['calleridname']; // DisplayName : Line 1 Alex Radetsky ru
+                        uniqueid = msgs[x].headers['uniqueid'];         // Уникальный ID звонка в терминологии астерика
+			
+			if ( calleridnum != '<unknown>' ) { 
+				myevent = myevent + "Абонент " + calleridnum + " покинул нас. </br></br>"; 
+			}
+ 
+		    }
+
+      		   for (y=0;y<msgs[x].names.length;y++) {
+          		test = test + "msg "+ (x + 1) + " --> " + msgs[x].names[y] + " : " + msgs[x].headers[msgs[x].names[y]] + "<br>";
+      		   }
+		   test = test + "<br>";
+	 
+   		} // Конец цикла for...
+ 
+		 $('#alleventslist').html(test);
+		 if (myevent != '') { 
+		 	$('#eventslist').html(myevent); 
+		 }
+		 $('#eventsbar').html("<i>Got " + msgs.length + " events. </i>");
+	 	
+		 // Запускаем следующий этап получения событий. 
+		 // Callback у нас уже установлен в localajaminit();
+		 astmanEngine.pollEvents();
+	}
+
+	function doLogin(username,secret) {
+		$('#loggedin').text("Logging in...");
+		$('#loggedin').attr("class","btn btn-warning");
+		// Посылаем запрос на сервер.
+		// В качестве callback устанавливаем функцию demo.logins
+		astmanEngine.sendRequest('action=login&username=' + username + "&secret=" + secret, demo.logins);
+	}
+	
+	function localajaminit() {
+		// Устанавливаем свойства движка 
+		astmanEngine.setURL('/asterisk/rawman');
+		// Кто будет отвечать на события 
+		astmanEngine.setEventCallback(demo.eventCB);
+		// Логин ? 
+		doLogin('webuser','zee7ae0Ma2ria4sh');	
+	}
+
+	</script>
+
+
+
+</body>
+</html>
+
+
