@@ -37,9 +37,13 @@ function pearlpbx_monitor_set_active_channels (msgs) {
 				pearlpbx_monitor_connected = false; 
 				pearlpbx_monitor_connect (pearlpbx_monitor_get_active_channels); 
 			}
+			if ( msgs[0].headers['message'] == 'Permission denied') {
+				pearlpbx_monitor_connected = false;
+				pearlpbx_monitor_connect (pearlpbx_monitor_get_active_channels);
+			}
 		}
 
-		$('#pearlpbx_monitor_active_channels tbody').append("Can't get info!"); 
+		$('#pearlpbx_monitor_active_channels tbody').append("Can't get info: "+msgs[0].headers['message']); 
 		return;		
 	}
 
@@ -50,14 +54,17 @@ function pearlpbx_monitor_set_active_channels (msgs) {
 		if (msgs[i].headers['event'] == 'Status') { 
 			achannels++; 
 			var channel = msgs[i].headers['channel'].split('-'); 
-			var callerid = msgs[i].headers['callerid']; 
-			var state = msgs[i].headers['state'];
-			var link = msgs[i].headers['link']; 
+			var callerid = msgs[i].headers['calleridnum']; 
+			var state = msgs[i].headers['channelstatedesc'];
+			if ( state == undefined ) { 
+				state = msgs[i].headers['state'];
+			}
+			var link = msgs[i].headers['bridgedchannel']; 
 
 			if (link == undefined) { 
 				link = new Array (" ", " "); 
 			} else { 
-				link = msgs[i].headers['link'].split('-');
+				link = msgs[i].headers['bridgedchannel'].split('-');
 				atalks++; 
 			}
 			
@@ -567,6 +574,7 @@ function pearlpbx_sip_load_external_id (sip_id) {
 			$('#input_peer_edit_ipaddr').val(json.ipaddr);
 			$('#input_peer_edit_is_dynamic').attr('checked',false);
 			$('#div_input_peer_edit_regstr').show();
+			// FIXME: найти и добавить строку регистрации, если таковая есть. 
 		}
 		$('#input_peer_edit_regstr').val(json.regstr); 
 		$('#input_peer_edit_regstr_id').val(json.regstr_id); 
