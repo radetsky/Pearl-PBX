@@ -9,6 +9,23 @@ Array.prototype.indexOfQueue = function ( name ) {
 	return -1; 
 }
 
+function pearlpbx_sip_reloaded(msgs) { 
+	var response = msgs[0].headers['response']; 
+	var message = msgs[0].headers['message']; 
+
+	alert('Настройки протокола SIP перезагружены.'); 
+
+}
+function pearlpbx_sip_reload() { 
+	var confirmed = confirm ("Перегрузить настройки протокола SIP ?");
+	if (confirmed == true ) { 
+		astmanEngine.sendRequest('action=command&command=sip%20reload',
+                        pearlpbx_sip_reloaded,
+                        pearlpbx_monitor_fake_callback
+                );
+	}
+}
+
 function pearlpbx_monitor_get_ulines() { 
 	$('#pearlpbx_monitor_ulines tbody').empty(); 
 	$.getJSON('/route.pl', { 
@@ -102,9 +119,13 @@ function pearlpbx_monitor_set_parkedcalls (msgs) {
 				pearlpbx_monitor_connected = false; 
 				pearlpbx_monitor_connect (pearlpbx_monitor_get_parkedcalls); 
 			}
+			if ( msgs[0].headers['message'] == 'Permission denied') {
+				pearlpbx_monitor_connected = false;
+				pearlpbx_monitor_connect (pearlpbx_monitor_get_parkedcalls);
+			}
 		}
 
-		$('#pearlpbx_monitor_parkedcalls tbody').append("Can't get info!"); 
+		$('#pearlpbx_monitor_parkedcalls tbody').append("Can't get info: " + msgs[0].headers['message']); 
 		return;		
 	}
 
@@ -150,9 +171,13 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 				pearlpbx_monitor_connected = false; 
 				pearlpbx_monitor_connect (pearlpbx_monitor_get_queue_status); 
 			}
+			if ( msgs[0].headers['message'] == 'Permission denied') { 
+				pearlpbx_monitor_connected = false;
+				pearlpbx_monitor_connect (pearlpbx_monitor_get_queue_status);
+			}
 		}
 
-		$('#pearlpbx_monitor_queue tbody').append("Can't get info!"); 
+		$('#pearlpbx_monitor_queue tbody').append("Can't get info: " + msgs[0].headers['message']); 
 		return;		
 	}
 

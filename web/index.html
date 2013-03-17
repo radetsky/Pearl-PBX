@@ -65,7 +65,6 @@
             <ul class="nav">
               <li class="active"><a href="#">Главная</a></li>
               <li><a href="http://www.pearlpbx.com">О проекте</a></li>
-              <li><a href="#contact">Контакты</a></li>
 							<li class="dropdown">
 								<a href="#" class="dropdown-toggle" 
 									data-toggle="dropdown">Язык<b class="caret"></b></a>
@@ -130,8 +129,8 @@
         <div class="span9" id="pearl-pbx-main-container">
           <div class="hero-unit">
             <h1>Привет !</h1>
-            <p>Это главная страница Express Pearl PBX.</p>
-            <p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+            <p>Это главная страница Radetsky Pearl PBX.
+            <a class="btn btn-primary btn-large" href='http://www.pearlpbx.com'>Learn more &raquo;</a></p>
           </div>
           <div class="row-fluid">
             <div class="span4">
@@ -291,9 +290,10 @@
  </div>
  <div class="pearlpbx-main-container-subheader">
   <ul class="nav nav-tabs">
-   <li><a href="javascript:void(0)" onClick="pearlpbx_show_sip_internal_users()">Внутренние пользователи</a></li> 
-	 <li><a href="javascript:void(0)" onClick="pearlpbx_show_sip_external_trunks()">Внешние транки</a></li>
-	</ul>
+   <li><a href="javascript:void(0)" onClick="pearlpbx_sip_reload()" class='btn'>SIP reload</a><li>
+   <li><a href="javascript:void(0)" onClick="pearlpbx_show_sip_internal_users()">Внутренние пользователи</a></li>
+   <li><a href="javascript:void(0)" onClick="pearlpbx_show_sip_external_trunks()">Внешние транки</a></li>
+   </ul>
  </div>
  
  <div id="pearlpbx-sip-connections-list">
