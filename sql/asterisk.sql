@@ -873,7 +873,7 @@ ALTER TABLE public.cdr OWNER TO asterisk;
 
 CREATE TABLE extensions_conf (
     id bigint NOT NULL,
-    context character varying(20) DEFAULT ''::character varying NOT NULL,
+    context character varying(40) DEFAULT ''::character varying NOT NULL,
     exten character varying(20) DEFAULT ''::character varying NOT NULL,
     priority smallint DEFAULT 0 NOT NULL,
     app character varying(20) DEFAULT ''::character varying NOT NULL,
@@ -1152,7 +1152,7 @@ CREATE TABLE sip_peers (
     lastms character varying(5) DEFAULT '0'::character varying,
     regserver character varying(100) DEFAULT NULL::character varying,
     fullcontact character varying(80) DEFAULT NULL::character varying,
-    useragent character varying(20) DEFAULT NULL::character varying,
+    useragent character varying(64) DEFAULT NULL::character varying,
     defaultuser character varying(10) DEFAULT NULL::character varying,
     outboundproxy character varying(80) DEFAULT NULL::character varying,
     CONSTRAINT sip_peers_name_check CHECK (((name)::text <> ''::text))

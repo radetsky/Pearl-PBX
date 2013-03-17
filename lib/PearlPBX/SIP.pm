@@ -514,18 +514,17 @@ sub setpeer {
   my $sip_call_limit = $params->{'sip_call_limit'}; 
   if ($sip_call_limit eq '') { $sip_call_limit = 2; }
 
-  my $sip_host = 'dynamic'; 
+  my $sip_host = $sip_ipaddr; 
   my $sip_type = 'friend'; 
   my $sip_insecure = ''; 
   my $sip_permit = ''; 
   my $sip_deny = ''; 
 
-
   if ($sip_nat eq 'true') { $sip_nat = 'yes'; } else { $sip_nat = 'no'; }  
   if ($sip_local_register eq 'false') { 
     $sip_insecure = 'invite,port'; 
-    $sip_permit = $sip_ipaddr."/255.255.255.255"; 
-    $sip_deny = "0.0.0.0/0.0.0.0"; 
+    $sip_permit = $sip_ipaddr; 
+    $sip_deny = "0.0.0.0"; 
     $sip_type = "peer"; 
   }
 
