@@ -335,8 +335,12 @@ function pearlpbx_monitor_set_sip_status(msgs) {
 				pearlpbx_monitor_connected = false; 
 				pearlpbx_monitor_connect (pearlpbx_monitor_get_sip_status); 
 			}
+			if ( msgs[0].headers['message'] == 'Permission denied') { 
+				pearlpbx_monitor_connected = false;
+				pearlpbx_monitor_connect (pearlpbx_monitor_get_sip_status);
+			}
+			alert("Can't get info: "+msgs[0].headers['message']);
 		}
-
 		return false; 
 	} 
 	for (i = 1; i < msgs.length; i++ ) {
@@ -1021,18 +1025,17 @@ function pearlpbx_reload_permissions() {
 		a: "loadpermissions",
 	}, function (data) { 
 		$('#pearlpbx_permissions_div').append(data);
+		$.getJSON("/route.pl", {
+			a: "loadpermissionsJSON",	
+			}, function (json) { 
+				jQuery.each(json, function () {
+				var id = "#X"+this['peer_id']+"_Y"+this['direction_id']; 
+				if ( $(id).length>0 ) { 
+					$(id).attr('checked','checked'); 
+				}
+			} );
+		} ); 
 	} );
-	$.getJSON("/route.pl", {
-		a: "loadpermissionsJSON",
-	}, function (json) { 
-		jQuery.each(json, function () {
-			var id = "#X"+this['peer_id']+"_Y"+this['direction_id']; 
-			if ( $(id).length>0 ) { 
-				$(id).attr('checked','checked'); 
-			}
-		} );
-	} ); 
-
 }
 function pearlpbx_check_routing() {
 	var channel = $('select#check_routing_channel option:selected').val();
