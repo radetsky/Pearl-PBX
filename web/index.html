@@ -290,7 +290,6 @@
  </div>
  <div class="pearlpbx-main-container-subheader">
   <ul class="nav nav-tabs">
-   <li><a href="javascript:void(0)" onClick="pearlpbx_sip_reload()" class='btn'>SIP reload</a><li>
    <li><a href="javascript:void(0)" onClick="pearlpbx_show_sip_internal_users()">Внутренние пользователи</a></li>
    <li><a href="javascript:void(0)" onClick="pearlpbx_show_sip_external_trunks()">Внешние транки</a></li>
    </ul>
@@ -299,11 +298,17 @@
  <div id="pearlpbx-sip-connections-list">
  </div>
  <div id="pearlpbx-sip-add-internal-button" style="display: none;" class="pearlpbx-main-container-header">
-<center>  <button class="btn btn-primary" href="#add_sip_user" data-toggle="modal" onClick="pearlpbx_fill_sip_form();">Добавить нового пользователя</button> </center>
+    <center>  <button class="btn btn-primary" href="#add_sip_user" data-toggle="modal" onClick="pearlpbx_fill_sip_form();">Добавить нового пользователя</button> </center>
  </div>
- <div id="pearlpbx-sip-add-external-button" style="display: none;" class="pearlpbx-main-container-header">
-<center> <a class="btn btn-primary" href="#pearlpbx_sip_edit_peer" data-toggle="modal" onClick="pearlpbx_sip_add_trunk()">Добавить новый транк</a></center>
- </div>
+<div id="pearlpbx-sip-add-external-button" style="display: none;" class="pearlpbx-main-container-header">
+  <center> <a class="btn btn-primary" href="#pearlpbx_sip_edit_peer" data-toggle="modal" onClick="pearlpbx_sip_add_trunk()">Добавить новый транк</a></center>
+</div>
+<div id="pearlpbx-sip-reload-button" class="pearlpbx-main-container-header">
+  <center> 
+    <a href="javascript:void(0)" onClick="pearlpbx_sip_reload()" class='btn btn-success'>Обновить настройки протокола SIP</a>
+    <a href="javascript:void(0)" onClick="pearlpbx_tftp_reload()" class='btn btn-success'>Обновить настройки телефонов </a>
+  </center>
+</div>
 </div>
 
 <div id="queues" style="display: none">

@@ -619,6 +619,16 @@ sub monitor_get_sip_db {
 
 }
 
+sub tftp_reload { 
+  my $this = shift; 
+
+  system ('/usr/bin/PearlPBX-tftpprovisor.pl','--fromdb') or return $?; 
+  
+
+  return "OK"; 
+
+}
+
 1;
 
 __END__

@@ -103,6 +103,11 @@ if ($action eq 'monitor_get_sip_db') {
 	exit(0);
 }
 
+if ($action eq 'tftp_reload') { 
+	print $sip->tftp_reload; 
+	exit(0); 
+}
+
 $pearl->htmlError("Action not found.");
 exit(0);
 

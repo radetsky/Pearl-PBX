@@ -9,6 +9,18 @@ Array.prototype.indexOfQueue = function ( name ) {
 	return -1; 
 }
 
+function pearlpbx_tftp_reload() { 
+	var confirmed = confirm ("Обновить настройки телефонов в каталоге TFTP-сервера ?");
+	if ( confirmed == true ) { 
+		$.get('/sip.pl',{ 
+			a: "tftp_reload",
+		},function(data) { 
+			alert(data);
+		}, "html");	
+	}
+}
+
+
 function pearlpbx_sip_reloaded(msgs) { 
 	var response = msgs[0].headers['response']; 
 	var message = msgs[0].headers['message']; 
