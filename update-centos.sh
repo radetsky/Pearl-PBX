@@ -23,6 +23,7 @@ cp -a lib/NetSDS /usr/share/perl5
 
 mkdir -p /usr/share/pearlpbx
 cp -av share/reports /usr/share/pearlpbx/
+cp -ac share/provision /usr/share/pearlpbx/
 #cp -av sounds/* /usr/share/asterisk/sounds 
 
 mkdir -p /var/lib/tftpboot 
