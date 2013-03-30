@@ -127,6 +127,65 @@ sub htmlHeader {
 		                    			-charset => 'utf-8' );
 }; 
 
+=item B<read1stlines(directory) 
+
+ Возвращает список уловных обозначений и наименований файлов.
+ Пример: ((001-alltraffic,Весь траффик),(007-internalcalls,Внутренние звонки)) 
+ Условные обозначения - это имена файлов без расширения, 
+ Наименование отчета - первая строка из файла html внутри комментария. 
+
+=cut 
+
+sub read1stlines {
+	my ($this, $dirname) = @_; 
+	my @result; 
+
+	opendir my ($dh), $dirname or return undef; 
+	my @files = readdir $dh; 
+	closedir $dh;
+
+	foreach my $filename (sort @files) { 
+		if ($filename =~ /\.html$/) { 
+			# try to read first line 
+		  	next unless ( open ( my $fh, $dirname.'/'.$filename ) ); 	
+			my $firstline = <$fh>;
+			close $fh; 
+			# cut off comment chars
+			$firstline =~ s/<!--//g; 
+			$firstline =~ s/-->//g;
+			$filename =~ s/\.html$//g; 
+			push @result, [ $filename, $firstline ];
+		}
+	}
+	return @result; 
+}
+
+sub readwholebodies { 
+	my ($this, $dirname) = @_; 
+
+	my $result = ''; 
+
+	opendir my ($dh), $dirname or return undef; 
+	my @files = readdir $dh; 
+	closedir $dh;
+
+	foreach my $filename (sort @files) { 
+		if ($filename =~ /\.html$/) { 
+			next unless ( open ( my $fh, $dirname.'/'.$filename ) ); 	
+			my @body = <$fh>;
+			close $fh;
+			$filename =~ s/\.html$//g; 
+			$result .= '<div id="'.$filename.'">';
+			foreach my $line (@body) {
+				$result .= $line;
+			} 
+			$result .= '</div>'; 
+		}
+	}
+	return $result; 
+
+}
+
 =item B<listreportsnames> 
 
  Возвращает список (LIST) уловных обозначений и наименований отчетов. 
@@ -140,33 +199,16 @@ sub htmlHeader {
 sub listreportsnames { 
 	my ($this,$rtype) = @_;
 
-	my @result; 
-  my $dirname = '/usr/share/pearlpbx/reports';
+	 
+    my $dirname = '/usr/share/pearlpbx/reports';
 
 	if ( defined ( $rtype ) ) { 
 		  if ($rtype =~ /sum/i ) { 
 				$dirname .= '/summary'; 
 			} 
 	} 
-# Классика :) 
-	opendir my ($dh), $dirname or return undef; 
-	my @files = readdir $dh; 
-	closedir $dh;
 
-	foreach my $filename (sort @files) { 
-		if ($filename =~ /\.html$/) { 
-			# try to read first line 
-		  next unless ( open ( my $fh, $dirname.'/'.$filename ) ); 	
-			my $firstline = <$fh>;
-			close $fh; 
-			# cut off comment chars
-			$firstline =~ s/<!--//g; 
-			$firstline =~ s/-->//g;
-			$filename =~ s/\.html$//g; 
-			push @result, [ $filename, $firstline ];
-		}
-	}
-	return @result; 
+	return $this->read1stlines($dirname); 
 
 };
 
@@ -180,35 +222,14 @@ sub listreportsnames {
 sub reportsbodies { 
 	my ($this,$rtype) = @_; 
 
-	my $result=''; 
 	my $dirname = '/usr/share/pearlpbx/reports';
 
-  if ( defined ( $rtype ) ) {
+	 if ( defined ( $rtype ) ) {
       if ($rtype =~ /sum/i ) {
         $dirname .= '/summary';
       }
-  }
-
-# Классика :) 
-	opendir my ($dh), $dirname or return undef; 
-	my @files = readdir $dh; 
-	closedir $dh;
-
-	foreach my $filename (sort @files) { 
-		if ($filename =~ /\.html$/) { 
-			# try to read 
-		  next unless ( open ( my $fh, $dirname.'/'.$filename ) ); 	
-			my @body = <$fh>;
-			close $fh;
-			$filename =~ s/\.html$//g; 
-			$result .= '<div id="'.$filename.'">';
-			foreach my $line (@body) {
-				$result .= $line;
-			} 
-			$result .= '</div>'; 
-		}
-	}
-	return $result; 
+  	}
+  	return $this->readwholebodies($dirname);
 
 };
 
@@ -235,6 +256,57 @@ sub hashref2arrayofhashes {
 
 	return @output; 
 }
+
+=item B<modulesnames(dirname,rtype)>
+
+Возвращает список имен модулей и их человеческих названий 
+из каталога /usr/share/pearlpbx/modules/$rtype
+
+=cut 
+
+sub modulesnames { 
+	my ($this,$rtype) = @_; 
+
+	my $dirname = "/usr/share/pearlpbx/modules/";
+	if ($rtype =~ /^ivr$/) {
+		$dirname .= $rtype; 
+	}
+	if ($rtype =~ /^katyusha$/ ) { 
+		$dirname .= $rtype; 
+	}
+	if ($rtype =~ /^konference$/ ) { 
+		$dirname .= $rtype; 
+	}
+	if ($rtype =~ /^backup$/ ) { 
+		$dirname .= $rtype; 
+	}
+
+	return $this->read1stlines($dirname);
+
+}
+
+sub modulesbodies { 
+	my ($this,$rtype) = @_; 
+
+	my $dirname = "/usr/share/pearlpbx/modules/";
+	if ($rtype =~ /^ivr$/) {
+		$dirname .= $rtype; 
+	}
+	if ($rtype =~ /^katyusha$/ ) { 
+		$dirname .= $rtype; 
+	}
+	if ($rtype =~ /^konference$/ ) { 
+		$dirname .= $rtype; 
+	}
+	if ($rtype =~ /^backup$/ ) { 
+		$dirname .= $rtype; 
+	}
+
+	return $this->readwholebodies($dirname);
+
+}
+
+
 
 1;
 

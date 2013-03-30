@@ -9,6 +9,49 @@ Array.prototype.indexOfQueue = function ( name ) {
 	return -1; 
 }
 
+function pearlpbx_get_calendar() { 
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+
+	$('#pearlpbx_ivr_calendar_table tbody').empty(); 
+	$.getJSON('/modules.pl', { 
+		"exec-module":"Calendar",
+		"sub":"getJSON",
+	}, function (json) { 
+	
+		jQuery.each(json, function () {
+			var remurl = '<td><a href="javascript:void(0)" onClick="pearlpbx_calendar_item_remove('+
+				this['id']+')">'+remicon+'</a></td>';
+			var weekday = this['weekday'];
+			var mon_day = this['mon_day'];
+			var mon     = this['mon']; 
+			var year    = this['year']; 
+			var time_start = this['time_start'];
+			var time_stop  = this['time_stop'];
+			var is_work    = this['is_work']; 
+			var group_name = this['group_name']; 
+			var prio       = this['prio']; 
+
+			$('#pearlpbx_ivr_calendar_table tbody').append("<tr>"+
+				"<td>"+weekday+"</td>"+
+				"<td>"+mon_day+"</td>"+
+				"<td>"+mon+"</td>"+
+				"<td>"+year+"</td>"+
+				"<td>"+time_start+"</td>"+
+				"<td>"+time_stop+"</td>"+
+				"<td>"+group_name+"</td>"+
+				"<td>"+is_work+"</td>"+
+				"<td>"+prio+"</td>"+remurl+
+				"</tr>");
+		}); 		
+
+	}, "html"); 
+}
+
+function pearlpbx_show_module (modulename) { 
+	$('.pearlpbx-modules-admin-ivr-body').html($(modulename).html());
+	return false; 
+}
+
 function pearlpbx_tftp_reload() { 
 	var confirmed = confirm ("Обновить настройки телефонов в каталоге TFTP-сервера ?");
 	if ( confirmed == true ) { 

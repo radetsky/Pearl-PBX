@@ -99,12 +99,17 @@
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-general')">Общие</a></li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#cdr-filter')">CDR-фильтр</a></li>
 							<li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-summary')">Количественные</a></li>
-<!--              <li class="nav-header">Состояние</li>
-              <li><a href="#">Очереди</a></li>
-              <li><a href="#">УПАТС</a></li>
-              <li><a href="#">Отзвон</a></li>
-							<li><a href="#">Внутренние линии</a></li>
--->
+
+              <li class="nav-header">Модули</li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-admin-ivr')"> Визуальное управление IVR </a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-katyusha')"> 
+              Автодозвон </a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-konference')"> 
+              Конференц-связь </a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-backup')"> 
+              Резервное копирование </a></li>
+                            
+
               <li class='nav-header'> Пользователь </li>
               <li> <button class='btn btn-info'>Мой профиль</button>
               <li> <button class='btn btn-danger' onClick='pearlpbx_logout()'>Закончить сессию</button>
@@ -503,6 +508,7 @@ function cdrfilter_submit () {
 			$('#reports-summary-names').load('/reports.pl?list-reports=1&rtype=sum');
       $('#pearlpbx-summary-reports-bodies').load('/reports.pl?list-reports=2&rtype=sum'); 
       $('.pearlpbx_list_channels').load('/reports.pl?list-channels=1');
+
 
       pearlpbx_fill_check_routing_channel();
 			
@@ -1381,6 +1387,75 @@ function cdrfilter_submit () {
   </div>
 </div>
 <!-- Конец Страница "Установка номеров Б" --> 
+
+
+<!-- DIV-ы для модулей --> 
+
+<div id="modules-admin-ivr" style="display: none">
+ <div class="pearlpbx-main-container-header">
+   <h1><center> Модули управления IVR </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+  <div id="pearlpbx-modules-admin-ivr-list">
+  </div>
+  <div class="pearlpbx-modules-admin-ivr-body">
+  </div>
+  <div id="pearlpbx-modules-admin-ivr-bodies-preload" style="display: none;">
+  </div>
+
+ </div>
+</div>
+
+
+
+<script type="text/javascript">
+
+  $('#pearlpbx-modules-admin-ivr-list').load('/modules.pl?list-modules=1&rtype=ivr');
+  $('#pearlpbx-modules-admin-ivr-bodies-preload').load('/modules.pl?list-modules=2&rtype=ivr'); 
+
+</script>
+
+<div id="modules-katyusha" style="display: none">
+ <div class="pearlpbx-main-container-header">
+   <h1><center> Автодозвон </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+ </div>
+ <div class="pearlpbx-modules-katyusha-body">
+  <span class="label label-warning"> Этот модуль пока не доступен. </span>
+ </div>
+</div>
+
+
+<div id="modules-konference" style="display: none">
+ <div class="pearlpbx-main-container-header">
+   <h1><center> Конференц-связь </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+  <div id="pearlpbx-modules-konference-list">
+  </div>
+  <div class="pearlpbx-modules-konference-body">
+     <span class="label label-warning"> Этот модуль пока не доступен. </span>
+  </div>
+ </div>
+</div>
+
+<div id="modules-backup" style="display: none">
+ <div class="pearlpbx-main-container-header">
+   <h1><center> Резервное копирование </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+  <div id="pearlpbx-modules-backup-list">
+  </div>
+  <div class="pearlpbx-modules-backup-body">
+     <span class="label label-warning"> Этот модуль пока не доступен. </span>
+  </div>
+ </div>
+</div>
+
+
+<!-- Конец DIV-ы для модулей --> 
+
 
 
 </body>

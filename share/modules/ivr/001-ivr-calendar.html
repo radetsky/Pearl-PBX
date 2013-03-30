@@ -1,0 +1,176 @@
+<!-- Календарь рабочих и выходных дней --> 
+
+<center><h2>Календарь рабочих и выходных дней </h2></center>
+<table id="pearlpbx_ivr_calendar_table" class="table table-bordered table-striped">
+<thead>
+	<tr>
+		<th> День недели </th>
+		<th> День месяца </th>
+		<th> Месяц </th>
+		<th> Год </th>
+		<th> Начало </th>
+		<th> Окончание </th>
+		<th> Группа/Очередь </th>
+		<th> График </th>
+		<th> Приоритет </th>
+	</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+<script type="text/javascript"> 
+
+    pearlpbx_get_calendar();
+
+</script>
+
+<form class="well" onSubmit="return calendar_submit()">
+    <fieldset>
+         <select name="calendar_wday" id="calendar_wday" style="width: 150px; ">
+         	<option value='0'>Любой день</option>
+         	<option value='1'>Понедельник</option>
+         	<option value='2'>Вторник</option>
+         	<option value='3'>Среда</option>
+         	<option value='4'>Четверг</option>
+         	<option value='5'>Пятница</option>
+         	<option value='6'>Суббота</option>
+         	<option value='7'>Воскресенье</option>
+        </select>
+        <select name="calendar_mday" id="calendar_mday" style="width: 50px"; >
+        	<option value='0'> </option>
+        	<option value='1'>1</option>
+        	<option value='2'>2</option>
+        	<option value='3'>3</option>
+        	<option value='4'>4</option>
+        	<option value='5'>5</option>
+        	<option value='6'>6</option>
+        	<option value='7'>7</option>
+        	<option value='8'>8</option>
+        	<option value='9'>9</option>
+        	<option value='10'>10</option>
+        	<option value='11'>11</option>
+        	<option value='12'>12</option>
+        	<option value='13'>13</option>
+        	<option value='14'>14</option>
+        	<option value='15'>15</option>
+        	<option value='16'>16</option>
+        	<option value='17'>17</option>
+        	<option value='18'>18</option>
+        	<option value='19'>19</option>
+        	<option value='20'>20</option>
+        	<option value='21'>21</option>
+        	<option value='22'>22</option>
+        	<option value='23'>23</option>
+        	<option value='24'>24</option>
+        	<option value='25'>25</option>
+        	<option value='26'>26</option>
+        	<option value='27'>27</option>
+        	<option value='28'>28</option>
+        	<option value='29'>29</option>
+        	<option value='30'>30</option>
+        	<option value='31'>31</option>
+        </select>
+        <select name="calendar_mon" id="calendar_mon" style="width: 100px;">
+        	<option value='0'> </option>
+        	<option value='1'>Январь</option>
+        	<option value='2'>Февраль</option>
+        	<option value='3'>Март</option>
+        	<option value='4'>Апрель</option>
+        	<option value='5'>Май</option>
+        	<option value='6'>Июнь</option>
+        	<option value='7'>Июль</option>
+        	<option value='8'>Август</option>
+        	<option value='9'>Сентябрь</option>
+        	<option value='10'>Октябрь</option>
+        	<option value='11'>Ноябрь</option>
+        	<option value='12'>Декабрь</option>
+
+        </select>
+        <input type="text" maxlength='4' class='input-mini' id='calendar_year' placeholder='2013'>
+        <input id='calendar_time_start' class="input-mini" type="text" value="00:00" />
+        <input id='calendar_time_stop' class="input-mini" type="text" value="23:59" />
+        <select name="calendar_queue" id="calendar_queue" class="pearlpbx-list-queues input-small">
+		</select>
+		<select name="calendar_is_work" id="calendar_is_work" class='input-small'>
+			<option value='0'>Выходной</option>
+			<option value='1'>Рабочий</option>
+		</select>	
+		<input type="text" class="input-mini" id="calendar_prio" placeholder="900">
+
+        <input type="submit" class="btn btn-primary" value="Добавить исключение">
+
+        <a href="javascript:void(0)" onClick="pearlpbx_get_calendar()" class="btn btn-success"> Обновить календарь</a>
+    </fieldset>
+    </form>
+
+<script type="text/javascript"> 
+function calendar_submit() { 
+
+	var wday = $('select#calendar_wday option:selected').val();
+	var mday = $('select#calendar_mday option:selected').val();
+	var mon  = $('select#calendar_mon option:selected').val();
+	var year = $('#calendar_year').val();
+	var time_start = $('#calendar_time_start').val();
+	var time_stop  = $('#calendar_time_stop').val(); 
+	var group_name = $('select#calendar_queue option:selected').val(); 
+	var is_work = $('select#calendar_is_work option:selected').val();
+	var prio = $('#calendar_prio').val();
+
+	// Submit 
+	$.get("/modules.pl",
+		{ "exec-module":"Calendar",
+		  "sub":"add",
+		  wday:wday,
+		  mday:mday,
+		  mon:mon,
+		  year:year,
+		  time_start:time_start,
+		  time_stop:time_stop,
+		  group_name:group_name,
+		  is_work:is_work,
+		  prio:prio, 
+
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_get_calendar();
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+	return false; 
+}
+
+function pearlpbx_calendar_item_remove ( timesheet_id ) { 
+
+// Submit 
+	$.get("/modules.pl",
+		{ "exec-module":"Calendar",
+		  "sub":"del",
+		  id:timesheet_id,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_get_calendar();
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+	return false; 
+}
+
+
+</script>
+
+
