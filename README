@@ -1,37 +1,7 @@
-Hi,
+Всем привет! 
 
-This is simple skeleton for future. 
-It does not interesting for anyone till it will be done. 
+Вы смотрите в корень каталога, который содержит исходные коды проекта PearlPBX ( pearlpbx.com )
 
-sql/
-	contains few files for local postgresql database. 
-	1. create_user_asterisk.sql creates user 'asterisk'. 
-	su - postgres 
-	psql -U postgres -f ./create_user_asterisk.sql
-	2. creates database for PearlPBX. 
-	psql -U asterisk -f ./asterisk.sql 
-
-web/ 
-  contains web gui files  
-
-etc/
-  contains configuration files 
-
-sbin/ 
-  NetSDS-hangupd.pl - Hangup daemon. Listen AMI for hangups and clear the ulines. 
-  NetSDS-recd.pl    - Record concatenation tool from few/one WAV to MP3. 
-  NetSDS-parsequeuelogd.pl  - Tailing queue.log and parse it into database. Useful for Queues.      
-  missedcallnotification.pl - Searches for missed calls and send information about it by email. 
-
-agi-bin/ 
-	NetSDS-route.pl - The main script that routes any calls and makes extra data to database. 
-	NetSDS-AGI-integration.pl - Script that calls after anyone answer on the line to get a some integration features. 
-
-tests/ 
- Containe some internal unit tests 
-
-lib/
- Perl libraries
-
+По любым вопросам смело обращайтесь ко мне: rad@pearlpbx.com 
 
 
