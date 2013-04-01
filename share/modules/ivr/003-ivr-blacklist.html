@@ -1,2 +1,138 @@
-<!-- Черный список -->
+<!-- Черный список  --> 
+
+<center><h2>Черный список </h2></center>
+<table id="pearlpbx_ivr_blacklist_table" class="table table-bordered table-striped">
+<thead>
+	<tr>
+		<th> Номер Абонента </th>
+		<th> Причина добавления </th>
+		<th> Дата добавления</th>
+	</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+<script type="text/javascript"> 
+
+function pearlpbx_get_blacklist() { 
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+
+	$('#pearlpbx_ivr_blacklist_table tbody').empty(); 
+	$.getJSON('/modules.pl', { 
+		"exec-module":"WBList",
+		"wb":"black",
+		"sub":"getJSON",
+
+	}, function (json) { 
+		
+		jQuery.each(json, function () {
+			var remurl = '<td><a href="javascript:void(0)" onClick="pearlpbx_blacklist_item_remove('+
+				this['id']+')">'+remicon+'</a></td>';
+			var reason = this['reason'];
+			var msisdn = this['number'];
+			var create_date = this['create_date'];
+
+			$('#pearlpbx_ivr_blacklist_table tbody').append("<tr>"+
+				"<td>"+msisdn+"</td>"+
+				"<td>"+reason+"</td>"+
+				"<td>"+create_date+"</td>"+remurl+
+				"</tr>");
+		}); 		
+
+	}, "html"); 
+
+}
+
+    pearlpbx_get_blacklist();
+
+</script>
+
+<form class="well" onSubmit="return blacklist_submit()">
+    <fieldset>
+        <input type="text" maxlength='15' class='input-small' id='blacklist_msisdn' placeholder='0501231231'>
+        <input type="text" class="input-large" id="blacklist_reason" placeholder="Причина добавления в список.">
+
+        <input type="submit" class="btn btn-primary" value="Добавить">
+
+        <a href="javascript:void(0)" onClick="pearlpbx_get_blacklist()" class="btn btn-success"> Обновить список</a>
+    </fieldset>
+    </form>
+
+<script type="text/javascript"> 
+
+
+
+function blacklist_submit() { 
+
+	var msisdn = $('#blacklist_msisdn').val();
+	var reason = $('#blacklist_reason').val();
+	if ( msisdn.search(/[^0-9A-Za-z]/) != -1 ) {
+		alert("Номер должен содержать только цифры или латинские символы!");
+		return false; 
+	}
+	if ( reason.search(/[^0-9A-Za-zА-Яа-я.,!-=+:; ]/) != -1 ) {
+		alert("Причина должна быть указана в русских и латинских символов с цифрами!");
+		return false; 
+	}
+	if ( msisdn == "" ) { 
+		alert("Поле номера не может быть пустым!");
+		return false; 
+	}
+	if ( reason == "") { 
+		alert("Поле причины добавления не может быть пустым!");
+		return false; 
+	}
+
+	// Submit 
+	$.get("/modules.pl",
+		{ "exec-module":"WBList",
+		  "wb":"black",
+		  "sub":"add",
+		  "msisdn":msisdn,
+		  "reason":reason, 
+
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_get_blacklist();
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+	return false; 
+}
+
+function pearlpbx_blacklist_item_remove ( blacklist_id ) { 
+
+// Submit 
+	$.get("/modules.pl",
+		{ "exec-module":"WBList",
+		  "wb":"black",
+		  "sub":"del",
+		  id:blacklist_id,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_get_blacklist();
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+	return false; 
+}
+
+
+</script>
+
 

@@ -839,6 +839,7 @@ ALTER TABLE public.blacklist_id_seq OWNER TO asterisk;
 --
 
 ALTER SEQUENCE blacklist_id_seq OWNED BY blacklist.id;
+CREATE unique INDEX blacklist_idx on blacklist ( number);
 
 
 --
@@ -1215,7 +1216,7 @@ ALTER TABLE public.whitelist_id_seq OWNER TO asterisk;
 --
 
 ALTER SEQUENCE whitelist_id_seq OWNED BY whitelist.id;
-
+create UNIQUE INDEX whitelist_idx on whitelist ( number);
 
 SET search_path = routing, pg_catalog;
 
