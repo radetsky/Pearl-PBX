@@ -41,3 +41,13 @@ create table addressbook (
 create unique index ivr_displayname_msisdn on ivr.addressbook ( msisdn, displayname); 
 create UNIQUE INDEX ivr_ad_msisdn on addressbook (msisdn);
 
+create table audiofiles ( 
+	id bigserial primary key, 
+	filename varchar(64) not null, 
+	typeOfMusic varchar(3) not null, 
+	description varchar(64) not null
+);
+
+create unique index ivr_audiofiles_filename on ivr.audiofiles  ( filename ); 
+
+
