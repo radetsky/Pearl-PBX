@@ -1,2 +1,132 @@
 <!-- Дополнительная подсказка --> 
+<center><h2>Подсказка оператору</h2></center>
+<table id="pearlpbx_ivr_hints_table" class="table table-bordered table-striped">
+<thead>
+	<tr>
+		<th> Подсказка</th>
+		<th> Кол-во номеров </th>
+		<th> Начало </th>
+        <th> Окончание </th>
+        <th> Список </th>
+        <th> Удалить </th>
+	</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+<form class="well" id="hintupload" method="POST" enctype="multipart/form-data" action="/uploader.pl">
+    <fieldset>     
+        <span class="btn btn-success fileinput-button">
+            <i class="icon-plus icon-white"></i>
+            <span>Добавить CSV файл...</span>
+            <input type="file" name="fileinput" id="fileinput" onChange="fileupload_changed()" multiple >
+        </span>
+        <span class='input-large uneditable-input' id='fileupload_name'>Имя файла</span>
+        <input type='hidden' name="fileupload_name_hidden" id="fileupload_name_hidden">
+        <input type='hidden' name="fileupload_module" id="fileupload_module" value="Hints">
+        <input type="text" maxlength='32' class='input-xlarge' name='hintupload' id='hintupload' placeholder='Text dlya operatora'>
+    	<br>
+    	Дата начала:
+        <input name="sincehint" id="sincehint" data-datepicker="datepicker" class="input-date" type="text" value="" />
+        Дата окончания:
+        <input name="tillhint" id="tillhint" data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input type="submit" class="btn btn-primary" value="Загрузить">
+    </fieldset>
+</form>
+<div class="progress" style="width: 100%;">
+        <div class="bar"></div >
+        <div class="percent">0%</div >
+</div>
+<div id="status"></div>
+<script type="text/javascript"> 
+function pearlpbx_get_hint_count() { 
+	
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+    $('#pearlpbx_ivr_hints_table tbody').empty(); 
+
+    $.getJSON('/modules.pl', { 
+        "exec-module":"Hints",
+        "sub":"getGroupJSON", 
+    }, function (json) { 
+    	jQuery.each(json, function () {
+            var remurl = '<td><a href="javascript:void(0)" onClick="pearlpbx_hints_item_remove('+
+                this['hint_id']+')">'+remicon+'</a></td>';
+			var since  = this['since']; 
+			var till   = this['till']; 
+			var message = this['message'];
+			var msisdn_count = this['msisdn_count']; 
+			var playurl = '<td><a target="_blank" href="/modules.pl?exec-module=Hints&sub=getlist&hint_id='+
+				this['hint_id']+'"><i class="icon-play icon-blue"></i></a></td>';
+
+			$('#pearlpbx_ivr_hints_table tbody').append("<tr>"+
+                "<td>"+message+"</td>"+
+                "<td>"+msisdn_count+"</td>"+
+                "<td>"+since+"</td>"+
+                "<td>"+till+"</td>"+
+                playurl+remurl+
+                "</tr>");
+        });         
+    }, "html"); 
+}
+
+function pearlpbx_hints_item_remove ( hint_id ) { 
+// Submit 
+	$.get("/modules.pl",
+		{ "exec-module":"Hints",
+		  "sub":"del",
+		  hint_id:hint_id,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_get_hint_count();
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+	return false; 
+
+}
+
+pearlpbx_today();
+pearlpbx_get_hint_count();
+
+(function() {
+    
+var bar = $('.bar');
+var percent = $('.percent');
+var status = $('#status');
+   
+$('#hintupload').ajaxForm({
+    beforeSend: function() {
+        status.empty();
+        var percentVal = '0%';
+        bar.width(percentVal)
+        percent.html(percentVal);
+    },
+    uploadProgress: function(event, position, total, percentComplete) {
+        var percentVal = percentComplete + '%';
+        bar.width(percentVal)
+        percent.html(percentVal);
+    },
+    success: function() {
+        var percentVal = '100%';
+        bar.width(percentVal)
+        percent.html(percentVal);
+    },
+    complete: function(xhr) {
+        status.html(xhr.responseText);
+        pearlpbx_get_hint_count();
+    }
+}); 
+
+})();       
+
+
+</script>
 

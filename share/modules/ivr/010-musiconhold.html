@@ -1,6 +1,6 @@
-<!-- Голосовые файлы -->
+<!-- Музыка для холда --> 
 <center><h2>Управление голосовыми файлами</h2></center>
-<table id="pearlpbx_ivr_audiofiles_table" class="table table-bordered table-striped">
+<table id="pearlpbx_ivr_moh_table" class="table table-bordered table-striped">
 <thead>
 	<tr>
 		<th> Короткое описание файла</th>
@@ -13,33 +13,33 @@
 </tbody>
 </table>
 <script type="text/javascript"> 
-    function pearlpbx_get_audiofiles () { 
+    function pearlpbx_get_moh () { 
     
     var remicon = "<img src=/img/remove-icon.png width=16>";
-    $('#pearlpbx_ivr_audiofiles_table tbody').empty(); 
+    $('#pearlpbx_ivr_moh_table tbody').empty(); 
 
     $.getJSON('/modules.pl', { 
         "exec-module":"Audiofiles",
         "sub":"getJSON",
-        "typeOfMusic":"IVR", 
+        "typeOfMusic":"MOH", 
     }, function (json) { 
     
         jQuery.each(json, function () {
-            var remurl = '<td><a href="javascript:void(0)" onClick="pearlpbx_audiofiles_item_remove('+
+            var remurl = '<td><a href="javascript:void(0)" onClick="pearlpbx_moh_item_remove('+
                 this['id']+')">'+remicon+'</a></td>';
             var description = this['description'];
             var filename = this['filename'];
 
             var playurl = '<td><a target="_blank" href="files/'+filename+'"><i class="icon-play icon-blue"></i></a></td>'; 
 
-            $('#pearlpbx_ivr_audiofiles_table tbody').append("<tr>"+
+            $('#pearlpbx_ivr_moh_table tbody').append("<tr>"+
                 "<td>"+description+"</td>"+
                 "<td>"+filename+"</td>"+playurl+remurl+
                 "</tr>");
         });         
         }, "html"); 
     }
-    function pearlpbx_audiofiles_item_remove (file_id) { 
+    function pearlpbx_moh_item_remove (file_id) { 
         var confirmed = confirm ("Вы уверены, что хотите удалить этот аудиофайл ?");
         if (confirmed == false) { 
             return false; 
@@ -52,7 +52,7 @@
         },function(data) 
         {
             if (data == "OK") { 
-                pearlpbx_get_audiofiles();
+                pearlpbx_get_moh();
                 return false; 
             }
             if (data == "ERROR") { 
@@ -65,7 +65,7 @@
         return false;
     }
  
-    pearlpbx_get_audiofiles();
+    pearlpbx_get_moh();
 
 </script>
 
@@ -79,7 +79,7 @@
         </span>
         <span class='input-large uneditable-input' id='fileupload_name'>Имя файла</span>
         <input type='hidden' name="fileupload_name_hidden" id="fileupload_name_hidden">
-        <input type='hidden' name="fileupload_voicetype" id="fileupload_voicetype" value="IVR">
+        <input type='hidden' name="fileupload_voicetype" id="fileupload_voicetype" value="MOH">
         <input type="text" maxlength='64' class='input-xlarge' name='fileupload_description' id='fileupload_description' placeholder='Короткое описание файла'>
         <input type="submit" class="btn btn-primary" value="Загрузить">
     </fieldset>
@@ -125,11 +125,10 @@ $('#fileupload').ajaxForm({
     },
     complete: function(xhr) {
         status.html(xhr.responseText);
-        pearlpbx_get_audiofiles();
+        pearlpbx_get_moh();
     }
 }); 
 
 })();       
 
 </script>
-
