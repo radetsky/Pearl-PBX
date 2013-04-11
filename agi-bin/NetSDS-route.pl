@@ -610,6 +610,7 @@ sub _add_next_recording {
 
     $this->agi->verbose(
         "Add next recording: '$callerid_num' '$cdr_start' '$uline'", 3 );
+    
     my $cdr_src = $this->agi->get_variable('CDR(src)');
     my $cdr_dst = $this->agi->get_variable('CDR(dst)');
 

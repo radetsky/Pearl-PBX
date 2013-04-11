@@ -1,0 +1,19 @@
+context spy { 
+	_555XXX => { 
+		NUM=${EXTEN:3};
+		ChanSpy(SIP/${NUM},qso);  // only listen
+		Hangup();
+	}; 
+  _556XXX => { 
+		NUM=${EXTEN:3}; 
+		ChanSpy(SIP/${NUM},sw);   // whisper
+		Hangup();
+	}; 
+	_557XXX => { 
+		NUM=${EXTEN:3};
+		ChanSpy(SIP/${NUM},sB);   // barge
+		Hangup();
+	};
+}; 
+
+

@@ -20,6 +20,7 @@ Source0: %name-%version.tar
 
 Requires: asterisk > 11
 Requires: asterisk-postgresql
+Requires: asterisk-voicemail-plain 
 Requires: postgresql-server
 Requires: postgresql
 Requires: perl-NetSDS
@@ -81,7 +82,7 @@ install -D -m 755  etc/monit.d/pearlpbx-hangupd %buildroot/etc/monit.d/
 install -D -m 755  etc/monit.d/asterisk %buildroot/etc/monit.d/
 
 install -d -m 755  %buildroot/etc/cron.d
-install -D -m 755  etc/cron.d/* %buildroot/etc/cron.d/ 
+install -D -m 644  etc/cron.d/* %buildroot/etc/cron.d/ 
 
 install -d -m 755  %buildroot/etc/NetSDS/asterisk
 install -D -m 755  etc/asterisk1.8/* %buildroot/etc/NetSDS/asterisk/
