@@ -75,24 +75,25 @@ sub process {
     }
 
     if ( $ARGV[0] =~ /^get$/i ) { 
-	my $sql = "select id,operator from ivr.personal_operator where msisdn=? order by priority,calldate desc limit 5";
+	    my $sql = "select calldate,src,dst,channel,dstchannel from public.cdr where src like '%".$ARGV[1]." order by calldate desc limit 5";
     	my $sth = $this->dbh->prepare($sql);
     	eval { $sth->execute( $ARGV[1] ); };
     	if ($@) { $this->agi->verbose( $this->dbh->errstr );exit(-1); } 
-	my $res = $sth->fetchall_hashref('id');
-	my $count = keys %{$res}; 
-	unless ( $count )  { 
-		$this->agi->set_variable("POPERATOR",""); 
-		exit(0);
-	}
-	#warn Dumper ($res); 
-	my $poperator = ""; 
-	foreach my $id ( keys %{$res} ) { 
-		my $operator = $res->{$id}->{'operator'};
-		$poperator .= $operator . ",";
-	}
-	$poperator =~ s/,$//s; 
-	$this->agi->set_variable("POPERATOR",$poperator); 
+			my $res = $sth->fetchall_hashref('calldate');
+			my $count = keys %{$res}; 
+			unless ( $count )  { 
+				$this->agi->set_variable("POPERATOR",""); 
+				exit(0);
+			}
+			#warn Dumper ($res); 
+			my $poperator = ""; 
+			foreach my $id ( keys %{$res} ) { 
+				my $channel = $res->{$id}->{'dstchannel'};
+				my ($operator,$fake) = split('-',$channel);
+				$poperator .= $operator . ",";
+			}
+			$poperator =~ s/,$//s; 
+			$this->agi->set_variable("POPERATOR",$poperator); 
     }
     
     if ( $ARGV[0] =~ /^set$/i ) { 

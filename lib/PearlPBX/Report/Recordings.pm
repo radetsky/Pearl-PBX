@@ -80,7 +80,7 @@ sub report {
 		my $src = $params->{'src'}; 
 		my $dst = $params->{'dst'}; 
 
-    my $sql = "select id,uline_id,original_file,result_file, cdr_start, cdr_src, cdr_dst from integration.recordings where cdr_start = ? and cdr_src = ? and cdr_dst = ? order by id"; 
+    my $sql = "select id,uline_id,original_file,result_file, cdr_start, cdr_src, cdr_dst from integration.recordings where cdr_start = ? and ( cdr_src = ? or cdr_dst = ?) order by id"; 
 
     my $sth = $this->{dbh}->prepare($sql);
     eval { $sth->execute( $start, $src, $dst ); };
