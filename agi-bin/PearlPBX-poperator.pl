@@ -39,7 +39,8 @@ Poperator->run(
 package Poperator;
 
 use base 'PearlPBX::IVR';
-use Data::Dumper; 
+use Data::Dumper;
+use NetSDS::Util::String;  
 
 sub process {
     my $this = shift;
@@ -75,25 +76,25 @@ sub process {
     }
 
     if ( $ARGV[0] =~ /^get$/i ) { 
-	    my $sql = "select calldate,src,dst,channel,dstchannel from public.cdr where src like '%".$ARGV[1]." order by calldate desc limit 5";
+	    my $sql = "select calldate,src,dst,channel,dstchannel from public.cdr where src like '%".$ARGV[1]."' order by calldate desc limit 5";
     	my $sth = $this->dbh->prepare($sql);
-    	eval { $sth->execute( $ARGV[1] ); };
+    	eval { $sth->execute; };
     	if ($@) { $this->agi->verbose( $this->dbh->errstr );exit(-1); } 
-			my $res = $sth->fetchall_hashref('calldate');
-			my $count = keys %{$res}; 
-			unless ( $count )  { 
-				$this->agi->set_variable("POPERATOR",""); 
-				exit(0);
-			}
-			#warn Dumper ($res); 
-			my $poperator = ""; 
-			foreach my $id ( keys %{$res} ) { 
-				my $channel = $res->{$id}->{'dstchannel'};
-				my ($operator,$fake) = split('-',$channel);
-				$poperator .= $operator . ",";
-			}
-			$poperator =~ s/,$//s; 
-			$this->agi->set_variable("POPERATOR",$poperator); 
+	my $res = $sth->fetchall_hashref('calldate');
+	my $count = keys %{$res}; 
+	unless ( $count )  { 
+		exit(0);
+	}
+	foreach my $id ( keys %{$res} ) { 
+		my $channel = str_trim($res->{$id}->{'dstchannel'});
+		next if ($channel eq '');
+		my ($operator,$fake) = split('-',$channel);
+		$this->agi->exec ("Dial","$operator,10,tTgm(default)");
+        	my $dialstatus = $this->agi->get_variable("DIALSTATUS");
+       	 	if ( $dialstatus =~ /^ANSWER/ ) {
+                	exit(0);
+       		}
+	}
     }
     
     if ( $ARGV[0] =~ /^set$/i ) { 
