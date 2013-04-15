@@ -76,7 +76,7 @@ sub process {
     }
 
     if ( $ARGV[0] =~ /^get$/i ) { 
-	    my $sql = "select calldate,src,dst,channel,dstchannel from public.cdr where src like '%".$ARGV[1]."' order by calldate desc limit 5";
+	    my $sql = "select calldate,src,dst,channel,dstchannel from public.cdr where src like '%".$ARGV[1]."' order by calldate desc limit 1";
     	my $sth = $this->dbh->prepare($sql);
     	eval { $sth->execute; };
     	if ($@) { $this->agi->verbose( $this->dbh->errstr );exit(-1); } 

@@ -1060,6 +1060,7 @@ CREATE TABLE queues (
     ringinuse boolean DEFAULT false,
     setinterfacevar boolean DEFAULT true,
 		autofill boolean DEFAULT true,
+		autopause varchar(5) not null default 'yes', 
     "monitor-type" character varying DEFAULT 'mixmonitor'::character varying NOT NULL
 );
 
