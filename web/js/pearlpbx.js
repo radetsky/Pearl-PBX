@@ -1965,26 +1965,28 @@ function turnOnPBXPlayer (cdr_start, cdr_src, cdr_dst ) {
     {
 
       $('#recordings_table').html(data);
-		  PBXPlayerSetMedia('/','wav'); 	
+	  $("#jquery_jplayer_1").jPlayer( { swfPath: "/jPlayer" } );	
 
     }, "html");
 
  return false; 
 }
 
-function PBXPlayerSetMedia (url, type) { 
+function PBXPlayerSetMedia (url, type) {
 
+pearlpbx_player_type = type;
+pearlpbx_player_url = url;
+$("#jquery_jplayer_1").jPlayer( "destroy" );
 $("#jquery_jplayer_1").jPlayer({
         ready: function () {
           $(this).jPlayer("setMedia", {
-						type: url,
-          });
+                "mp3": pearlpbx_player_url,
+          }).jPlayer("play");
         },
-        swfPath: "/jPlayer",
-        supplied: type,
+        swfPath: "/js",
+        supplied: "mp3",
       });
-
- return false; 
+  return false;
 }
 
 function pearlpbx_parse_internal_phone ( phone ) { 
