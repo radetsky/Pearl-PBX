@@ -537,7 +537,7 @@ function cdrfilter_submit () {
  
  </div>
 <!-- jQuery jPlayer -->   
-<body>
+
   <div id="jquery_jplayer_1" class="jp-jplayer"></div>
   <div id="jp_container_1" class="jp-audio">
     <div class="jp-type-single">
@@ -578,6 +578,8 @@ function cdrfilter_submit () {
       </div>
     </div>
   </div>
+</div>
+</div>
 <!-- End of PearlPBX Player --> 
 
 <div id="pearlpbx-external-numbers" style="display: none"> 
@@ -585,7 +587,7 @@ function cdrfilter_submit () {
 
 <!-- Диалог добавления SIP-пользователя. Модальный. -->
 
-<div class="modal fade" id="add_sip_user" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; overflow-y:scroll;">
+<div class="modal fade" id="add_sip_user" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Добавление пользователя SIP</h3>
@@ -695,7 +697,7 @@ function cdrfilter_submit () {
 
 <!-- Диалог редактирования SIP-пользователя. Модальный. -->
 
-<div class="modal fade" id="pearlpbx_sip_edit_user" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; overflow-y:scroll;">
+<div class="modal fade" id="pearlpbx_sip_edit_user" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Редактирование пользователя SIP</h3>
@@ -804,7 +806,7 @@ function cdrfilter_submit () {
 <!-- Конец диалога редактирования очереди --> 
 
 <!-- Диалог редактирования очереди. Модальный. -->
-<div class="modal fade" id="pearlpbx_queues_edit" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; overflow-y:scroll;">
+<div class="modal fade" id="pearlpbx_queues_edit" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Редактирование группы/очереди операторов</h3>
@@ -888,7 +890,7 @@ function cdrfilter_submit () {
 <!-- Конец диалога редактирования очереди --> 
 
 <!-- Модальный диалог подтверждения удаления очереди -->
-<div class="modal" id="pearlpbx_remove_queue_confirm_dialog" style="display: none; position: fixed; top: 480px; left: 300px; width: 900px; max-height: 650px;">
+<div class="modal" id="pearlpbx_remove_queue_confirm_dialog" style="display: none; width: 900px; max-height: 650px;">
   <div class="modal-header">
     <h3>Удаление группы/очереди операторов</h3>
   </div>
@@ -933,7 +935,7 @@ function cdrfilter_submit () {
 
 
 <!-- Диалог редактирования направления Модальный. -->
-<div class="modal fade" id="pearlpbx_direction_edit" style="display: none; position: fixed; top: 280px; left: 400px;  width: 900px; max-height: 650px; overflow-y:scroll;">
+<div class="modal fade" id="pearlpbx_direction_edit" style="display: none; left: 400px;  width: 900px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Редактирование направления</h3>
@@ -1029,7 +1031,7 @@ function cdrfilter_submit () {
 <!-- Конец диалога редактирования направления --> 
 
 <!-- Окно результата проверки маршрутизации -->
-<div class="modal fade" id="pearlpbx_check_routing_result" style="display: none; position: fixed; top: 480px; left: 600px;  width: 600px; max-height: 650px; overflow-y:scroll;">
+<div class="modal fade" id="pearlpbx_check_routing_result" style="display: none; left: 600px;  width: 600px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Результат проверки маршрутизации</h3>
@@ -1090,7 +1092,7 @@ function cdrfilter_submit () {
 <!-- Конец Страница со списком транкгрупп --> 
 
 <!-- Диалог редактирования транкгруппы. Модальный. -->
-<div class="modal fade" id="pearlpbx_trunkgroup_edit" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; overflow-y:scroll;">
+<div class="modal fade" id="pearlpbx_trunkgroup_edit" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Редактирование транкгруппы</h3>
@@ -1152,7 +1154,7 @@ function cdrfilter_submit () {
 <!-- Конец диалога редактирования очереди --> 
 
 <!-- Модальный диалог списка пропущенных звонков по группе. -->
-<div class="modal fade" id="pearlpbx_lost_calls" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; overflow-y:scroll;">
+<div class="modal fade" id="pearlpbx_lost_calls" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Пропущенные звонки</h3>
@@ -1234,7 +1236,7 @@ function cdrfilter_submit () {
 
 <!-- Диалог редактирования SIP-подключения внешнего Модальный. -->
 
-<div class="modal fade" id="pearlpbx_sip_edit_peer" style="display: none; position: fixed; top: 280px; width: 800px; max-height: 650px; overflow-y:scroll;">
+<div class="modal fade" id="pearlpbx_sip_edit_peer" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Редактирование внешнего подключения по SIP</h3>

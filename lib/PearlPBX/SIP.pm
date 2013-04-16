@@ -429,7 +429,7 @@ sub getpeer {
   my ($this,$id) = @_; 
 
   my $sql = "select id, name, comment, secret, context, host, insecure, nat, permit, deny, qualify, 
-  type, username, ipaddr, \"call-limit\" as cl  
+  type, username, defaultuser, ipaddr, \"call-limit\" as cl  
   from public.sip_peers where id = ?"; 
 
   my $sth = $this->{dbh}->prepare($sql);
@@ -503,7 +503,8 @@ sub setpeer {
   my $sip_id = $params->{'sip_id'}; 
   my $sip_comment = $params->{'sip_comment'}; 
   my $sip_name = $params->{'sip_name'};  
-  my $sip_username = $params->{'sip_username'};  
+  my $sip_username = $params->{'sip_username'}; 
+	my $sip_defaultuser = $params->{'sip_username'}; 
   my $sip_secret = $params->{'sip_secret'}; 
   my $sip_remote_register = $params->{'sip_remote_register'}; 
   my $sip_regstr_id = $params->{'sip_remote_regstr_id'};  
@@ -533,18 +534,18 @@ sub setpeer {
 
 
   if ($sip_id ne '') { 
-    $sql = "update public.sip_peers set name=?,username=?,secret=?,
+    $sql = "update public.sip_peers set name=?,username=?,defaultuser=?,secret=?,
                       comment=?,nat=?,\"call-limit\"=?,
                       type=?,host=?,permit=?,deny=?,ipaddr=?,insecure=? where id=?"; 
-    push @sip_params, $sip_name, $sip_username, $sip_secret, $sip_comment, $sip_nat, 
+    push @sip_params, $sip_name, $sip_username, $sip_defaultuser, $sip_secret, $sip_comment, $sip_nat, 
         $sip_call_limit, $sip_type, $sip_host, $sip_permit, $sip_deny, 
         $sip_ipaddr, $sip_insecure, $sip_id ; 
   } 
   if ($sip_id eq '' ) { 
-    $sql = "insert into public.sip_peers (name,username,secret,comment,nat,\"call-limit\",
-    type,host,permit,deny,ipaddr,insecure) values (?,?,?,?,?,?,?,?,?,?,?,?)"; 
+    $sql = "insert into public.sip_peers (name,username,defaultuser,secret,comment,nat,\"call-limit\",
+    type,host,permit,deny,ipaddr,insecure) values (?,?,?,?,?,?,?,?,?,?,?,?,?)"; 
 
-    push @sip_params, $sip_name, $sip_username, $sip_secret, $sip_comment, $sip_nat, 
+    push @sip_params, $sip_name, $sip_username, $sip_defaultuser, $sip_secret, $sip_comment, $sip_nat, 
         $sip_call_limit, $sip_type, $sip_host, $sip_permit, $sip_deny, 
         $sip_ipaddr, $sip_insecure;
      
