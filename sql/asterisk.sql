@@ -1129,7 +1129,7 @@ CREATE TABLE sip_peers (
     language character varying(2) default 'ru' not null,
     mailbox character varying(50),
     md5secret character varying(80),
-    nat character varying(5) DEFAULT 'no'::character varying NOT NULL,
+    nat character varying(20) DEFAULT 'no'::character varying NOT NULL,
     permit character varying(95),
     deny character varying(95),
     mask character varying(95),

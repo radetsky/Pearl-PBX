@@ -544,10 +544,10 @@ function pearlpbx_sip_add_trunk() {
 	$('#input_peer_edit_name').val(''); 
 	$('#input_peer_edit_username').val(''); 
 	$('#input_peer_edit_secret').val(''); 
-	$('#input_peer_edit_registration').attr('checked',false); 
+	$('#input_peer_edit_registration').prop('checked',false); 
 	$('#input_peer_edit_regstr').val('');
-	$('#input_peer_edit_is_dynamic').attr('checked',false);
-	$('#input_peer_edit_nat').attr('checked',false); 
+	$('#input_peer_edit_is_dynamic').prop('checked',false);
+	$('#input_peer_edit_nat').prop('checked',false); 
 	$('#input_peer_edit_ipaddr').val('');
 	$('#input_peer_edit_call_limit').val('');
 } 
@@ -562,18 +562,20 @@ function pearlpbx_sip_update_peer() {
 	var sip_remote_regstr = $('#input_peer_edit_regstr').val(); 
 	var sip_remote_regstr_id = $('#input_peer_edit_regstr_id').val();  
 
-	if ($('#input_peer_edit_registration').attr('checked') == 'checked') { 
+	if ($('#input_peer_edit_registration').prop('checked') ) { 
 		sip_remote_register = true; 
 	} 
 	
 	var sip_local_register = false; 
-	if ( $('#input_peer_edit_is_dynamic').attr('checked') == 'checked') {
+	if ( $('#input_peer_edit_is_dynamic').prop('checked') ) {
 		sip_local_register = true; 
 	}
+
 	var sip_nat = false; 
-	if ( $('#input_peer_edit_nat').attr('checked') == 'checked') { 
+	if ( $('#input_peer_edit_nat').prop('checked') ) { 
 		sip_nat = true; 
 	}
+
 	var sip_ipaddr = $('#input_peer_edit_ipaddr').val(); 
 	var sip_call_limit = $('#input_peer_edit_call_limit').val(); 
 
@@ -609,9 +611,9 @@ function pearlpbx_sip_update_peer() {
 
 }
 function pearlpbx_edit_peer_is_dynamic() { 
-	if ($('#input_peer_edit_is_dynamic').attr('checked') == 'checked') { 
+	if ($('#input_peer_edit_is_dynamic').prop('checked') ) { 
 		$('#div_input_peer_edit_ipaddr').hide(); 
-		$('#input_peer_edit_registration').attr('checked',false); 
+		$('#input_peer_edit_registration').prop('checked',false); 
 		$('#div_input_peer_edit_regstr').hide();
 	} else { 
 		$('#div_input_peer_edit_ipaddr').show(); 
@@ -619,9 +621,9 @@ function pearlpbx_edit_peer_is_dynamic() {
 	}
 }
 function pearlpbx_edit_peer_registration() { 
-	if ($('#input_peer_edit_registration').attr('checked') == 'checked' ) { 
+	if ($('#input_peer_edit_registration').prop('checked') ) { 
 		$('#div_input_peer_edit_regstr').show();
-		$('#input_peer_edit_is_dynamic').attr('checked',false); 
+		$('#input_peer_edit_is_dynamic').prop('checked',false); 
 		$('#div_input_peer_edit_ipaddr').show(); 
 	} else { 
 		$('#div_input_peer_edit_regstr').hide();
@@ -642,21 +644,21 @@ function pearlpbx_sip_load_external_id (sip_id) {
 		$('#input_peer_edit_call_limit').val(json.cl); 
 		$('#input_peer_edit_username').val(json.username);
 
-		if (json.nat == 'yes') { 
-			$('#input_peer_edit_nat').attr('checked','checked'); 
+		if (json.nat == 'force_rport,comedia') { 
+			$('#input_peer_edit_nat').prop('checked',true); 
 		} else { 
-			$('#input_peer_edit_nat').attr('checked',false); 
+			$('#input_peer_edit_nat').prop('checked',false); 
 		}
 
 		if ( (json.type == 'friend') && ( json.host=='dynamic') )  {
 			$('#div_input_peer_edit_ipaddr').hide();
 			$('#input_peer_edit_ipaddr').val('');
-			$('#input_peer_edit_is_dynamic').attr('checked','checked');
+			$('#input_peer_edit_is_dynamic').prop('checked',true);
 			$('#div_input_peer_edit_regstr').hide();
 		} else { 
 			$('#div_input_peer_edit_ipaddr').show();
 			$('#input_peer_edit_ipaddr').val(json.ipaddr);
-			$('#input_peer_edit_is_dynamic').attr('checked',false);
+			$('#input_peer_edit_is_dynamic').prop('checked',false);
 			$('#div_input_peer_edit_regstr').show();
 			// FIXME: найти и добавить строку регистрации, если таковая есть. 
 		}
@@ -665,11 +667,11 @@ function pearlpbx_sip_load_external_id (sip_id) {
 
 		if ( ( json.regstr_id != null ) && ( json.regstr_commented != 1 ) ) { 
 			$('#div_input_peer_edit_regstr').show();	
-			$('#input_peer_edit_registration').attr('checked','checked'); 
+			$('#input_peer_edit_registration').prop('checked',true); 
 			
 		} else { 
 			$('#div_input_peer_edit_regstr').hide(); 
-			$('#input_peer_edit_registration').attr('checked',false);
+			$('#input_peer_edit_registration').prop('checked',false);
 		}
 
 
@@ -1012,7 +1014,7 @@ function pearlpbx_save_permissions() {
 		var id = $(this).attr('id');
 		if (regstr.test( id ) == true ) {
 			count = count + 1; 
-			if ($(this).attr('checked') == 'checked') { 
+			if ($(this).prop('checked') ) { 
 				matrix = matrix +id+"=1,"; 
 			} else { 
 				matrix = matrix +id+"=0,"; 
@@ -1039,36 +1041,35 @@ function pearlpbx_save_permissions() {
 }
 
 function pearlpbx_permissions_selectall() {
-	var checked = $('#XYall').attr('checked');
+	var checked = $('#XYall').prop('checked');
 	$('#pearlpbx_permissions_div').find('input[type=checkbox]').each(function() { 
-			if (checked == 'checked') { 
-				$(this).attr('checked','checked'); 
+			if ( checked ) { 
+				$(this).prop('checked',true); 
 			} else {
-				$(this).attr('checked',false);
+				$(this).prop('checked',false);
 			}
 	}); 
 }
 function pearlpbx_permissions_set_y(yid) {
-	var checked = $('#'+yid).attr('checked');
+	var checked = $('#'+yid).prop('checked');
 	$('#pearlpbx_permissions_div').find('input[type=checkbox]').each(function() { 
 		if ($(this).attr('id').search(yid+'$') >= 0) {
-			if (checked == 'checked') { 
-				$(this).attr('checked','checked'); 
+			if ( checked ) { 
+				$(this).prop('checked',true); 
 			} else {
-				$(this).attr('checked',false);
+				$(this).prop('checked',false);
 			}
 		}
 	}); 
 }
 function pearlpbx_permissions_set_x(x) {
-	var checked = $('#'+x).attr('checked');
+	var checked = $('#'+x).prop('checked');
 	$('#pearlpbx_permissions_div').find('input[type=checkbox]').each(function() { 
-		//alert("id:" + $(this).attr('id') + " search: " + $(this).attr('id').search(x)); 
 		if ($(this).attr('id').search(x) >= 0 ) { 
-			if (checked == 'checked') { 
-				$(this).attr('checked','checked'); 
+			if ( checked ) { 
+				$(this).prop('checked',true); 
 			} else {
-				$(this).attr('checked',false);
+				$(this).prop('checked',false);
 			}
 		}
 	}); 
@@ -1086,7 +1087,7 @@ function pearlpbx_reload_permissions() {
 				jQuery.each(json, function () {
 				var id = "#X"+this['peer_id']+"_Y"+this['direction_id']; 
 				if ( $(id).length>0 ) { 
-					$(id).attr('checked','checked'); 
+					$(id).prop('checked',true); 
 				}
 			} );
 		} ); 

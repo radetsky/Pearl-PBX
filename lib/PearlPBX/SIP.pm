@@ -521,7 +521,7 @@ sub setpeer {
   my $sip_permit = ''; 
   my $sip_deny = ''; 
 
-  if ($sip_nat eq 'true') { $sip_nat = 'yes'; } else { $sip_nat = 'no'; }  
+  if ($sip_nat eq 'true') { $sip_nat = 'force_rport,comedia'; } else { $sip_nat = 'no'; }  
   if ($sip_local_register eq 'false') { 
     $sip_insecure = 'invite,port'; 
     $sip_permit = $sip_ipaddr; 
