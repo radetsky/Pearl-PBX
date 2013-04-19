@@ -1,4 +1,191 @@
 <!-- Управление сценариями IVR -->
-<span class="label label-warning"> Этот модуль пока не доступен. </span>
+<center><h2>Управление сценариями IVR</h2></center>
+<div class="pearlpbx-main-container-subheader" id="pearlpbx_ivr_context_list"></div> 
+
+<div class="pearlpbx-main-container-header">
+  <center> <a class="btn btn-primary" href="#pearlpbx_ivr_edit_context" data-toggle="modal" onclick="pearlpbx_ivr_add_context()">Добавить новый контекст</a></center>
+</div>
+
+<div class="modal fade hide" id="pearlpbx_ivr_edit_context" style="width: 800px; max-height: 650px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Редактирование сценария <span id="ivr_context_header"></span></h3>
+  </div>
+  <div class="modal-body">
+	<table id="pearlpbx_ivr_edit_table" class="table table-bordered table-striped">
+		<thead>
+		<tr>
+		<th> Extension </th>
+		<th> Priority </th>
+		<th> Application </th>
+		<th> Parameters </th>
+		</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+
+
+  	<form class="form-horizontal">
+      <fieldset>
+        <input type='hidden' id='ivr_context_name' value=''> 
+        <input type='text' maxlen='16' name='ivr_X_extension' id='ivr_X_extension' style='float: left;' placeholder='_X!' class='input-mini'>
+        <input type='text' maxlen='3' name='ivr_X_priority' id='ivr_X_priority' style='float: left;' placeholder='X' class='input-mini'> 
+        <input type='text' maxlen='29' name='ivr_X_app' id='ivr_X_app' style='float: left;' placeholder='application' class='input-small'>
+		<input type='text' maxlen='128' name='ivr_X_appdata' id='ivr_X_appdata' style='float: left;' placeholder='parameters' class='input-xlarge'>
+		<a href="javascript:void(0)" class='btn btn-primary' onClick="pearlpbx_ivr_add_priority()">Enter</a>
+
+
+      </fieldset>
+     </form>
+  </div>
+  <div class="modal-footer">
+  	<a href="javascript:void(0)" class="btn btn-danger" data-dismiss="modal">Удалить</a>
+    <a href="javascript:void(0)" class="btn" data-dismiss="modal">Отменить</a>
+    <a href="javascript:void(0)" class="btn btn-primary" onClick="pearlpbx_ivr_save_context()">Сохранить</a>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+function pearlpbx_ivr_add_priority() {
+	var context  = $('#ivr_context_name').val(); 
+	var exten    = $('#ivr_X_extension').val(); 
+	var priority = $('#ivr_X_priority').val(); 
+	var app      = $('#ivr_X_app').val();
+	var appdata  = $('#ivr_X_appdata').val(); 
+
+	$.get("/modules.pl",
+	{ "exec-module":"IVREdit",
+	  "sub":"addpriority",
+	  "context": context,
+	  exten: exten,
+	  priority: priority,
+	  app: app, 
+	  appdata: appdata,
+	},function(data) {
+		if (data == "OK") { 
+			pearlpbx_ivr_load_context(context); 
+			return false; 
+		}
+		if (data == "ERROR") { 
+			alert("Сервер вернул ошибку!");
+			return false;
+		}
+		alert("Server returns unrecognized answer. Please contact system administrator.");
+		alert(data);
+	}, "html"); 
+	return false; 
+}
+
+function pearlpbx_ivr_save_context() { 
+	alert("Saving context: "+$('#ivr_context_name').val()); 
+}
+
+function pearlpbx_ivr_priority_up(id) { 
+	var context = $('#ivr_context_name').val(); 
+
+	$.get("/modules.pl",
+	{ "exec-module":"IVREdit",
+	  "sub":"uppriority",
+	  "id": id,
+	},function(data) {
+		if (data == "OK") { 
+			pearlpbx_ivr_load_context(context); 
+			return false; 
+		}
+		if (data == "ERROR") { 
+			alert("Сервер вернул ошибку!");
+			return false;
+		}
+		alert("Server returns unrecognized answer. Please contact system administrator.");
+		alert(data);
+	}, "html"); 
+}
+
+function pearlpbx_ivr_priority_down(id, priority) { 
+	var context = $('#ivr_context_name').val(); 
+
+	$.get("/modules.pl",
+	{ "exec-module":"IVREdit",
+	  "sub":"downpriority",
+	  "id": id,
+	},function(data) {
+		if (data == "OK") { 
+			pearlpbx_ivr_load_context(context); 
+			return false; 
+		}
+		if (data == "ERROR") { 
+			alert("Сервер вернул ошибку!");
+			return false;
+		}
+		alert("Server returns unrecognized answer. Please contact system administrator.");
+		alert(data);
+	}, "html"); 
+}
+
+function pearlpbx_ivr_priority_remove(id) { 
+	var context = $('#ivr_context_name').val(); 
+	$.get("/modules.pl",
+	{ "exec-module":"IVREdit",
+	  "sub":"delpriority",
+	  "id": id,
+	},function(data) {
+		if (data == "OK") { 
+			pearlpbx_ivr_load_context(context); 
+			return false; 
+		}
+		if (data == "ERROR") { 
+			alert("Сервер вернул ошибку!");
+			return false;
+		}
+		alert("Server returns unrecognized answer. Please contact system administrator.");
+		alert(data);
+	}, "html"); 
+}
+
+function pearlpbx_ivr_load_context(ivr_context_name) { 
+
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+	var upicon = "<i class='icon-arrow-up'></i>"; 
+	var downicon = "<i class='icon-arrow-down'></i>"; 
+
+	$('#ivr_context_name').val(ivr_context_name); 
+	$('#ivr_context_header').html(ivr_context_name);
+
+	$('#pearlpbx_ivr_edit_table tbody').empty(); 
+	$.getJSON('/modules.pl', { 
+		"exec-module":"IVREdit",
+		"sub":"getJSON",
+		"name":ivr_context_name, 
+	}, function (json) { 
+		jQuery.each(json, function () {
+			var upurl  = '<a href="javascript:void(0)" onClick="pearlpbx_ivr_priority_up('+this['id']+')">'+upicon+'</a>';
+			var downurl  = '<a href="javascript:void(0)" onClick="pearlpbx_ivr_priority_down('+this['id']+')">'+downicon+'</a>';
+			
+			var remurl = '<td>'+upurl+downurl+'<a href="javascript:void(0)" onClick="pearlpbx_ivr_priority_remove('+
+				this['id']+')">'+remicon+'</a></td>';
+
+			$('#pearlpbx_ivr_edit_table tbody').append("<tr>"+
+				"<td>"+this['exten']+"</td>"+
+				"<td>"+this['priority']+"</td>"+
+				"<td>"+this['app']+"</td>"+
+				"<td>"+this['appdata']+"</td>"
+				+remurl+
+				"</tr>");
+		}); 		
+
+	}, "html"); 
+
+
+}
+
+function pearlpbx_ivr_get_context_list() { 
+  $('#pearlpbx_ivr_context_list').load('/modules.pl?exec-module=IVREdit&sub=context_list');
+} 
+
+pearlpbx_ivr_get_context_list();
+</script>
+
 
 
