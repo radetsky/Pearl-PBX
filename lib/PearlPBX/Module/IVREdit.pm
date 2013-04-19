@@ -75,6 +75,30 @@ sub getJSON {
 sub addpriority { 
 	my ($this, $params) = @_; 
 
+	my $sql_check = "select count(*) as cnt from public.extensions_conf where context=? and exten=? and priority=?"; 
+	my $sth_check = $this->{dbh}->prepare($sql_check);
+	eval { $sth_check->execute( $params->{'context'}, $params->{'exten'}, $params->{'priority'} ); }; 
+	if ( $@ ) { 
+		print $this->{dbh}->errstr; 
+		return undef; 
+	}
+	my $count = $sth_check->fetchrow_hashref; 
+	if ($count->{'cnt'} > 0 ) { 
+		my $sql = "update public.extensions_conf set app=?,appdata=? where context=? and exten=? and priority=?"; 
+		my $sth = $this->{dbh}->prepare($sql); 
+		eval { 
+			$sth->execute ( $params->{'app'}, $params->{'appdata'},
+				$params->{'context'}, $params->{'exten'}, $params->{'priority'} ); 
+		};
+		if ( $@ ) { 
+			print $this->{dbh}->errstr; 
+			return undef;
+		}
+		$this->{dbh}->commit; 
+		print "OK"; 
+		return 1; 
+	}
+
 	my $sql = "insert into public.extensions_conf ( context, exten, priority, app, appdata ) values (?,?,?,?,?)";
 	my $sth = $this->{dbh}->prepare($sql); 
 	eval { $sth->execute ( $params->{'context'}, $params->{'exten'},
