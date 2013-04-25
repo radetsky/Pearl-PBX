@@ -149,7 +149,7 @@ mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/
 
 %files
 %defattr(-,root,root,-)
-%doc README* *.txt 
+%doc README* *.txt LICENSE  
 
 %{_initrddir}/pearlpbx-parsequeuelogd
 %{_initrddir}/pearlpbx-hangupd
