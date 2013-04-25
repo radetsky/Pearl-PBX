@@ -1,8 +1,8 @@
 Name: Pearl-PBX
-Version: 1.0
+Version: 1.1
 Release: centos6
 
-Summary: Web GUI for Asterisk written by Alex Radetsky <rad@rad.kiev.ua> 
+Summary: Contact-center for SMB written by Alex Radetsky <rad@rad.kiev.ua> 
 
 License: GPL
 
@@ -41,6 +41,7 @@ Requires: monit
 Requires: pwgen 
 Requires: perl-File-Tail 
 Requires: rpmforge-release
+Requires: epel-release
 
 %description
 Web GUI for Asterisk written by Alex Radetsky <rad@rad.kiev.ua>
@@ -99,6 +100,9 @@ cp -a lib/NetSDS %buildroot/usr/share/perl5
 
 mkdir -p %buildroot/usr/share/pearlpbx
 cp -av share/reports %buildroot/usr/share/pearlpbx/
+cp -av share/provision %buildroot/usr/share/pearlpbx/ 
+cp -av share/modules %buildroot/usr/share/pearlpbx/
+
 
 install -d -m 755  %buildroot/usr/share/asterisk/sounds
 cp -av sounds/* %buildroot/usr/share/asterisk/sounds/ 
@@ -254,7 +258,6 @@ mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/
 /var/lib/tftpboot/spa502G.xml
 /var/lib/tftpboot/spa504G.cfg
 /var/lib/tftpboot/spa504G.xml
-/var/www/pearlpbx/Makefile
 /var/www/pearlpbx/cdr2recordings.pl
 /var/www/pearlpbx/css/.DS_Store
 /var/www/pearlpbx/css/bootstrap-datepicker.css
@@ -364,8 +367,82 @@ mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/
 /var/www/pearlpbx/route.pl
 /var/www/pearlpbx/sip.pl
 /var/www/pearlpbx/stored_sessions.pl
+/usr/share/asterisk/sounds/ru/calendar_vacation.mp3
+/usr/share/asterisk/sounds/ru/calendar_vacation.ul
+/usr/share/asterisk/sounds/ru/calendar_workday.mp3
+/usr/share/asterisk/sounds/ru/calendar_workday.ul
+/usr/share/asterisk/sounds/ru/checking_addressbook.ul
+/usr/share/asterisk/sounds/ru/checking_adressbook.mp3
+/usr/share/asterisk/sounds/ru/checking_advfilter.mp3
+/usr/share/asterisk/sounds/ru/checking_advfilter.ul
+/usr/share/asterisk/sounds/ru/checking_blacklist.mp3
+/usr/share/asterisk/sounds/ru/checking_blacklist.ul
+/usr/share/asterisk/sounds/ru/checking_calendar.mp3
+/usr/share/asterisk/sounds/ru/checking_calendar.ul
+/usr/share/asterisk/sounds/ru/checking_hint.mp3
+/usr/share/asterisk/sounds/ru/checking_hint.ul
+/usr/share/asterisk/sounds/ru/checking_language.mp3
+/usr/share/asterisk/sounds/ru/checking_language.ul
+/usr/share/asterisk/sounds/ru/checking_personal_operator.mp3
+/usr/share/asterisk/sounds/ru/checking_personal_operator.ul
+/usr/share/asterisk/sounds/ru/checking_whitelist.mp3
+/usr/share/asterisk/sounds/ru/checking_whitelist.ul
+/usr/share/asterisk/sounds/ru/privet.mp3
+/usr/share/asterisk/sounds/ru/privet.ul
+/usr/share/asterisk/sounds/ru/ru_choice_language.mp3
+/usr/share/asterisk/sounds/ru/ru_choice_language.ul
+/usr/share/asterisk/sounds/ru/ru_selected_language.mp3
+/usr/share/asterisk/sounds/ru/ru_selected_language.ul
+/usr/share/asterisk/sounds/ru/ua_choice_language.mp3
+/usr/share/asterisk/sounds/ru/ua_choice_language.ul
+/usr/share/asterisk/sounds/ru/ua_selected_language.mp3
+/usr/share/asterisk/sounds/ru/ua_selected_language.ul
+/usr/share/perl5/PearlPBX/Audiofile.pm
+/usr/share/perl5/PearlPBX/IVR.pm
+/usr/share/perl5/PearlPBX/Module.pm
+/usr/share/perl5/PearlPBX/Module/Audiofiles.pm
+/usr/share/perl5/PearlPBX/Module/Calendar.pm
+/usr/share/perl5/PearlPBX/Module/Hints.pm
+/usr/share/perl5/PearlPBX/Module/IVREdit.pm
+/usr/share/perl5/PearlPBX/Module/WBList.pm
+/var/www/pearlpbx/img/PearlPBX-logo-big.png
+/var/www/pearlpbx/img/PearlPBX-logo-mid.PNG
+/var/www/pearlpbx/img/PearlPBX-logo-text.PNG
+/var/www/pearlpbx/img/PearlPBX-logo-text.PSD
+/var/www/pearlpbx/integration_webcrm.html
+/var/www/pearlpbx/jPlayer/extras/jquery-1.8.2-ajax-deprecated.min.js
+/var/www/pearlpbx/jPlayer/extras/jquery.jplayer.combo.min.js
+/var/www/pearlpbx/jPlayer/extras/jquery.jplayer.playlist.combo.min.js
+/var/www/pearlpbx/jPlayer/extras/readme.txt
+/var/www/pearlpbx/jPlayer/popcorn/popcorn.jplayer.js
+/var/www/pearlpbx/js/jqPlot/plugins/jqplot.mobile.js
+/var/www/pearlpbx/js/jqPlot/plugins/jqplot.mobile.min.js
+/var/www/pearlpbx/js/jquery-1.9.1.js
+/var/www/pearlpbx/js/jquery-1.9.1.min.js
+/var/www/pearlpbx/js/jquery.form.js
+/var/www/pearlpbx/js/jquery.ui.widget.js
+/var/www/pearlpbx/modules.pl
+/var/www/pearlpbx/uploader.pl
+/usr/share/pearlpbx/modules/ivr/000-ivr-gui.html
+/usr/share/pearlpbx/modules/ivr/001-ivr-calendar.html
+/usr/share/pearlpbx/modules/ivr/002-ivr-voicefiles.html
+/usr/share/pearlpbx/modules/ivr/003-ivr-blacklist.html
+/usr/share/pearlpbx/modules/ivr/004-ivr-whitelist.html
+/usr/share/pearlpbx/modules/ivr/005-ivr-addressbook.html
+/usr/share/pearlpbx/modules/ivr/006-ivr-advfilter.html
+/usr/share/pearlpbx/modules/ivr/007-ivr-hint.html
+/usr/share/pearlpbx/modules/ivr/008-ivr-language.html
+/usr/share/pearlpbx/modules/ivr/009-ivr-poperator.html
+/usr/share/pearlpbx/modules/ivr/010-musiconhold.html
+/usr/share/pearlpbx/provision/GrandStreamGXP1200.cfg
+/usr/share/pearlpbx/provision/SPA502G.cfg
+/usr/share/pearlpbx/provision/SPA504G.cfg
 
 %changelog
+* Thu Apr 25 2013 Alex Radetsky <rad@rad.kiev.ua> 1.1-centos6
+- Many patches, many fixes. 
+- Upgrade to PearlPBX 1.1 
+
 * Wed Feb 27 2013 Alex Radetsky <rad@rad.kiev.ua> 1.0-centos6
 - Initial build of Pearl-PBX 1.0 
 
