@@ -44,8 +44,11 @@ sub context_list {
 	}
 	print '<ul class="nav nav-tabs">'; 
 	while ( my $hashref = $sth->fetchrow_hashref ) { 
-		print '<li><a href="#pearlpbx_ivr_edit_context" data-toggle="modal" 
+		unless ( $hashref->{'context'} =~ /workcopy$/ ) { # Не показываем рабочие копии 
+			print '<li><a href="#pearlpbx_ivr_edit_context" data-toggle="modal" 
 			onClick="pearlpbx_ivr_load_context(\''.$hashref->{'context'}.'\')">'.$hashref->{'context'}.'</a></li>'; 
+		}
+	
 	}
 	print '</ul>';
 	return 1; 
@@ -65,11 +68,51 @@ sub getJSON {
 	while (my $hashref = $sth->fetchrow_hashref ) { 
 		push @dialplan,$hashref; 
 	}
-
 	my $jdata = encode_json(\@dialplan); 
+# Сохранили данные для вывода. Теперь бэкапим в .workcopy 
+# Удаляем предыдущую копию, если она есть случайно. 
+	$sql = "delete from public.extensions_conf where context='".$params->{'name'}.".workcopy' "; 
+	eval { $this->{dbh}->do($sql); }; 
+	if ( $@ ) { 
+		print "<font color='red'>".$this->{dbh}->errstr."</font>";
+		return undef;
+	} 
+# insert новую копию 
+	$sql = "insert into public.extensions_conf ( context,exten,priority,app,appdata ) values ( ?,?,?,?,? )"; 
+	$sth = $this->{dbh}->prepare($sql); 
+	foreach my $hashref ( @dialplan ) { 
+		eval { $sth->execute ( $hashref->{'context'}.".workcopy", 
+								$hashref->{'exten'}, 
+								$hashref->{'priority'},
+								$hashref->{'app'},
+								$hashref->{'appdata'} ); }; 
+		if ( $@ ) { 
+			print "<font color='red'>".$this->{dbh}->errstr."</font>";
+			return undef; 
+		}
+	} 
+
+	$this->{dbh}->commit; 
 	print $jdata; 
 
 	return 1; 
+}
+
+sub refresh { 
+	my ($this, $params) = @_; 
+	my $sql = "select id,context,exten,priority,app,appdata from public.extensions_conf where context=? order by exten,priority"; 
+	my $sth = $this->{dbh}->prepare($sql); 
+	eval { $sth->execute ($params->{'context'}); };
+	if ( $@ ) { 
+		print "<font color='red'>".$this->{dbh}->errstr."</font>";
+		return undef; 
+	}
+	my @dialplan; 
+	while (my $hashref = $sth->fetchrow_hashref ) { 
+		push @dialplan,$hashref; 
+	}
+	my $jdata = encode_json(\@dialplan);
+	print $jdata; 
 }
 
 sub addpriority { 
@@ -227,6 +270,49 @@ my ($this, $params) = @_;
 	print "OK"; 
 	return 1; 
 }
+
+sub save { 
+	my ($this, $params) = @_; 
+	my ($context,$workcopy) = split('\.',$params->{'context'}); 
+
+	my $sql = "delete from public.extensions_conf where context=?";
+	my $sth = $this->{dbh}->prepare($sql); 
+	eval { $sth->execute($context); }; 
+	if ( $@ ) { 
+		print $this->{dbh}->errstr; 
+		return undef; 
+	}
+
+	$sql = "update public.extensions_conf set context=? where context=?";
+	$sth = $this->{dbh}->prepare($sql); 
+
+	eval { $sth->execute ($context,$params->{'context'}); }; 
+	if ( $@ ) { 
+		print $this->{dbh}->errstr; 
+		return undef; 
+	}
+	$this->{dbh}->commit;
+	print "OK"; 
+	return 1;
+}
+
+sub delete { 
+	my ($this, $params) = @_; 
+	my ($context,$workcopy) = split('\.',$params->{'context'}); 
+
+	my $sql = "delete from public.extensions_conf where context=?";
+	my $sth = $this->{dbh}->prepare($sql); 
+	eval { $sth->execute($context); }; 
+	if ( $@ ) { 
+		print $this->{dbh}->errstr; 
+		return undef; 
+	}
+
+	$this->{dbh}->commit;
+	print "OK"; 
+	return 1;
+}
+
 
 1;
 

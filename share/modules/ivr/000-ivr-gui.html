@@ -12,6 +12,7 @@
     <h3>Редактирование сценария <span id="ivr_context_header"></span></h3>
   </div>
   <div class="modal-body">
+  	<input type='text' maxlen='32' name='ivr_new_context_name' id='ivr_new_context_name' placeholder='ContextName' class='input-xlarge' style='display: none;'>
 	<table id="pearlpbx_ivr_edit_table" class="table table-bordered table-striped">
 		<thead>
 		<tr>
@@ -34,13 +35,11 @@
         <input type='text' maxlen='29' name='ivr_X_app' id='ivr_X_app' style='float: left;' placeholder='application' class='input-small'>
 		<input type='text' maxlen='128' name='ivr_X_appdata' id='ivr_X_appdata' style='float: left;' placeholder='parameters' class='input-xlarge'>
 		<a href="javascript:void(0)" class='btn btn-primary' onClick="pearlpbx_ivr_add_priority()">Enter</a>
-
-
       </fieldset>
      </form>
   </div>
   <div class="modal-footer">
-  	<a href="javascript:void(0)" class="btn btn-danger" data-dismiss="modal">Удалить</a>
+  	<a href="javascript:void(0)" class="btn btn-danger"  onClick="pearlpbx_ivr_delete_context()">Удалить</a>
     <a href="javascript:void(0)" class="btn" data-dismiss="modal">Отменить</a>
     <a href="javascript:void(0)" class="btn btn-primary" onClick="pearlpbx_ivr_save_context()">Сохранить</a>
   </div>
@@ -49,11 +48,27 @@
 <script type="text/javascript">
 
 function pearlpbx_ivr_add_priority() {
+	var name = ''; 
 	var context  = $('#ivr_context_name').val(); 
 	var exten    = $('#ivr_X_extension').val(); 
 	var priority = $('#ivr_X_priority').val(); 
 	var app      = $('#ivr_X_app').val();
 	var appdata  = $('#ivr_X_appdata').val(); 
+
+	if ( context.trim() == '') { 
+		name = $('#ivr_new_context_name').val().trim();
+		if ( name == '') { 
+			// Пустое название нового контекста. Ошибка. 
+			alert("Название нового контекста не может быть пустым! Назовите контекст перед тем как добавлять сценарий IVR.");
+			return false; 
+		}
+		if ( name.search(/[^0-9A-Za-z]/) != -1) {
+    		alert("Название контекста должно содержать только латинские символы и цифры! Без пробелов!");
+    		return false;
+    	}
+    	context = name + ".workcopy"; 
+    	$('#ivr_context_name').val(context); 
+	}
 
 	$.get("/modules.pl",
 	{ "exec-module":"IVREdit",
@@ -65,7 +80,7 @@ function pearlpbx_ivr_add_priority() {
 	  appdata: appdata,
 	},function(data) {
 		if (data == "OK") { 
-			pearlpbx_ivr_load_context(context); 
+			pearlpbx_ivr_refresh_context(context); 
 			return false; 
 		}
 		if (data == "ERROR") { 
@@ -79,9 +94,87 @@ function pearlpbx_ivr_add_priority() {
 }
 
 function pearlpbx_ivr_save_context() { 
-	alert("Saving context: "+$('#ivr_context_name').val()); 
+	var name = ''; 
+
+	var rowCount = $('#pearlpbx_ivr_edit_table').prop('rows').length;
+	if ( rowCount <= 1) { 
+    		// Пустая таблица. 
+    		alert("А какой смысл записывать пустой контекст ? "); 
+    		return false;
+    }
+
+	if ( $('#ivr_context_name').val() == '') { 
+		// Пустое название редактируемого контекста. Это новый контекст.
+		name = $('#ivr_new_context_name').val().trim();
+		if ( name == '') { 
+			// Пустое название нового контекста. Ошибка. 
+			alert("Название нового контекста не может быть пустым!");
+			return false; 
+		}
+		if ( name.search(/[^0-9A-Za-z]/) != -1) {
+    		alert("Название контекста должно содержать только латинские символы и цифры! Без пробелов!");
+    		return false;
+    	}
+    	alert("Saving context: "+name); 
+    	return true; 
+	}
+
+	//alert("Saving context: "+$('#ivr_context_name').val()); 
+	name = $('#ivr_context_name').val();
+
+	$.get("/modules.pl",
+	{ "exec-module":"IVREdit",
+	  "sub":"save",
+	  "context": name,
+	},function(data) {
+		if (data == "OK") { 
+			//pearlpbx_ivr_refresh_context(context); 
+			pearlpbx_ivr_get_context_list();
+			$('#pearlpbx_ivr_edit_context').modal('hide'); 
+
+			return true; 
+		}
+		if (data == "ERROR") { 
+			alert("Сервер вернул ошибку!");
+			return false;
+		}
+		alert("Server returns unrecognized answer. Please contact system administrator.");
+		alert(data);
+	}, "html"); 
+
 }
 
+function pearlpbx_ivr_refresh_context(context) { // refresh.workcopy
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+	var upicon = "<i class='icon-arrow-up'></i>"; 
+	var downicon = "<i class='icon-arrow-down'></i>"; 
+	$('#pearlpbx_ivr_edit_table tbody').empty(); 
+
+	$.getJSON("/modules.pl", 
+	{
+		"exec-module":"IVREdit",
+		"sub":"refresh",
+		"context":context,
+	},function (json) { 
+		jQuery.each(json, function () {
+			var upurl  = '<a href="javascript:void(0)" onClick="pearlpbx_ivr_priority_up('+this['id']+')">'+upicon+'</a>';
+			var downurl  = '<a href="javascript:void(0)" onClick="pearlpbx_ivr_priority_down('+this['id']+')">'+downicon+'</a>';
+			
+			var remurl = '<td>'+upurl+downurl+'<a href="javascript:void(0)" onClick="pearlpbx_ivr_priority_remove('+
+				this['id']+')">'+remicon+'</a></td>';
+
+			$('#pearlpbx_ivr_edit_table tbody').append("<tr>"+
+				"<td>"+this['exten']+"</td>"+
+				"<td>"+this['priority']+"</td>"+
+				"<td>"+this['app']+"</td>"+
+				"<td>"+this['appdata']+"</td>"
+				+remurl+
+				"</tr>");
+		}); 		
+
+	}, "html"); 
+
+}
 function pearlpbx_ivr_priority_up(id) { 
 	var context = $('#ivr_context_name').val(); 
 
@@ -91,7 +184,7 @@ function pearlpbx_ivr_priority_up(id) {
 	  "id": id,
 	},function(data) {
 		if (data == "OK") { 
-			pearlpbx_ivr_load_context(context); 
+			pearlpbx_ivr_refresh_context(context); 
 			return false; 
 		}
 		if (data == "ERROR") { 
@@ -112,7 +205,7 @@ function pearlpbx_ivr_priority_down(id, priority) {
 	  "id": id,
 	},function(data) {
 		if (data == "OK") { 
-			pearlpbx_ivr_load_context(context); 
+			pearlpbx_ivr_refresh_context(context); 
 			return false; 
 		}
 		if (data == "ERROR") { 
@@ -132,7 +225,7 @@ function pearlpbx_ivr_priority_remove(id) {
 	  "id": id,
 	},function(data) {
 		if (data == "OK") { 
-			pearlpbx_ivr_load_context(context); 
+			pearlpbx_ivr_refresh_context(context); 
 			return false; 
 		}
 		if (data == "ERROR") { 
@@ -144,14 +237,24 @@ function pearlpbx_ivr_priority_remove(id) {
 	}, "html"); 
 }
 
+function pearlpbx_ivr_add_context() { 
+
+	$('#ivr_context_name').val('');
+	$('#ivr_context_header').html(''); 
+	$('#pearlpbx_ivr_edit_table tbody').empty();
+	$('#ivr_new_context_name').show();
+	$('#ivr_new_context_name').val('');
+
+}
+
 function pearlpbx_ivr_load_context(ivr_context_name) { 
+
+	$('#ivr_new_context_name').hide();
+	$('#ivr_new_context_name').val('');
 
 	var remicon = "<img src=/img/remove-icon.png width=16>";
 	var upicon = "<i class='icon-arrow-up'></i>"; 
 	var downicon = "<i class='icon-arrow-down'></i>"; 
-
-	$('#ivr_context_name').val(ivr_context_name); 
-	$('#ivr_context_header').html(ivr_context_name);
 
 	$('#pearlpbx_ivr_edit_table tbody').empty(); 
 	$.getJSON('/modules.pl', { 
@@ -159,6 +262,9 @@ function pearlpbx_ivr_load_context(ivr_context_name) {
 		"sub":"getJSON",
 		"name":ivr_context_name, 
 	}, function (json) { 
+		$('#ivr_context_name').val(ivr_context_name+".workcopy"); 
+	    $('#ivr_context_header').html(ivr_context_name);
+
 		jQuery.each(json, function () {
 			var upurl  = '<a href="javascript:void(0)" onClick="pearlpbx_ivr_priority_up('+this['id']+')">'+upicon+'</a>';
 			var downurl  = '<a href="javascript:void(0)" onClick="pearlpbx_ivr_priority_down('+this['id']+')">'+downicon+'</a>';
@@ -183,6 +289,58 @@ function pearlpbx_ivr_load_context(ivr_context_name) {
 function pearlpbx_ivr_get_context_list() { 
   $('#pearlpbx_ivr_context_list').load('/modules.pl?exec-module=IVREdit&sub=context_list');
 } 
+
+function pearlpbx_ivr_delete_context() { 
+	var confirmed = confirm ("Вы действительно хотите удалить данный контекст ? Проверьте, не установлен ли на него какой-нибудь маршрут, а потом удаляйте. ");
+	if (confirmed == true) { 
+
+	var name = ''; 
+
+	var rowCount = $('#pearlpbx_ivr_edit_table').prop('rows').length;
+	if ( rowCount <= 1) { 
+    		// Пустая таблица. 
+    		alert("А какой смысл удалять пустой контекст ? Нажмите кнопку 'Отменить'." ); 
+    		return false;
+    }
+
+	if ( $('#ivr_context_name').val() == '') { 
+		// Пустое название редактируемого контекста. Это новый контекст.
+		name = $('#ivr_new_context_name').val().trim();
+		if ( name == '') { 
+			// Пустое название нового контекста. Ошибка. 
+			alert("Не следует удалять не названный контект. Нажмите кнопку 'Отменить'.");
+			return false; 
+		}
+		if ( name.search(/[^0-9A-Za-z]/) != -1) {
+    		alert("Название контекста должно содержать только латинские символы и цифры! Без пробелов!");
+    		return false;
+    	}
+    	return false;
+	}
+
+	//alert("Saving context: "+$('#ivr_context_name').val()); 
+	name = $('#ivr_context_name').val();
+	$.get("/modules.pl",
+	{ "exec-module":"IVREdit",
+	  "sub":"delete",
+	  "context": name,
+	},function(data) {
+		if (data == "OK") { 
+			//pearlpbx_ivr_refresh_context(context); 
+			pearlpbx_ivr_get_context_list();
+			$('#pearlpbx_ivr_edit_context').modal('hide'); 
+			return true; 
+		}
+		if (data == "ERROR") { 
+			alert("Сервер вернул ошибку!");
+			return false;
+		}
+		alert("Server returns unrecognized answer. Please contact system administrator.");
+		alert(data);
+	}, "html"); 
+	
+	}
+}
 
 pearlpbx_ivr_get_context_list();
 </script>
