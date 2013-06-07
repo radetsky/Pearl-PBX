@@ -61,6 +61,7 @@ chmod 777 %buildroot/var/run/NetSDS
 mkdir -p %buildroot/usr/share/asterisk/agi-bin
 install -m 755  agi-bin/NetSDS-AGI-integration.pl %buildroot/usr/share/asterisk/agi-bin
 install -m 755  agi-bin/NetSDS-route.pl %buildroot/usr/share/asterisk/agi-bin
+install -m 755  agi-bin/PearlPBX* %buildroot/usr/share/asterisk/agi-bin 
 
 mkdir -p %buildroot/usr/bin
 mkdir -p %buildroot/usr/sbin
@@ -146,6 +147,8 @@ psql -U asterisk -f /etc/NetSDS/sql/ivr.sql
 mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/ 
 
 /usr/sbin/PearlPBX-gui-passwd.pl admin admin 
+/usr/bin/ulines.pl
+
 
 %files
 %defattr(-,root,root,-)
@@ -437,6 +440,14 @@ mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/
 /usr/share/pearlpbx/provision/GrandStreamGXP1200.cfg
 /usr/share/pearlpbx/provision/SPA502G.cfg
 /usr/share/pearlpbx/provision/SPA504G.cfg
+/usr/share/asterisk/agi-bin/PearlPBX-addressbook.pl
+/usr/share/asterisk/agi-bin/PearlPBX-advfilter.pl
+/usr/share/asterisk/agi-bin/PearlPBX-blacklist.pl
+/usr/share/asterisk/agi-bin/PearlPBX-calendar.pl
+/usr/share/asterisk/agi-bin/PearlPBX-hint.pl
+/usr/share/asterisk/agi-bin/PearlPBX-language.pl
+/usr/share/asterisk/agi-bin/PearlPBX-poperator.pl
+/usr/share/asterisk/agi-bin/PearlPBX-whitelist.pl
 
 %changelog
 * Thu Apr 25 2013 Alex Radetsky <rad@rad.kiev.ua> 1.1-centos6
