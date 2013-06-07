@@ -241,6 +241,8 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 	var qcalls = 0; 
 	var inuse = new Array(); 
 	var notinuse = new Array();
+	var paused = new Array();
+	var unavailable = new Array(); 
 
 
 	for (var i=1; i < msgs.length; i++) { 
@@ -253,6 +255,8 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 			queue.inuse    = 0;
 			queue.notinuse = 0; 
 			queue.ringing   = 0;
+			queue.unavailable = 0; 
+			queue.paused = 0; 
 			queues.push(queue);
 		}
 	} 
@@ -267,6 +271,8 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 			queue = queues[j]; 
 			var name = msgs[i].headers['name'];
 			var status = msgs[i].headers['status']; 
+			var paused = msgs[i].headers['paused']; 
+
 			if ( status == 2 ) { 
 				queue.inuse = queue.inuse + 1; 
 				inuse[name] = 1; 
@@ -279,15 +285,26 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 				queue.ringing = queue.ringing + 1; 
 				notinuse[name] = 1; 
 			}
+			if ( status == 5 ) { 
+				queue.unavailable = queue.unavailable + 1; 
+				unavailable[name] = 1; 
+			}
+			if ( paused == 1 ) { 
+				queue.paused = queue.paused + 1;
+				paused[name] = 1; 
+			}
 		}
 	}
+
 	//alert("queues length: "+queues.length); 
 	for (var i=0; i < queues.length; i++ ) {  
 		var table_string = "<tr><td>"+queues[i].name+"</td>"
 								+"<td>"+queues[i].calls+"</td>"
 								+"<td>"+queues[i].inuse+"</td>"
 								+"<td>"+queues[i].notinuse+"</td>"
-								+"<td>"+queues[i].ringing+"</td></tr>"; 
+								+"<td>"+queues[i].ringing+"</td>"
+								+"<td>"+queues[i].paused+"</td>"
+								+"<td>"+queues[i].unavailable+"</td></tr>"; 
 		//alert(table_string);
 		$('#pearlpbx_monitor_queue tbody').append(table_string); 
 	}

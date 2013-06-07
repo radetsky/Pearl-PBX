@@ -7,7 +7,6 @@ till timestamp without time zone  not null,
 hint_id bigint not null, 
 message varchar(32) not null );
 
-create SEQUENCE hints_hint_id_seq  minvalue 1 maxvalue 9223372036854775807  start 1 increment 1;
 create index ivr_hints_msisdn on hints (msisdn); 
 create index ivr_hints_hint_id on hints (hint_id); 
 
