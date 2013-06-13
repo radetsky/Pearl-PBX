@@ -1,3 +1,56 @@
+context notifications {
+        hint(SIP/201) 201 => { NoOp; }
+        hint(SIP/202) 202 => { NoOp; }
+        hint(SIP/203) 203 => { NoOp; }
+        hint(SIP/204) 204 => { NoOp; }
+        hint(SIP/205) 205 => { NoOp; }
+        hint(SIP/206) 206 => { NoOp; }
+        hint(SIP/207) 207 => { NoOp; }
+        hint(SIP/208) 208 => { NoOp; }
+        hint(SIP/209) 209 => { NoOp; }
+        hint(SIP/210) 210 => { NoOp; }
+        hint(SIP/211) 211 => { NoOp; }
+        hint(SIP/212) 212 => { NoOp; }
+        hint(SIP/213) 213 => { NoOp; }
+        hint(SIP/214) 214 => { NoOp; }
+        hint(SIP/215) 215 => { NoOp; }
+        hint(SIP/216) 216 => { NoOp; }
+        hint(SIP/217) 217 => { NoOp; }
+        hint(SIP/218) 218 => { NoOp; }
+        hint(SIP/219) 219 => { NoOp; }
+        hint(SIP/220) 220 => { NoOp; }
+        hint(SIP/221) 221 => { NoOp; }
+        hint(SIP/222) 222 => { NoOp; }
+        hint(SIP/223) 223 => { NoOp; }
+        hint(SIP/224) 224 => { NoOp; }
+        hint(SIP/225) 225 => { NoOp; }
+        hint(SIP/226) 226 => { NoOp; }
+        hint(SIP/227) 227 => { NoOp; }
+        hint(SIP/228) 228 => { NoOp; }
+        hint(SIP/229) 229 => { NoOp; }
+        hint(SIP/230) 230 => { NoOp; }
+        hint(SIP/231) 231 => { NoOp; }
+        hint(SIP/232) 232 => { NoOp; }
+        hint(SIP/233) 233 => { NoOp; }
+        hint(SIP/234) 234 => { NoOp; }
+        hint(SIP/235) 235 => { NoOp; }
+        hint(SIP/236) 236 => { NoOp; }
+        hint(SIP/237) 237 => { NoOp; }
+        hint(SIP/238) 238 => { NoOp; }
+        hint(SIP/239) 239 => { NoOp; }
+        hint(SIP/240) 240 => { NoOp; }
+        hint(SIP/241) 241 => { NoOp; }
+        hint(SIP/242) 242 => { NoOp; }
+        hint(SIP/243) 243 => { NoOp; }
+        hint(SIP/244) 244 => { NoOp; }
+        hint(SIP/245) 245 => { NoOp; }
+        hint(SIP/246) 246 => { NoOp; }
+        hint(SIP/247) 247 => { NoOp; }
+        hint(SIP/248) 248 => { NoOp; }
+        hint(SIP/249) 249 => { NoOp; }
+        hint(SIP/250) 250 => { NoOp; }
+}
+
 context Echo { 
 	_X! => { 
 		Answer();
