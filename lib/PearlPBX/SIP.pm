@@ -140,21 +140,21 @@ sub db_connect {
 =cut 
 sub list_internal { 
 	my $this = shift;
-	my $sql = "select id,comment,name from public.sip_peers where name ~ E'2\\\\d\\\\d' order by name";
+	my $sql = "select id,comment,name from public.sip_peers where name ~ E'^2\\\\d\\\\d\$' order by name";
 
 	return $this->_list($sql,undef);
 }
 
 sub list_internalAsOption { 
   my $this = shift;
-  my $sql = "select id,comment,name from public.sip_peers where name ~ E'2\\\\d\\\\d' order by name";
+  my $sql = "select id,comment,name from public.sip_peers where name ~ E'^2\\\\d\\\\d\$' order by name";
 
   return $this->_listAsOption($sql);  
 }
 
 sub list_internalAsJSON { 
   my $this = shift; 
-  my $sql = "select id,comment,name from public.sip_peers where name ~ E'2\\\\d\\\\d' order by name";
+  my $sql = "select id,comment,name from public.sip_peers where name ~ E'^2\\\\d\\\\d\$' order by name";
 
   my $sth = $this->{dbh}->prepare($sql); 
   eval { $sth->execute();}; 
@@ -171,7 +171,7 @@ sub list_internalAsJSON {
 }
 sub list_internalAsOptionIdValue { 
   my $this = shift;
-  my $sql = "select id,comment,name from public.sip_peers where name ~ E'2\\\\d\\\\d' order by name";
+  my $sql = "select id,comment,name from public.sip_peers where name ~ E'^2\\\\d\\\\d\$' order by name";
 
   return $this->_listAsOptionIdValue($sql);  
 }
@@ -183,13 +183,13 @@ sub list_internalAsOptionIdValue {
 =cut 
 sub list_external { 
 	my $this = shift; 
-	my $sql = "select id,name,comment from public.sip_peers where name !~ E'2\\\\d\\\\d' order by name"; 
+	my $sql = "select id,name,comment from public.sip_peers where name !~ E'^2\\\\d\\\\d\$' order by name"; 
 
   return $this->_list($sql,1); 
 }
 sub list_externalAsJSON { 
   my $this = shift; 
-  my $sql = "select id,comment,name from public.sip_peers where name !~ E'2\\\\d\\\\d' order by name";
+  my $sql = "select id,comment,name from public.sip_peers where name !~ E'^2\\\\d\\\\d\$' order by name";
 
   my $sth = $this->{dbh}->prepare($sql); 
   eval { $sth->execute();}; 
@@ -208,13 +208,13 @@ sub list_externalAsJSON {
 
 sub list_externalAsOption { 
   my $this = shift; 
-  my $sql = "select id,name,comment from public.sip_peers where name !~ E'2\\\\d\\\\d' order by name"; 
+  my $sql = "select id,name,comment from public.sip_peers where name !~ E'^2\\\\d\\\\d\$' order by name"; 
 
   return $this->_listAsOption($sql); 
 }
 sub list_externalAsOptionIdValue { 
   my $this = shift; 
-  my $sql = "select id,name,comment from public.sip_peers where name !~ E'2\\\\d\\\\d' order by name"; 
+  my $sql = "select id,name,comment from public.sip_peers where name !~ E'^2\\\\d\\\\d\$' order by name"; 
 
   return $this->_listAsOptionIdValue($sql); 
 }

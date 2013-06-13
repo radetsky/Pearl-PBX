@@ -624,8 +624,10 @@ sub _add_next_recording {
     }
     my $result = $sth->fetchrow_hashref;
     unless ( defined($result) ) {
-        $this->_exit(
-            "EXCEPTION: ADDING NEXT RECORD TO NULL. CALL THE LOCKSMAN.");
+        #$this->_exit(
+        #    "EXCEPTION: ADDING NEXT RECORD TO NULL. CALL THE LOCKSMAN.")
+        $this->dbh->rollback();
+	return; 	    
     }
     my $id = $result->{'id'};
 
@@ -748,8 +750,19 @@ sub _init_uline {
     $this->agi->set_variable( "PARKINGEXTEN",   "$uline" );
     $this->agi->set_variable( "CDR(userfield)", "$uline" );
     $this->agi->set_variable( "ULINE",          "$uline" );
-    $this->agi->exec( "Set", "CALLERID(name)=LINE $uline $callerid_num" );
-    $this->log( "info", "CALLERID(name)=LINE $uline $callerid_num" );
+
+    my $caller_name = $this->_get_callername ($callerid_num); 
+    unless ( defined ( $caller_name) ) { 
+
+        $this->agi->exec( "Set", "CALLERID(name)=LINE $uline $callerid_num" );
+        $this->log( "info", "CALLERID(name)=LINE $uline $callerid_num" );
+
+    } else { 
+    
+        $this->agi->exec( "Set", "CALLERID(name)=LINE $uline $caller_name $callerid_num" );
+        $this->log( "info", "CALLERID(name)=LINE $uline $caller_name $callerid_num" );
+
+    }
 
     $sth = $this->dbh->prepare(
 "update integration.ulines set status='busy',callerid_num=?,cdr_start=?,channel_name=?,uniqueid=? where id=?"
@@ -769,6 +782,42 @@ sub _init_uline {
     $this->dbh->commit;
 
     $this->_add_new_recording( $callerid_num, $cdr_start, $uline );
+
+}
+
+sub _get_callername { 
+    my ($this, $callerid) = @_; 
+
+    my $sql = "select comment from public.sip_peers where name=?"; 
+    my $adr = "select displayname from ivr.addressbook where msisdn=?";
+
+    my $sth = $this->dbh->prepare($sql);
+    eval { $sth->execute( $callerid ) };
+    if ($@) {
+        $this->agi->verbose( $this->dbh->errstr );
+        exit(-1);
+    }
+    my $res         = $sth->fetchrow_hashref;
+    my $displayname = $res->{'comment'};
+
+    if ( defined ( $displayname ) and ( $displayname ne '') ) { 
+        return $displayname;
+    }
+
+    $sth = $this->dbh->prepare($adr);
+    eval { $sth->execute( $callerid )};
+    if ($@) {
+        $this->agi->verbose( $this->dbh->errstr );
+        exit(-1);
+    }
+    $res         = $sth->fetchrow_hashref;
+    $displayname = $res->{'displayname'};
+
+    if ( defined ( $displayname ) and ( $displayname ne '') ) { 
+        return $displayname;
+    }
+
+    return undef; 
 
 }
 
