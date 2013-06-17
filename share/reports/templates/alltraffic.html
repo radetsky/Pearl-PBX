@@ -7,7 +7,9 @@
 <th>Номер А</th>
 <th>Номер Б</th>
 <th>Канал А</th>
+<th>Имя А</th>
 <th>Канал Б</th>
+<th>Имя Б</th> 
 <th>Состояние</th>
 <th>Время</th>
 <th>Запись</th>
@@ -20,7 +22,9 @@
 <td>[% cdr_key.src %]</td>
 <td>[% cdr_key.dst %]</td>
 <td>[% cdr_key.channel %]</td>
+<td>[% cdr_key.srcname %]</td>
 <td>[% cdr_key.dstchannel %]</td>
+<td>[% cdr_key.dstname %]</td>
 <td>[% cdr_key.disposition %]</td>
 <td>[% cdr_key.billsec %]</td>
 <td>[% pearlpbx_player(cdr_key.calldate,cdr_key.src,cdr_key.dst,cdr_key.disposition) %]</td>

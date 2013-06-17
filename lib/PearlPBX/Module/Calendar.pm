@@ -127,7 +127,7 @@ sub add {
 
 	my $wday = str_trim($params->{'wday'});
 	undef $wday if $wday =~ /^0/;
-	$wday = 0 if $wday = 7; 
+	$wday = 0 if $wday == 7; 
 
 	my $mday = str_trim($params->{'mday'}); 
 	undef $mday if $mday =~ /^0/;  

@@ -247,6 +247,54 @@ sub queuemembers {
 	}
 	my $hash_ref = $sth->fetchall_hashref('uniqueid'); 
 }
+
+=item B<loadsippeers>  
+
+  Читает public.sip_peers в память для дальнейшей подстановки comment  в отчеты. 
+
+=cut 
+sub loadsippeers { 
+  my $this = shift; 
+  my $sql = "select * from public.sip_peers"; 
+  my $sth = $this->{dbh}->prepare($sql);
+
+  eval { $sth->execute(); }; 
+  if ( $@ ) { 
+    warn $this->{dbh}->errstr; 
+    return undef; 
+  }
+  my $hash_ref = $sth->fetchall_hashref('name'); 
+  $this->{sip_peers} = $hash_ref; 
+
+}
+
+sub subst_report { 
+  my $this = shift; 
+  my $hash_ref = shift; 
+
+  unless ( defined ( $this->{sip_peers})) { 
+    return $hash_ref; 
+  }
+
+  foreach my $rec ( keys %{$hash_ref} ) {
+    my ($protosrc,$src) = split ('/', $hash_ref->{$rec}->{'channel'});
+
+    if ( defined ( $this->{sip_peers}->{$src} ) ) { 
+      $hash_ref->{$rec}->{'srcname'} = $this->{sip_peers}->{$src}->{'comment'}; 
+    }
+
+    my ($protodst,$dst) = split('/',$hash_ref->{$rec}->{'dstchannel'}); 
+    if ( defined ( $dst ) ) { 
+      if ( defined ( $this->{sip_peers}->{$dst})) { 
+        $hash_ref->{$rec}->{'dstname'} = $this->{sip_peers}->{$dst}->{'comment'}; 
+      }
+    }
+  } 
+  
+  return $hash_ref;
+
+}
+
 1;
 
 __END__
