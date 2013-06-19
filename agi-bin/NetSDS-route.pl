@@ -206,47 +206,53 @@ sub _get_callerid {
 
     my $set_own = undef;
     if ( $callerid ne '' ) {
-		# Зачастую внешние устройства типа шлюзов FXO-SIP или GSM-SIP ставят в callerid(num)
-		# свой локальный номер, например, 1001. 
-		# А реальный пришедший номер типа 380501231231 подставляют в callerid(name). 
-		# Значение NAME в правилах преобразования callerid служит именно для цели получения 
-		# корректного номера из callerid(name). 
-				
+
+# Зачастую внешние устройства типа шлюзов FXO-SIP или GSM-SIP ставят в callerid(num)
+# свой локальный номер, например, 1001.
+# А реальный пришедший номер типа 380501231231 подставляют в callerid(name).
+# Значение NAME в правилах преобразования callerid служит именно для цели получения
+# корректного номера из callerid(name).
+
         if ( $callerid =~ /^NAME/i ) {
             $this->agi->verbose( "CHANGING NUM TO NAME.", 3 );
             $this->log( "info", "CHANGING NUM TO NAME." );
             $callerid = $this->agi->get_variable("CALLERID(name)");
-			$callerid = $this->_cut_the_plus($callerid); 
+            $callerid = $this->_cut_the_plus($callerid);
             $callerid = $this->_cut_the_lineX($callerid);
         }
 
-		# Устанавливаем признак того, что номер поставили "свой", то есть для "своих нужд" 
-		# и его преобразовывать не надо. 
+# Устанавливаем признак того, что номер поставили "свой", то есть для "своих нужд"
+# и его преобразовывать не надо.
         else {
             $set_own = 1;
         }
 
-        $this->agi->verbose("$peername have to set CallerID to \'$callerid\' while calling to $exten",3);
-        $this->log( "info","$peername have to set CallerID to \'$callerid\' while calling to $exten");
+        $this->agi->verbose(
+"$peername have to set CallerID to \'$callerid\' while calling to $exten",
+            3
+        );
+        $this->log( "info",
+"$peername have to set CallerID to \'$callerid\' while calling to $exten"
+        );
 
-        unless ( defined ( $set_own ) )
-        {   
-			# Если не меняли номер на свой, а требуется его обрезать до национальго формата,
-			# для удобства набора, то проводим такую операцию.
-			# Конфиг-> telephony->local_country_code + local_number_length 
-			$callerid = $this->_cut_local_callerid($callerid);
+        unless ( defined($set_own) ) {
+
+# Если не меняли номер на свой, а требуется его обрезать до национальго формата,
+# для удобства набора, то проводим такую операцию.
+# Конфиг-> telephony->local_country_code + local_number_length
+            $callerid = $this->_cut_local_callerid($callerid);
         }
 
         $this->agi->exec( "Set", "CALLERID(all)=$callerid" );
     }
     else {
-        unless ( defined($set_own) )
-        {    
+        unless ( defined($set_own) ) {
+
             # Esli my ne menyali nomer na svoj. To obrezaem do 10 cyfr.
             $callerid = $this->agi->get_variable("CALLERID(num)");
-			$callerid = $this->_cut_the_plus($callerid); 
-			$callerid = $this->_cut_local_callerid($callerid);
-			$this->agi->exec( "Set", "CALLERID(all)=$callerid" );
+            $callerid = $this->_cut_the_plus($callerid);
+            $callerid = $this->_cut_local_callerid($callerid);
+            $this->agi->exec( "Set", "CALLERID(all)=$callerid" );
         }
         $this->agi->verbose( "$peername does not change own CallerID", 3 );
         $this->log( "info", "$peername does not change own CallerID" );
@@ -256,6 +262,7 @@ sub _get_callerid {
     return;
 
 }
+
 =item B<cut_the_lineX(string)>
 
  Вырезает из строки вида LINE %d CALLERID собственно сам CALLERID. 
@@ -268,14 +275,14 @@ sub _get_callerid {
 
 =cut 
 
-sub _cut_the_lineX { 
-    my $this = shift; 
-    my $str = shift; 
+sub _cut_the_lineX {
+    my $this = shift;
+    my $str  = shift;
 
-    $this->log("info","_cut_the_linex: $str"); 
+    $this->log( "info", "_cut_the_linex: $str" );
     if ( $str =~ /^LINE/ ) {
-        my ($line,$linex,$callerid) = split (' ',$str);
-        return $callerid; 
+        my ( $line, $linex, $callerid ) = split( ' ', $str );
+        return $callerid;
     }
     return $str;
 }
@@ -286,18 +293,19 @@ sub _cut_the_lineX {
 
 =cut 
 
-sub _cut_the_plus { 
-	my $this = shift; 
-	my $str = shift; 
+sub _cut_the_plus {
+    my $this = shift;
+    my $str  = shift;
 
-	$this->log("info","_cut_the_plus: $str"); 
+    $this->log( "info", "_cut_the_plus: $str" );
 
-	my $first = substr($str,0,1); 
-	if ($first eq '+') { 
-		return substr($str,1); 
-	} else { 
-		return $str; 
-	}
+    my $first = substr( $str, 0, 1 );
+    if ( $first eq '+' ) {
+        return substr( $str, 1 );
+    }
+    else {
+        return $str;
+    }
 
 }
 
@@ -308,40 +316,47 @@ sub _cut_the_plus {
 
 =cut 
 
-sub _cut_local_callerid { 
-	my $this = shift; 
-	my $callerid = shift; 
+sub _cut_local_callerid {
+    my $this     = shift;
+    my $callerid = shift;
 
-	$this->log("info","_cut_local_callerid: $callerid"); 
+    $this->log( "info", "_cut_local_callerid: $callerid" );
 
-	my $local_country_code = undef; 
-	my $local_number_length = undef; 
+    my $local_country_code  = undef;
+    my $local_number_length = undef;
 
-	unless ( defined ( $this->conf->{'telephony'}->{'local_country_code'} ) ) { 
-		$local_country_code = 'NULL'; 
-	} else { 
-		$local_country_code = $this->conf->{'telephony'}->{'local_country_code'}; 
-	} 
+    unless ( defined( $this->conf->{'telephony'}->{'local_country_code'} ) ) {
+        $local_country_code = 'NULL';
+    }
+    else {
+        $local_country_code =
+          $this->conf->{'telephony'}->{'local_country_code'};
+    }
 
-	unless ( defined ( $this->conf->{'telephony'}->{'local_number_length'} ) ) { 
-		$local_number_length = 10; 
-	} else { 
-		$local_number_length = $this->conf->{'telephony'}->{'local_number_length'};
-	}
+    unless ( defined( $this->conf->{'telephony'}->{'local_number_length'} ) ) {
+        $local_number_length = 10;
+    }
+    else {
+        $local_number_length =
+          $this->conf->{'telephony'}->{'local_number_length'};
+    }
 
-  my $calleridlen = length($callerid); 
-	if ($calleridlen > $local_number_length) { 
-		# Длина входящего номера больше чем длина национального, 
-		# Значит будем обрезать. 
-		if ($callerid =~ /^$local_country_code/) { 
-			# Еще и попал под regexp с началом номера с национального кода ? 
-			# Точно будем обрезать 
-		  $callerid = substr ( $callerid, $calleridlen - $local_number_length, $local_number_length );
-			$this->log("info","_cut_local_callerid: $callerid"); 
-		}
-	}
+    my $calleridlen = length($callerid);
+    if ( $calleridlen > $local_number_length ) {
 
-	return $callerid;
+# Длина входящего номера больше чем длина национального,
+# Значит будем обрезать.
+        if ( $callerid =~ /^$local_country_code/ ) {
+
+# Еще и попал под regexp с началом номера с национального кода ?
+# Точно будем обрезать
+            $callerid = substr( $callerid, $calleridlen - $local_number_length,
+                $local_number_length );
+            $this->log( "info", "_cut_local_callerid: $callerid" );
+        }
+    }
+
+    return $callerid;
 }
 
 sub _get_dial_route {
@@ -357,8 +372,8 @@ sub _get_dial_route {
     if ($@) {
         $this->log( "warning", $this->dbh->errstr );
         $this->agi->verbose( $this->dbh->errstr, 3 );
-        $this->agi->exec( "Playback" , "pearlpbx-nomorelines");
-        $this->agi->exec( "Hangup", "17" );
+        $this->agi->exec( "Playback", "pearlpbx-nomorelines" );
+        $this->agi->exec( "Hangup",   "17" );
         exit(-1);
     }
     my $result = $sth->fetchrow_hashref;
@@ -367,65 +382,70 @@ sub _get_dial_route {
 
 }
 
-sub _convert_extension { 
-	my $this = shift;
-	my $input = shift; 
+sub _convert_extension {
+    my $this  = shift;
+    my $input = shift;
 
-	my $output = $input;  
-	my $result = undef; 
+    my $output = $input;
+    my $result = undef;
 
-	  my $sth = $this->dbh->prepare ("select id,exten,operation,parameters,step from routing.convert_exten where ? ~ exten order by id,step"); 
-	  eval { my $rv = $sth->execute($input); };
-		if ($@) {
-				$this->_exit($this->dbh->errstr); 
-		}
+    my $sth = $this->dbh->prepare(
+"select id,exten,operation,parameters,step from routing.convert_exten where ? ~ exten order by id,step"
+    );
+    eval { my $rv = $sth->execute($input); };
+    if ($@) {
+        $this->_exit( $this->dbh->errstr );
+    }
 
-		eval { 
-			$result = $sth->fetchall_hashref ('id'); 
-		}; 
-		if ($@) { 
-			$this->_exit($this->dbh->errstr);
-		} 
-		unless ( defined ( $result ) ) { 
-				return $input; 
-		}
-		if ( $result == {} ) { 
-				return $input; 
-		}
-		foreach my $id ( sort keys %$result ) { 
-				my $operation = $result->{$id}->{'operation'};
-				my $parameters = $result->{$id}->{'parameters'}; 
-				my ($param1,$param2) = split (':',$parameters);
-			  if ($operation =~ /concat/ ) { 
-					if ($this->{debug}) { 
-				  	$this->log("info","convert extension: concat '$param1':'$param2'");
-					}
-					# second param contains 'begin' or 'end'	
-					if ($param2 =~ /begin/) { 
-						$output = $param1 . $output;  
-					} 
-					if ($param2 =~ /end/ ) { 
-						$output = $output . $param1; 
-					}
-				}
-				if ($operation =~ /substr/ ) { 
-					# first param - position of beginning. Example: black : substr 2,3 = ack 
-					# second param - if empty substr till the end. 
-					if ($this->{debug}) { 
-						$this->log("info","convert extension: substr '$param1':'$param2'");
-					}
-					
-					unless ( $param1 ) { 
-						$param1 = 0; 
-					} 
-					unless ( $param2 ) {
-						$output = substr($output,$param1);
-					} else {
-						$output = substr($output,$param1,$param2);
-					}
-				} 
-		}
-		return $output; 
+    eval { $result = $sth->fetchall_hashref('id'); };
+    if ($@) {
+        $this->_exit( $this->dbh->errstr );
+    }
+    unless ( defined($result) ) {
+        return $input;
+    }
+    if ( $result == {} ) {
+        return $input;
+    }
+    foreach my $id ( sort keys %$result ) {
+        my $operation  = $result->{$id}->{'operation'};
+        my $parameters = $result->{$id}->{'parameters'};
+        my ( $param1, $param2 ) = split( ':', $parameters );
+        if ( $operation =~ /concat/ ) {
+            if ( $this->{debug} ) {
+                $this->log( "info",
+                    "convert extension: concat '$param1':'$param2'" );
+            }
+
+            # second param contains 'begin' or 'end'
+            if ( $param2 =~ /begin/ ) {
+                $output = $param1 . $output;
+            }
+            if ( $param2 =~ /end/ ) {
+                $output = $output . $param1;
+            }
+        }
+        if ( $operation =~ /substr/ ) {
+
+        # first param - position of beginning. Example: black : substr 2,3 = ack
+        # second param - if empty substr till the end.
+            if ( $this->{debug} ) {
+                $this->log( "info",
+                    "convert extension: substr '$param1':'$param2'" );
+            }
+
+            unless ($param1) {
+                $param1 = 0;
+            }
+            unless ($param2) {
+                $output = substr( $output, $param1 );
+            }
+            else {
+                $output = substr( $output, $param1, $param2 );
+            }
+        }
+    }
+    return $output;
 }
 
 sub _mixmonitor_filename {
@@ -584,6 +604,7 @@ sub _add_new_recording {
           $sth->execute( $uline, $original_file, $cdr_start, $cdr_src,
             $cdr_dst );
     };
+
     if ($@) {
         $this->_exit( $this->dbh->errstr );
     }
@@ -610,7 +631,7 @@ sub _add_next_recording {
 
     $this->agi->verbose(
         "Add next recording: '$callerid_num' '$cdr_start' '$uline'", 3 );
-    
+
     my $cdr_src = $this->agi->get_variable('CDR(src)');
     my $cdr_dst = $this->agi->get_variable('CDR(dst)');
 
@@ -624,10 +645,8 @@ sub _add_next_recording {
     }
     my $result = $sth->fetchrow_hashref;
     unless ( defined($result) ) {
-        #$this->_exit(
-        #    "EXCEPTION: ADDING NEXT RECORD TO NULL. CALL THE LOCKSMAN.")
-        $this->dbh->rollback();
-	return; 	    
+        $this->_exit(
+            "EXCEPTION: ADDING NEXT RECORD TO NULL. CALL THE LOCKSMAN.");
     }
     my $id = $result->{'id'};
 
@@ -699,28 +718,34 @@ sub _init_uline {
 
     # Try to find by ULINE (userfield)
     my $userfield = $this->agi->get_variable("CDR(userfield)");
-    if ( defined ( $userfield ) ) {
-      my $trimmed_userfield = str_trim ( $userfield );
+    if ( defined($userfield) ) {
+        my $trimmed_userfield = str_trim($userfield);
 
-      if ( $trimmed_userfield ne '' ) {
-        # Если userfield не пустой, тогда пытаемся что-то найти. 
-        if ($this->{debug} ) {
-          $this->log( "info", "current CDR(userfield)=" . $userfield );
-          $this->agi->verbose("current CDR(userfield)=" . $userfield , 3);
+        if ( $trimmed_userfield ne '' ) {
+
+# Если userfield не пустой, тогда пытаемся что-то найти.
+            if ( $this->{debug} ) {
+                $this->log( "info", "current CDR(userfield)=" . $userfield );
+                $this->agi->verbose( "current CDR(userfield)=" . $userfield,
+                    3 );
+            }
+
+            $uline =
+              $this->_uline_by_userfield_and_start( $userfield, $cdr_start );
+
+            if ( defined($uline) ) {
+
+              # Неужели нашли ? Обновим информацию.
+                $this->_update_uline_by_new_channel( $uline, $channel );
+
+# Если мы звоним не на парковку, то дополняем запись.
+                if ( $this->{'exten'} > 0 ) {
+                    $this->_add_next_recording( $callerid_num, $cdr_start,
+                        $uline );
+                }
+                return;
+            }
         }
-
-        $uline = $this->_uline_by_userfield_and_start( $userfield, $cdr_start );
-
-        if ( defined ( $uline ) ) {
-          # Неужели нашли ? Обновим информацию.
-          $this->_update_uline_by_new_channel( $uline, $channel );
-          # Если мы звоним не на парковку, то дополняем запись. 
-          if ( $this->{'exten'} > 0 ) {
-            $this->_add_next_recording( $callerid_num, $cdr_start, $uline );
-          }
-          return;
-        }
-      }
     }
 
     # Create new uline
@@ -750,19 +775,8 @@ sub _init_uline {
     $this->agi->set_variable( "PARKINGEXTEN",   "$uline" );
     $this->agi->set_variable( "CDR(userfield)", "$uline" );
     $this->agi->set_variable( "ULINE",          "$uline" );
-
-    my $caller_name = $this->_get_callername ($callerid_num); 
-    unless ( defined ( $caller_name) ) { 
-
-        $this->agi->exec( "Set", "CALLERID(name)=LINE $uline $callerid_num" );
-        $this->log( "info", "CALLERID(name)=LINE $uline $callerid_num" );
-
-    } else { 
-    
-        $this->agi->exec( "Set", "CALLERID(name)=LINE $uline $caller_name $callerid_num" );
-        $this->log( "info", "CALLERID(name)=LINE $uline $caller_name $callerid_num" );
-
-    }
+    $this->agi->exec( "Set", "CALLERID(name)=LINE $uline $callerid_num" );
+    $this->log( "info", "CALLERID(name)=LINE $uline $callerid_num" );
 
     $sth = $this->dbh->prepare(
 "update integration.ulines set status='busy',callerid_num=?,cdr_start=?,channel_name=?,uniqueid=? where id=?"
@@ -782,42 +796,6 @@ sub _init_uline {
     $this->dbh->commit;
 
     $this->_add_new_recording( $callerid_num, $cdr_start, $uline );
-
-}
-
-sub _get_callername { 
-    my ($this, $callerid) = @_; 
-
-    my $sql = "select comment from public.sip_peers where name=?"; 
-    my $adr = "select displayname from ivr.addressbook where msisdn=?";
-
-    my $sth = $this->dbh->prepare($sql);
-    eval { $sth->execute( $callerid ) };
-    if ($@) {
-        $this->agi->verbose( $this->dbh->errstr );
-        exit(-1);
-    }
-    my $res         = $sth->fetchrow_hashref;
-    my $displayname = $res->{'comment'};
-
-    if ( defined ( $displayname ) and ( $displayname ne '') ) { 
-        return $displayname;
-    }
-
-    $sth = $this->dbh->prepare($adr);
-    eval { $sth->execute( $callerid )};
-    if ($@) {
-        $this->agi->verbose( $this->dbh->errstr );
-        exit(-1);
-    }
-    $res         = $sth->fetchrow_hashref;
-    $displayname = $res->{'displayname'};
-
-    if ( defined ( $displayname ) and ( $displayname ne '') ) { 
-        return $displayname;
-    }
-
-    return undef; 
 
 }
 
@@ -928,7 +906,7 @@ sub process {
     $this->_get_permissions( $this->{peername}, $this->{extension} );
 
     # Convert extension
-    $extension = $this->_convert_extension ($this->{'extension'} );  
+    $extension = $this->_convert_extension( $this->{'extension'} );
 
     my $tgrp_first;
 
@@ -969,8 +947,9 @@ sub process {
             if ( $dialstatus =~ /^ANSWER/ ) {
                 exit(0);
             }
-						if ( $dialstatus =~ /^BUSY/ ) {
-                $this->agi->exec ("Hangup","17");
+            if ( $dialstatus =~ /^BUSY/ ) {
+		$this->agi->exec( "Busy","5"); 
+                $this->agi->exec( "Hangup", "17" );
                 exit(0);
             }
         }
@@ -984,8 +963,9 @@ sub process {
             if ( $dialstatus =~ /^ANSWER/ ) {
                 exit(0);
             }
-						if ( $dialstatus =~ /^BUSY/ ) {
-                $this->agi->exec ("Hangup","17");
+            if ( $dialstatus =~ /^BUSY/ ) {
+                $this->agi->exec( "Busy","5");
+		$this->agi->exec( "Hangup", "17" );
                 exit(0);
             }
         }
@@ -1009,10 +989,11 @@ sub process {
                 if ( $dialstatus =~ /^ANSWER/ ) {
                     exit(0);
                 }
-								if ( $dialstatus =~ /^BUSY/ ) {
-               		$this->agi->exec ("Hangup","17");
-               	 	exit(0);
-           		 	}
+                if ( $dialstatus =~ /^BUSY/ ) {
+		    $this->agi->exec( "Busy","5");
+                    $this->agi->exec( "Hangup", "17" );
+                    exit(0);
+                }
                 next;
             }
             if ( $dst_str eq $tgrp_first ) {
@@ -1023,23 +1004,25 @@ sub process {
                 next;
             }
             $this->agi->verbose("current_try = $current_try");
-            $res = $this->agi->exec( "Dial", "SIP/$dst_str/$extension,120,tTg" );
+            $res =
+              $this->agi->exec( "Dial", "SIP/$dst_str/$extension,120,tTg" );
             $this->agi->verbose( "result = $res", 3 );
             $dialstatus = $this->agi->get_variable("DIALSTATUS");
             $this->agi->verbose( "DIALSTATUS=" . $dialstatus, 3 );
             if ( $dialstatus =~ /^ANSWER/ ) {
                 exit(0);
             }
-						if ( $dialstatus =~ /^BUSY/ ) { 
-								$this->agi->exec ("Hangup","17"); 
-								exit(0); 
-						}
+            if ( $dialstatus =~ /^BUSY/ ) {
+		$this->agi->exec( "Busy","5");
+                $this->agi->exec( "Hangup", "17" );
+                exit(0);
+            }
 
         }    # End of (if tgrp)
 
     }    # End of for (1...5)
-    $this->agi->exec( "Playback","pearlpbx-nomorelines");
-
+    #$this->agi->exec( "Playback", "pearlpbx-nomorelines" );
+    $this->agi->exec( "Busy","5");
 
 }    # End of process();
 
