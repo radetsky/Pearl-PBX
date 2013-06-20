@@ -84,7 +84,7 @@ sub report {
         from public.cdr where calldate between ? and ? 
             and channel ~ E'^SIP/2\\\\d\\\\d-' 
                 group by split_part(channel,'-',1), disposition  
-                order by split_part(channel,'-',1);";
+                order by split_part(channel,'-',1)";
 
 
     my $sth_cdr = $this->{dbh}->prepare($sql_cdr);
@@ -93,24 +93,14 @@ sub report {
         $this->{error} = $this->{dbh}->errstr;
         return undef;
     }
-    
-    my $data_cdr = $sth_cdr->fetchall_hashref ('operator');
-
-	my $data_cdr2; 
-    foreach my $key ( keys %{$data_cdr} ) { 
-        my ($proto, $newkey) = split ('/', $key ); 
-        $data_cdr2->{$newkey} = $data_cdr->{$key}; 
-    }
-
- #   print Dumper ($data_cdr2); 
 
     my @result; 
-    
-    # Join it. 
-    foreach my $key ( sort keys %{$data_cdr2} ) { 
-        my $agent = $key; 
-        my $calls = $data_cdr2->{$key}->{'count'}; 
-        my $disposition = $data_cdr2->{$key}->{'disposition'}; 
+
+    while ( my $data_cdr = $sth_cdr->fetchrow_hashref ) { 
+
+        my ($proto,$agent) = split('/',$data_cdr->{'operator'}); 
+        my $calls = $data_cdr->{'count'}; 
+        my $disposition = $data_cdr->{'disposition'}; 
 
         my $record->{'disposition'} = $disposition; 
         $record->{'calls'} = $calls; 
