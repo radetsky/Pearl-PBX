@@ -628,10 +628,12 @@ function pearlpbx_sip_update_peer() {
 
 }
 function pearlpbx_edit_peer_is_dynamic() { 
-	if ($('#input_peer_edit_is_dynamic').prop('checked') ) { 
+
+  if ($('#input_peer_edit_is_dynamic').prop('checked') ) { 
 		$('#div_input_peer_edit_ipaddr').hide(); 
 		$('#input_peer_edit_registration').prop('checked',false); 
 		$('#div_input_peer_edit_regstr').hide();
+		$('#input_peer_edit_ipaddr').val(''); 
 	} else { 
 		$('#div_input_peer_edit_ipaddr').show(); 
 

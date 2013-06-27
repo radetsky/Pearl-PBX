@@ -516,6 +516,10 @@ sub setpeer {
   if ($sip_call_limit eq '') { $sip_call_limit = 2; }
 
   my $sip_host = $sip_ipaddr; 
+	if ($sip_ipaddr eq '') { 
+		$sip_host = 'dynamic';
+	}
+
   my $sip_type = 'friend'; 
   my $sip_insecure = ''; 
   my $sip_permit = ''; 
@@ -556,14 +560,16 @@ sub setpeer {
 
   if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
 
-  my $doreg = undef; 
+  my $doreg = ''; 
 
   if ( $sip_remote_register eq 'true') { 
     $doreg = $this->_add_or_replace_regstr ($sip_remote_regstr, $sip_regstr_id); 
   } else { 
-    if ( ($sip_regstr_id+0) > 0) { 
-			$doreg = $this->_remove_regstr ($sip_regstr_id); 
-		} 
+	  if ( $sip_regstr_id ne "" ) { 
+      if ( ($sip_regstr_id+0) > 0) { 
+			  $doreg = $this->_remove_regstr ($sip_regstr_id); 
+		  }
+		}
   }
 
   if ($doreg =~ /^ERROR/ ) { return $doreg; }
