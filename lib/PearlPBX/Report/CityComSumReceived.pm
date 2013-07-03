@@ -125,7 +125,6 @@ sub report {
 
     my @result; 
     my $sum1 = 0; 
-    my $sum2 = 0; 
     my $sum3 = 0; 
 
     # Join it. 
@@ -133,17 +132,14 @@ sub report {
         my $agent = $key; 
         my $qcalls = $data_agent->{$key}->{'s'}; 
         my $cdr = $data_cdr2->{$key}->{'count'}; 
-        my $ind = $cdr - $qcalls;
 
         my $record->{'queue_calls'}  = $qcalls; 
-        $record->{'individual_calls'} = $ind; 
         $record->{'cdr_calls'} = $cdr; 
         $record->{'agent'} = $agent; 
 
         push @result,$record; 
 
         $sum1 = $sum1 + $qcalls; 
-        $sum2 = $sum2 + $ind; 
         $sum3 = $sum3 + $cdr; 
 
     }
@@ -151,7 +147,6 @@ sub report {
     my $record->{'agent'} = "SUM"; 
     $record->{'qcalls'} = $sum1; 
     $record->{'cdr_calls'} = $sum3; 
-    $record->{'individual_calls'} = $sum2;
 
     push @result, $record; 
     #print Dumper (\@result); 
