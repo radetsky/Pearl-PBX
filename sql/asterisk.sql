@@ -1158,6 +1158,8 @@ CREATE TABLE sip_peers (
     defaultuser character varying(80) DEFAULT NULL::character varying,
     outboundproxy character varying(80) DEFAULT NULL::character varying,
 		callbackextension varchar(32) default ''::character varying,
+		transport varchar(8) DEFAULT NULL::character varying,
+		encryption varchar(8) DEFAULT NULL::character varying,
     CONSTRAINT sip_peers_name_check CHECK (((name)::text <> ''::text))
 );
 
