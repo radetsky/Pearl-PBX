@@ -1977,7 +1977,10 @@ create table primary_operators (
 );
 
 create INDEX primary_operators_msisdn on primary_operators (msisdn); 
-	
+
+ALTER TABLE primary_operators OWNER TO asterisk;
+
+
 set search_path to routing; 
 CREATE SEQUENCE routing.convert_extension_id_seq
     START WITH 1
