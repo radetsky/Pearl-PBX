@@ -1158,6 +1158,10 @@ CREATE TABLE sip_peers (
     defaultuser character varying(80) DEFAULT NULL::character varying,
     outboundproxy character varying(80) DEFAULT NULL::character varying,
 		callbackextension varchar(32) default ''::character varying,
+		transport varchar(8) DEFAULT NULL::character varying,
+		encryption varchar(8) DEFAULT NULL::character varying,
+		setvar character varying(128) DEFAULT NULL::character varying,
+		
     CONSTRAINT sip_peers_name_check CHECK (((name)::text <> ''::text))
 );
 
@@ -1975,7 +1979,10 @@ create table primary_operators (
 );
 
 create INDEX primary_operators_msisdn on primary_operators (msisdn); 
-	
+
+ALTER TABLE primary_operators OWNER TO asterisk;
+
+
 set search_path to routing; 
 CREATE SEQUENCE routing.convert_extension_id_seq
     START WITH 1
