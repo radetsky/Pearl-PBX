@@ -25,8 +25,7 @@ install -m 755 -o root -g root etc/monit.d/pearlpbx-hangupd /etc/monit.d
 
 install -m 755 -o root -g root etc/monit.d/asterisk /etc/monit.d/
 
-install -m 755 -o root -g root etc/cron.d/* /etc/cron.d/ 
-
+install -m 644 -o root -g root etc/cron.d/* /etc/cron.d/ 
 
 #mv -f /etc/asterisk /etc/asterisk.pearlpbx-moved-old-configs-here 
 #install -d -m 755 -o asterisk -g asterisk /etc/asterisk 

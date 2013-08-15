@@ -38,9 +38,11 @@ package NetSDSHangupD;
 use 5.8.0;
 use strict;
 use warnings;
+use DBI;
 
 use base qw(NetSDS::App);
 use NetSDS::Asterisk::EventListener;
+use NetSDS::Asterisk::Manager;
 use Data::Dumper;
 
 our @expire_list = (); 
