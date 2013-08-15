@@ -92,6 +92,7 @@ sub process {
 		$this->agi->exec ("Dial","$operator,10,tTgm(default)");
         	my $dialstatus = $this->agi->get_variable("DIALSTATUS");
        	 	if ( $dialstatus =~ /^ANSWER/ ) {
+									$this->agi->exec ("Hangup","16"); 
                 	exit(0);
        		}
 	}
