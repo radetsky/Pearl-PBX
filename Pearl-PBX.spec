@@ -448,9 +448,13 @@ mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/
 /usr/share/asterisk/agi-bin/PearlPBX-language.pl
 /usr/share/asterisk/agi-bin/PearlPBX-poperator.pl
 /usr/share/asterisk/agi-bin/PearlPBX-whitelist.pl
+/usr/share/perl5/PearlPBX/Report/CityComSumLost.pm
+/usr/share/perl5/PearlPBX/Report/CityComSumReceived.pm
+/usr/share/perl5/PearlPBX/Report/CityComSumSent.pm
+/usr/share/perl5/PearlPBX/Report/CityComTalks.pm
 
 %changelog
-* Fre Dec 13 2013 Alex Radetsky <rad@rad.kiev.ua> 1.2-centos6
+* Fri Dec 13 2013 Alex Radetsky <rad@rad.kiev.ua> 1.2-centos6
 - Upgrade to PearlPBX 1.2 
 - Many new features, fixes and bugs 
 
