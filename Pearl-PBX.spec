@@ -1,5 +1,5 @@
 Name: Pearl-PBX
-Version: 1.1
+Version: 1.2
 Release: centos6
 
 Summary: Contact-center for SMB written by Alex Radetsky <rad@rad.kiev.ua> 
@@ -450,6 +450,10 @@ mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/
 /usr/share/asterisk/agi-bin/PearlPBX-whitelist.pl
 
 %changelog
+* Fre Dec 13 2013 Alex Radetsky <rad@rad.kiev.ua> 1.2-centos6
+- Upgrade to PearlPBX 1.2 
+- Many new features, fixes and bugs 
+
 * Thu Apr 25 2013 Alex Radetsky <rad@rad.kiev.ua> 1.1-centos6
 - Many patches, many fixes. 
 - Upgrade to PearlPBX 1.1 
