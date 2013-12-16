@@ -19,8 +19,8 @@ Source0: %name-%version.tar
 #BuildRequires: perl-NetSDS perl-Class-Accessor-Class perl-Class-Accessor
 
 Requires: asterisk > 11
-Requires: asterisk-postgresql
-Requires: asterisk-voicemail-plain 
+Requires: asterisk-pgsql
+Requires: asterisk-voicemail 
 Requires: postgresql-server
 Requires: postgresql
 Requires: perl-NetSDS
@@ -114,7 +114,7 @@ cp -a var/lib/tftpboot/* %buildroot/var/lib/tftpboot
 
 install -D -d -m 755  %buildroot/var/www/pearlpbx 
 cp -a web/* %buildroot/var/www/pearlpbx/ 
-install -D -m 644 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf 
+install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf 
 
 %pre
 
@@ -130,7 +130,12 @@ chkconfig httpd on
 chkconfig monit on 
 
 /etc/init.d/postgresql initdb
-mv /var/tmp/pg_hba.conf /var/lib/pgsql/data/
+#mv /var/tmp/pg_hba.conf /var/lib/pgsql/data/
+#chown postgres:postgres /var/lib/pgsql/data/pg_hba.conf 
+#
+# Переписать изменение конфига на изменение текста trust/ident.
+
+
 /etc/init.d/postgresql start 
 
 psql -U postgres -f /etc/NetSDS/sql/create_user_asterisk.sql
