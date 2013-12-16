@@ -1,5 +1,5 @@
-check process pearlpbx-parsequeuelogd with pidfile /var/run/NetSDS/NetSDS-parsequeuelogd.pid
-        group asterisk
+check process PearlPBX-parsequeuelogd with pidfile /var/run/NetSDS/PearlPBX-parsequeuelogd.pid
+			  group asterisk
         group services
         start program = "/etc/init.d/pearlpbx-parsequeuelogd start"
         stop  program = "/etc/init.d/pearlpbx-parsequeuelogd stop"
