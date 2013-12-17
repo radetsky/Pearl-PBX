@@ -114,7 +114,8 @@ cp -a var/lib/tftpboot/* %buildroot/var/lib/tftpboot
 
 install -D -d -m 755  %buildroot/var/www/pearlpbx 
 cp -a web/* %buildroot/var/www/pearlpbx/ 
-install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf 
+install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
+
 
 %pre
 
@@ -148,12 +149,16 @@ psql -U asterisk -f /etc/NetSDS/sql/route.sql
 psql -U asterisk -f /etc/NetSDS/sql/cal.sql 
 psql -U asterisk -f /etc/NetSDS/sql/ivr.sql 
 
-
 mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/ 
 
 /usr/sbin/PearlPBX-gui-passwd.pl admin admin 
 /usr/bin/ulines.pl
 
+mkdir /var/www/pearlpbx/files 
+chown apache:apache /var/www/pearlpbx/files 
+
+mkdir /usr/share/asterisk/sounds/ru/pearlpbx 
+chown apache:apache /usr/share/asterisk/sounds/ru/pearlpbx 
 
 %files
 %defattr(-,root,root,-)

@@ -275,8 +275,33 @@ sub save {
 	my ($this, $params) = @_; 
 	my ($context,$workcopy) = split('\.',$params->{'context'}); 
 
-	my $sql = "delete from public.extensions_conf where context=?";
+ # Получение старого ID context
+
+	my $sql = "select id from public.extensions_conf where context=? and priority=1 and exten in ('_X!','s')"; 
 	my $sth = $this->{dbh}->prepare($sql); 
+	eval { $sth->execute($context); }; 
+	if ( $@ ) { 
+		print $this->{dbh}->errstr; 
+		return undef; 
+	}
+	
+	my $result = $sth->fetchrow_hashref; 
+	my $context_id = $result->{'id'}; 
+
+	# Получение нового context ID 
+
+  $sql = "select id from public.extensions_conf where context=? and priority=1 and exten in ('_X!','s')"; 
+	$sth = $this->{dbh}->prepare($sql); 
+	eval { $sth->execute($params->{'context'}); }; 
+	if ( $@ ) { 
+		print $this->{dbh}->errstr; 
+		return undef; 
+	}
+	$result = $sth->fetchrow_hashref; 
+	my $new_context_id = $result->{'id'}; 
+
+  $sql = "delete from public.extensions_conf where context=?";
+	$sth = $this->{dbh}->prepare($sql); 
 	eval { $sth->execute($context); }; 
 	if ( $@ ) { 
 		print $this->{dbh}->errstr; 
@@ -291,6 +316,16 @@ sub save {
 		print $this->{dbh}->errstr; 
 		return undef; 
 	}
+
+	# update route set route_dest_id=$1 where route_dest_id=$2 and route_type='context'; 
+ 	$sql = "update routing.route set route_dest_id=? where route_dest_id=? and route_type='context'"; 
+	$sth = $this->{dbh}->prepare($sql);
+	eval { $sth->execute ( $new_context_id, $context_id ); }; 
+  if ( $@ ) {
+	    print $this->{dbh}->errstr;
+	    return undef;
+  }
+	
 	$this->{dbh}->commit;
 	print "OK"; 
 	return 1;
