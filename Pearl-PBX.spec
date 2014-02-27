@@ -42,6 +42,7 @@ Requires: pwgen
 Requires: perl-File-Tail 
 Requires: rpmforge-release
 Requires: epel-release
+Requires: tftp-server
 
 %description
 Web GUI for Asterisk written by Alex Radetsky <rad@rad.kiev.ua>

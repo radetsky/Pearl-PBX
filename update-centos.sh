@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 install -m 755 -o asterisk -g asterisk agi-bin/NetSDS-AGI-integration.pl /usr/share/asterisk/agi-bin
 install -m 755 -o asterisk -g asterisk agi-bin/NetSDS-route.pl /usr/share/asterisk/agi-bin
 install -m 755 -o asterisk -g asterisk agi-bin/PearlPBX*.pl /usr/share/asterisk/agi-bin 
