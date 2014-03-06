@@ -1,5 +1,5 @@
 Name: Pearl-PBX
-Version: 1.2
+Version: 1.2.1
 Release: centos6
 
 Summary: Contact-center for SMB written by Alex Radetsky <rad@rad.kiev.ua> 
@@ -175,6 +175,7 @@ chown apache:apache /usr/share/asterisk/sounds/ru/pearlpbx
 %config /etc/monit.d/asterisk
 %config /etc/monit.d/pearlpbx-hangupd
 %config /etc/monit.d/pearlpbx-parsequeuelogd
+/usr/bin/PearlPBX-citycom1.pl
 /usr/bin/PearlPBX-tftpprovisor.pl
 /usr/bin/ffmpeg-any-to-alaw.sh
 /usr/bin/grandstream-config.pl
@@ -265,6 +266,7 @@ chown apache:apache /usr/share/asterisk/sounds/ru/pearlpbx
 /usr/share/perl5/PearlPBX/SIP.pm
 /usr/share/asterisk/agi-bin/NetSDS-AGI-integration.pl
 /usr/share/asterisk/agi-bin/NetSDS-route.pl
+/usr/share/asterisk/agi-bin/PearlPBX-addmissed.pl
 /var/tmp/pg_hba.conf
 /var/lib/tftpboot/lang/spa502g_en.xml
 /var/lib/tftpboot/lang/spa502g_ru.xml
