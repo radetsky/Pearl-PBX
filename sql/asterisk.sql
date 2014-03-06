@@ -13,7 +13,7 @@ SET escape_string_warning = off;
 -- Name: asterisk; Type: DATABASE; Schema: -; Owner: asterisk
 --
 
-CREATE DATABASE asterisk WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF8' LC_CTYPE = 'en_US.UTF8';
+CREATE DATABASE asterisk WITH TEMPLATE = template0 ENCODING = 'UTF8';
 
 
 ALTER DATABASE asterisk OWNER TO asterisk;

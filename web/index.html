@@ -589,12 +589,12 @@ function cdrfilter_submit () {
 
 <!-- Диалог добавления SIP-пользователя. Модальный. -->
 
-<div class="modal fade" id="add_sip_user" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
+<div class="modal fade" id="add_sip_user" style="display: none; width: 800px; max-height: 800px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Добавление пользователя SIP</h3>
   </div>
-  <div class="modal-body">
+  <div class="modal-body" style="max-height: 600px">
     <form class="form-horizontal">
       <fieldset>
 
@@ -609,9 +609,10 @@ function cdrfilter_submit () {
         <div class="control-group">
           <label class="control-label" for="input_sip_add_extension">Внутренний номер</label>
           <div class="controls">
-            <select name="input_sip_add_extension" class="pearlpbx_internal_free_list" id="input_sip_add_extension">
-            </select>
-            <p class="help-block">Выберите свободный внутренний номер из этого списка.</p>
+<!--            <select name="input_sip_add_extension" class="pearlpbx_internal_free_list" id="input_sip_add_extension"></select>
+--> 
+						<input type="text" class="input-small" id="input_sip_add_extension">
+            <p class="help-block">Введите внутренний номер для абонента.</p>
           </div>
         </div>
 
@@ -704,7 +705,7 @@ function cdrfilter_submit () {
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Редактирование пользователя SIP</h3>
   </div>
-  <div class="modal-body">
+  <div class="modal-body" style="max-height: 600px;">
     <form class="form-horizontal">
       <fieldset>
         <input type='hidden' id='input_sip_edit_id' value=''>
@@ -813,7 +814,7 @@ function cdrfilter_submit () {
     <button type="button" class="close" data-dismiss="modal">×</button>
     <h3>Редактирование группы/очереди операторов</h3>
   </div>
-  <div class="modal-body">
+  <div class="modal-body" style="max-height: 800px;">
     <form class="form-horizontal">
       <fieldset>
         <input type='hidden' id='input_queue_hidden_oldname' value=''>

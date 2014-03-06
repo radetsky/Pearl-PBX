@@ -1781,7 +1781,7 @@ function pearlpbx_sip_load_id(sip_id) {
 
 function pearlpbx_sip_add_user(){ 
 	var comment = $('#input_sip_add_comment').val(); 
-	var extension = $('select#input_sip_add_extension option:selected').val();
+	var extension = $('#input_sip_add_extension').val();  
 	var terminal = $('select#input_sip_add_terminal option:selected').val();
 	var macaddr = $('#input_sip_add_macaddr').val();
 	var secret = $('#input_sip_add_secret').html(); 
@@ -1860,7 +1860,7 @@ function pearlpbx_sip_edit_id(sip_id) {
 }
 
 function pearlpbx_fill_sip_form() { 
-	$('.pearlpbx_internal_free_list').load('/sip.pl?a=list&b=internal-free');
+	// $('.pearlpbx_internal_free_list').load('/sip.pl?a=list&b=internal-free');
 	pearlpbx_change_secret_add_form();
 }
 

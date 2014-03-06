@@ -41,7 +41,7 @@ unless ($pearl->{cgi}->param('fileupload_name_hidden') ) {
 }
 
 my $module = $pearl->{cgi}->param('fileupload_module'); 
-if ( defined ( $module )  and ($module =~ /^hints/i ) ) { 
+if ($module =~ /^hints/i ) { 
 	# Это таки Hints ?  
 	# Получаем кастомные параметры модуля 
 	my $hintupload = $pearl->{cgi}->param('hintupload'); 
