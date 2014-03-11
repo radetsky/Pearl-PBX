@@ -32,7 +32,6 @@ my $buffer;
 
 $pearl->htmlHeader;
 
-
 my $filebody = $pearl->{cgi}->param('fileinput');
 unless ($pearl->{cgi}->param('fileupload_name_hidden') ) { 
 	print str_encode('<span class="well" style="width: 100%;"> <span class="label label-important"> Важно! </span>');
@@ -106,7 +105,7 @@ my $uploadtype = $pearl->{cgi}->param('fileupload_voicetype'); ## IVR || MOH
 my $description = str_trim ($pearl->{cgi}->param('fileupload_description')); 
 
 if ($description eq '') {
-	uploader_status('important','Пожалуйста, заполните описание файла. Оно применяется в редактировании IVR.'); 
+	uploader_status('important','Пожалуйста, заполните условное обозначение файла. Оно применяется в редактировании IVR.'); 
 	exit(0);
 }
 
@@ -146,9 +145,9 @@ unless ( defined ( $file_id )) {
 }
 
 $audiofile->convert(
-	$pearl->{cgi}->param('fileupload_name_hidden'), 
-	$file_id,
-	$pearl->{cgi}->param('fileupload_voicetype')
+	$pearl->{cgi}->param('fileupload_name_hidden'), # from name  
+	$pearl->{cgi}->param('fileupload_description'), # to name 
+	$pearl->{cgi}->param('fileupload_voicetype')    # destination 
 	); 
 
 uploader_status('success','Файл успешно загружен.'); 

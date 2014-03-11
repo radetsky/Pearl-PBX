@@ -3,10 +3,10 @@
 <table id="pearlpbx_ivr_audiofiles_table" class="table table-bordered table-striped">
 <thead>
 	<tr>
-		<th> Короткое описание файла</th>
+		<th> Условное обозначение файла</th>
 		<th> Оригинальное имя файла </th>
 		<th> Play </th>
-        <th> Delete </th>
+    <th> Delete </th>
 	</tr>
 </thead>
 <tbody>
@@ -63,15 +63,13 @@
             alert(data);
         }, "html"); 
         return false;
-    }
- 
+    } 
     pearlpbx_get_audiofiles();
 
 </script>
 
-<form class="well" id="fileupload"  method="POST" enctype="multipart/form-data" action="/uploader.pl">
-    <fieldset>
-        
+<form class="well" id="fileupload"  method="POST" enctype="multipart/form-data" action="/uploader.pl" onSubmit="return pearlpbx_validate_audiofiles_form()">
+    <fieldset>    
         <span class="btn btn-success fileinput-button">
             <i class="icon-plus icon-white"></i>
             <span>Добавить файл...</span>
@@ -80,7 +78,7 @@
         <span class='input-large uneditable-input' id='fileupload_name'>Имя файла</span>
         <input type='hidden' name="fileupload_name_hidden" id="fileupload_name_hidden">
         <input type='hidden' name="fileupload_voicetype" id="fileupload_voicetype" value="IVR">
-        <input type="text" maxlength='64' class='input-xlarge' name='fileupload_description' id='fileupload_description' placeholder='Короткое описание файла'>
+        <input type="text" maxlength='64' class='input-xlarge' name='fileupload_description' id='fileupload_description' placeholder='Условное обозначение файла'>
         <input type="submit" class="btn btn-primary" value="Загрузить">
     </fieldset>
 
@@ -92,6 +90,15 @@
 <div id="status"></div>
 
 <script type="text/javascript">
+function pearlpbx_validate_audiofiles_form() { 
+	var description = $('#fileupload_description').val(); 
+	if ( description.search (/[^0-9A-Za-z_]/) != -1 ) { 
+		alert("Условное обозначение файла должно содержать только латинские символы, цифры и знаки '-','_' !. \nПример: main_menu_01_ua-1"); 
+		return false; 
+	}
+	return true; 
+}
+
 function fileupload_changed() { 
     var fullPath = $('#fileinput').val();
     var filename = fullPath.replace(/^.*[\\\/]/, '');
