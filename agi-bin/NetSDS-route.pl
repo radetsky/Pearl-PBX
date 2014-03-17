@@ -359,6 +359,28 @@ sub _cut_local_callerid {
     return $callerid;
 }
 
+# Поиск роутинга для канала Local
+sub _get_local_route { 
+    my $this = shift; 
+    my $exten = shift; 
+    my $try = shift; 
+
+    $this->dbh->begin_work or die $this->dbh->errstr; 
+    my $sth = $this->dbh->prepare("select * from routing.get_dial_route5 (?,?)");
+    eval { my $rv = $sth->execute( $exten, $try ); };
+    if ($@) {
+        $this->log( "warning", $this->dbh->errstr );
+        $this->agi->verbose( $this->dbh->errstr, 3 );
+        $this->agi->exec( "Playback", "pearlpbx-nomorelines" );
+        $this->agi->exec( "Hangup",   "17" );
+        exit(-1);
+    }
+    my $result = $sth->fetchrow_hashref;
+    $this->dbh->commit();
+    return $result;
+
+}
+
 sub _get_dial_route {
     my $this     = shift;
     my $peername = shift;
@@ -937,8 +959,7 @@ sub process {
 
     # split the channel name
 
-    ( $this->{proto}, $this->{peername}, $this->{channel_number} ) =
-      $this->_cutoff_channel($channel);
+    ( $this->{proto}, $this->{peername}, $this->{channel_number} ) = $this->_cutoff_channel($channel);
 
     $this->{channel}   = $channel;
     $this->{extension} = $extension;
@@ -949,14 +970,18 @@ sub process {
     # Connect to the database
     $this->_db_connect();
 
-    # CallerID
-    $this->_get_callerid( $this->{peername}, $this->{extension} );
+    # Установка номера А. Если используется канал Local, то эта функция игнорируется. 
+    if ( $this->{proto} ne "Local" ) { 
+        $this->_get_callerid( $this->{peername}, $this->{extension} ) 
+    } 
 
     # Init MixMonitor
     $this->_init_mixmonitor();
 
-    # Get permission
-    $this->_get_permissions( $this->{peername}, $this->{extension} );
+    # Проверка прав доступа.  Если используется канал "Local", то эта функция игнорируется.
+    if ( $this->{proto} ne "Local") { 
+        $this->_get_permissions( $this->{peername}, $this->{extension} );
+    } 
 
     # Convert extension
     $extension = $this->_convert_extension( $this->{'extension'} );
@@ -972,9 +997,12 @@ sub process {
               . $current_try . ")",
             3
         );
-        my $result =
-          $this->_get_dial_route( $this->{peername}, $this->{extension},
-            $current_try );
+        my $result = undef;  
+        if ( $this->{proto} ne "Local") { 
+            $result = $this->_get_dial_route( $this->{peername}, $this->{extension}, $current_try );
+        } else { 
+            $result = $this->_get_local_route ( $this->{extension}, $current_try ); 
+        } 
         unless ( defined($result) ) {
             $this->log( "warning",
                 "SOMETHING WRONG. _get_dial_route returns undefined value." );

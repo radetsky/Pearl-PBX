@@ -43,6 +43,7 @@ Requires: perl-File-Tail
 Requires: rpmforge-release
 Requires: epel-release
 Requires: tftp-server
+Requires: sox 
 
 %description
 Web GUI for Asterisk written by Alex Radetsky <rad@rad.kiev.ua>
@@ -141,7 +142,8 @@ chkconfig monit on
 /etc/init.d/postgresql start 
 
 psql -U postgres -f /etc/NetSDS/sql/create_user_asterisk.sql
-psql -U postgres -f /etc/NetSDS/sql/asterisk.sql 
+psql -U postgres -f /etc/NetSDS/sql/asterisk.sql
+psql -U postgres -f /etc/NetSDS/sql/local_route.sql 
 psql -U asterisk -f /etc/NetSDS/sql/directions_list.sql
 psql -U asterisk -f /etc/NetSDS/sql/directions.sql 
 psql -U asterisk -f /etc/NetSDS/sql/sip_conf.sql 
