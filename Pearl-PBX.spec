@@ -80,6 +80,8 @@ install -d -m 755 %{buildroot}%{_initrddir}
 install -D -m 755  etc/init.d/pearlpbx-parsequeuelogd %{buildroot}%{_initrddir}/ 
 install -D -m 644  etc/monit.d/* %buildroot/etc/monit.d/
 
+install -D -m 755 /etc/init.d/PearlPBX %{buildroot}%{_initrddir}/
+
 install -D -m 755  etc/init.d/pearlpbx-hangupd %{buildroot}%{_initrddir}/
 install -D -m 755  etc/monit.d/pearlpbx-hangupd %buildroot/etc/monit.d/
 
@@ -123,52 +125,13 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 
 %post
 
-ln -sf /etc/NetSDS /etc/PearlPBX
-
-chkconfig pearlpbx-parsequeuelogd on
-chkconfig pearlpbx-hangupd on 
-chkconfig asterisk on 
-chkconfig postgresql on 
-chkconfig httpd on 
-chkconfig monit on 
-
-/etc/init.d/postgresql initdb
-#mv /var/tmp/pg_hba.conf /var/lib/pgsql/data/
-#chown postgres:postgres /var/lib/pgsql/data/pg_hba.conf 
-#
-# Переписать изменение конфига на изменение текста trust/ident.
-
-
-/etc/init.d/postgresql start 
-
-psql -U postgres -f /etc/NetSDS/sql/create_user_asterisk.sql
-psql -U postgres -f /etc/NetSDS/sql/asterisk.sql
-psql -U postgres -f /etc/NetSDS/sql/local_route.sql 
-psql -U asterisk -f /etc/NetSDS/sql/directions_list.sql
-psql -U asterisk -f /etc/NetSDS/sql/directions.sql 
-psql -U asterisk -f /etc/NetSDS/sql/sip_conf.sql 
-psql -U asterisk -f /etc/NetSDS/sql/extensions_conf.sql 
-psql -U asterisk -f /etc/NetSDS/sql/route.sql
-psql -U asterisk -f /etc/NetSDS/sql/cal.sql 
-psql -U asterisk -f /etc/NetSDS/sql/ivr.sql 
-
-mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/ 
-
-/usr/sbin/PearlPBX-gui-passwd.pl admin admin 
-/usr/bin/ulines.pl
-
-mkdir /var/www/pearlpbx/files 
-chown apache:apache /var/www/pearlpbx/files 
-
-mkdir /usr/share/asterisk/sounds/ru/pearlpbx 
-chown apache:apache /usr/share/asterisk/sounds/ru/pearlpbx 
-
 %files
 %defattr(-,root,root,-)
 %doc README* *.txt LICENSE  
 
 %{_initrddir}/pearlpbx-parsequeuelogd
 %{_initrddir}/pearlpbx-hangupd
+%{_initrddir}/PearlPBX
 %config /etc/NetSDS/asterisk/* 
 %config /etc/NetSDS/sql/*
 %config(noreplace) /etc/NetSDS/asterisk-router.conf
