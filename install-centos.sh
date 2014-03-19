@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo "Please install EPEL,RpmForge,PearlPBX repos". 
+exit 2
+
 mkdir -p /var/run/NetSDS
 chmod 777 /var/run/NetSDS
 

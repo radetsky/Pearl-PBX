@@ -1,5 +1,5 @@
 Name: Pearl-PBX
-Version: 1.3
+Version: 1.3.2
 Release: centos6
 
 Summary: Contact-center for SMB written by Alex Radetsky <rad@rad.kiev.ua> 
