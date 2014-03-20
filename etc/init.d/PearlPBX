@@ -36,6 +36,8 @@ chkconfig postgresql off
 chkconfig httpd on
 chkconfig monit on
 /etc/init.d/postgresql initdb
+cp /var/lib/pgsql/data/pg_hba.conf /tmp/pg_hba.conf 
+cat /tmp/pg_hba.conf | sed 's/ident$/trust/' >/var/lib/pgsql/data/pg_hba.conf 
 /etc/init.d/postgresql start
 psql -U postgres -f /etc/NetSDS/sql/create_user_asterisk.sql
 psql -U postgres -f /etc/NetSDS/sql/asterisk.sql
@@ -61,8 +63,9 @@ echo "Installed" >/etc/sysconfig/PearlPBX
 
 
 start() {
-		echo -n "Starting $DESC: $NAME"
+		echo "Starting $DESC: $NAME"
 		/etc/init.d/postgresql start 
+		sleep 3
 		/etc/init.d/asterisk start 
 		/etc/init.d/pearlpbx-hangupd start 
 		/etc/init.d/pearlpbx-parsequeuelogd start 
