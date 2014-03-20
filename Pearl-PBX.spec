@@ -80,7 +80,7 @@ install -d -m 755 %{buildroot}%{_initrddir}
 install -D -m 755  etc/init.d/pearlpbx-parsequeuelogd %{buildroot}%{_initrddir}/ 
 install -D -m 644  etc/monit.d/* %buildroot/etc/monit.d/
 
-install -D -m 755 /etc/init.d/PearlPBX %{buildroot}%{_initrddir}/
+install -D -m 755  etc/init.d/PearlPBX %{buildroot}%{_initrddir}/
 
 install -D -m 755  etc/init.d/pearlpbx-hangupd %{buildroot}%{_initrddir}/
 install -D -m 755  etc/monit.d/pearlpbx-hangupd %buildroot/etc/monit.d/
