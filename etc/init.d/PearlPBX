@@ -63,8 +63,9 @@ echo "Installed" >/etc/sysconfig/PearlPBX
 
 
 start() {
-		echo -n "Starting $DESC: $NAME"
+		echo "Starting $DESC: $NAME"
 		/etc/init.d/postgresql start 
+		sleep 3
 		/etc/init.d/asterisk start 
 		/etc/init.d/pearlpbx-hangupd start 
 		/etc/init.d/pearlpbx-parsequeuelogd start 
