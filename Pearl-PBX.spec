@@ -43,7 +43,8 @@ Requires: perl-File-Tail
 Requires: rpmforge-release
 Requires: epel-release
 Requires: tftp-server
-Requires: sox 
+Requires: sox
+Requires: perl-Data-Simple 
 
 %description
 Web GUI for Asterisk written by Alex Radetsky <rad@rad.kiev.ua>

@@ -1021,7 +1021,7 @@ sub process {
 
         if ( ( $dst_type eq "user" ) or ( $dst_type eq "lmask" ) ) {
             $this->agi->verbose( "Dial SIP/$dst_str", 3 );
-            $res = $this->agi->exec( "Dial", "SIP/$dst_str,120,tT" );
+            $res = $this->agi->exec( "Dial", "SIP/$dst_str,120,mtT" );
             $this->agi->verbose( "result = $res", 3 );
             $dialstatus = $this->agi->get_variable("DIALSTATUS");
             $this->agi->verbose( "DIALSTATUS=" . $dialstatus, 3 );
@@ -1029,7 +1029,7 @@ sub process {
                 exit(0);
             }
             if ( $dialstatus =~ /^BUSY/ ) {
-		$this->agi->exec( "Busy", "5"); 
+		        $this->agi->exec( "Busy", "5"); 
                 $this->agi->exec( "Hangup", "17" );
                 exit(0);
             }
