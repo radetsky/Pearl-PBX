@@ -1,0 +1,111 @@
+#!/usr/bin/env perl 
+#===============================================================================
+#
+#         FILE:  PearlPBX-mail.pl
+#
+#        USAGE:  ./PearlPBX-mail.pl
+#
+#  DESCRIPTION:  Mail about missed call to support@ (see config)
+#
+#      OPTIONS:  ${CALLERID1}, ${CALLERID2} 
+# REQUIREMENTS:  ---
+#         BUGS:  ---
+#        NOTES:  ---
+#       AUTHOR:  Alex Radetsky (Rad), <rad@rad.kiev.ua>
+#      COMPANY:  PearlPBX
+#      VERSION:  1.0
+#      CREATED:  05.09.2014
+#     REVISION:  001
+#===============================================================================
+
+
+
+use 5.8.0;
+use strict;
+use warnings;
+
+$| = 1;
+
+Mail->run(
+    conf_file   => '/etc/PearlPBX/asterisk-router.conf',
+    has_conf    => 1,
+    daemon      => undef,
+    use_pidfile => undef,
+    verbose     => undef,
+    debug       => 1,
+    infinite    => undef
+);
+
+1;
+
+package Mail;
+
+use base 'PearlPBX::IVR';
+use Data::Dumper;
+use NetSDS::Util::String;  
+use MIME::Base64; 
+use NetSDS::Util::DateTime;
+
+
+sub process {
+    my $this = shift;
+
+    unless ( defined( $ARGV[0] ) ) {
+        $this->agi->verbose(
+            "Usage: "
+              . $this->name
+              . ' ${CALLERID(name)} ${CALLERID(num)}',
+            3
+        );
+        exit(-1);
+    }
+    unless ( defined( $ARGV[1] ) ) {
+        $this->agi->verbose(
+            "Usage: "
+              . $this->name
+              . ' ${CALLERID(name)} ${CALLERID(num)}',
+            3
+        );
+        exit(-1);
+    }
+    $this->_mail($ARGV[0], $ARGV[1]); 
+
+    exit(0);
+}
+
+
+sub _mail { 
+
+my ($this, $param1, $param2) = @_; 
+
+my $sendmail   = '/usr/sbin/sendmail';
+my $from       = $this->{conf}->{'email_from'}; 
+my $to         = $this->{conf}->{'email'};
+
+my $subject = 'Пропущенный звонок с номера: ' . $param1 . ' ' . $param2;
+my $body = "С уважением, PearlPBX\n";
+
+#utf8::encode($subject);
+$subject = encode_base64($subject,'');
+$body = encode_base64($body);
+
+open( MAIL, "| $sendmail -t -oi" ) or die("$!");
+
+print MAIL <<EOF;
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: base64
+From: $from
+To: $to
+Subject: =?UTF-8?B?$subject?=
+
+$body
+EOF
+
+close MAIL;
+
+return 1; 
+} 
+
+1; 
+
+
