@@ -1,0 +1,45 @@
+<!-- Отчет "МЦ Академия" --> 
+
+<center><h2>Отчет для МЦ "Академия"</h2></center>
+<form class="well" onSubmit="return academia_submit()">
+    <fieldset>
+        <input id='dateFrom_sum099' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <select name="queues099" id="queues099" class="pearlpbx-list-queues">
+        </select>
+
+        <input type="submit" class="btn btn-primary" value="Получить отчет">
+    </fieldset>
+    </form>
+    <div id="academia_result">
+    </div>
+
+<script type="text/javascript"> 
+
+function academia_submit() { 
+  var dateFrom;
+  var queue; 
+
+  dateFrom = $('#dateFrom_sum099').val();
+  queue = $('select#queues099 option:selected').val();
+  if (queue == false ) { 
+    return false; 
+  } 
+  if (queue == '' ) { 
+    return false; 
+  } 
+
+  $('#academia_result').html("Request sent...");
+
+  $.get("/reports.pl",
+    { "exec-report": "Academia",
+			dateFrom: dateFrom,
+      queue: queue,
+    },function(data)
+    {
+      $('#academia_result').html(data);
+			academia_make_graph(); 
+    }, "html");
+	return false; 
+}
+</script>
+
