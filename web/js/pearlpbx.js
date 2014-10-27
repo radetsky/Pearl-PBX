@@ -2015,8 +2015,8 @@ function pearlpbx_parse_internal_phone ( phone ) {
 		return false; 
 	}
 
-  if (phone.length != 3 ) { 
-		alert ("Введите номер телефона, где количество цифр = 3 !"); 
+  if (phone.length < 3 ) { 
+		alert ("Введите номер телефона, где количество цифр >= 3 !"); 
 		return false; 
 	}
 
