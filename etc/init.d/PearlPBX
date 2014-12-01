@@ -68,12 +68,15 @@ start() {
 		sleep 3
 		/etc/init.d/asterisk start 
 		/etc/init.d/pearlpbx-hangupd start 
-		/etc/init.d/pearlpbx-parsequeuelogd start 
+		/etc/init.d/pearlpbx-parsequeuelogd start
+		/usr/sbin/asterisk -rx "queue show"
+		/etc/init.d/httpd start 
 	  echo "."
 }
 
 stop() { 
 	echo -n "Stopping $DESC: $NAME"
+	/etc/init.d/httpd stop 
 	/etc/init.d/pearlpbx-parsequeuelogd stop 
 	/etc/init.d/pearlpbx-hangupd stop 
 	/etc/init.d/asterisk stop 

@@ -1,15 +1,15 @@
 #!/usr/bin/env perl 
 #===============================================================================
 #
-#         FILE:  PearlPBX-QueueCheck.pl
+#         FILE:  PearlPBX-ChannelCheck.pl
 #
-#        USAGE:  ./PearlPBX-QueueCheck.pl 
+#        USAGE:  ./PearlPBX-ChannelCheck.pl 
 #
-#  DESCRIPTION:  Проверяет указанную очередь и возвращает количество свободных операторов для разговора. 
-#                Сделано для того, что бы проверить наличие свободных операторов в очереди перед тем, как направить туда звонок. 
-#                Для скорейшего решения об обработке звонка надо знать сколько там свободных операторов. До вызова Queue(queue). 
-#
-#      OPTIONS:  QueueName
+#  DESCRIPTION:  Проверяет список активных каналов на принадлежность к пиру по маске 
+#                и принадлежность набранного номера к одному из операторов связи по маске префиксов 
+#                Сделано изначально для БКМ, у которых есть 9 каналов на одного пира, но надо ограничить 
+#                количество исходящих звонков на МТС, КС и Лайф по одному.  
+#      OPTIONS:  Маска канала (eurotel), номер по которому звонит абонент (0504139380)
 #       AUTHOR:  Alex Radetsky (Rad), <rad@rad.kiev.ua>
 #      VERSION:  1.0
 #      CREATED:  27.10.2014 
@@ -22,7 +22,7 @@ use warnings;
 
 $| = 1;
 
-QueueCheck->run(
+ChannelCheck->run(
     conf_file   => '/etc/PearlPBX/asterisk-router.conf',
     has_conf    => 1, 
     daemon      => undef,
@@ -34,7 +34,7 @@ QueueCheck->run(
 
 1;
  
-package QueueCheck; 
+package ChannelCheck; 
 
 use base 'PearlPBX::IVR'; 
 use 5.8.0;
@@ -44,21 +44,41 @@ use warnings;
 use NetSDS::Asterisk::Manager;
 use Data::Dumper;
 
+use constant providers => { 
+  MTS  => '^(050|095|099|066|38050|38066|38095|38099)',
+  KS   => '^(067|068|096|097|099|38067|38068|38096|38097|38098)',
+  Life => '^(093|063|38063|38093)'
+}; 
 
 sub process { 
   my $this = shift; 
 
-  unless ( defined ( $ARGV[0] ) ) { 
-	$this->agi->verbose("Usage: ".$this->{name}." <queuename> ", 3); 
-	   exit(-1);
+  unless ( defined ( $ARGV[0] ) or defined ( $ARGV[1]) ) { 
+	  $this->agi->verbose("Usage: ".$this->{name}." <channel mask> <msisdn> ", 3); 
+	  exit(-1);
   }
-  $this->agi->set_variable ('READYTORECEIVE','0'); 
-  $this->_manager_connect(); 
 
-  $this->_queue_status($ARGV[0]); 
+  $this->agi->set_variable ('BUSYTRUNK','0'); 
+  my $group = $this->_is_need_be_checked($ARGV[1]); 
+  $this->_manager_connect(); 
+  $this->_busytrunk( $ARGV[0], $ARGV[1], $group, $this->_status() ); 
   $this->_logoff(); 
 
   exit(0);
+}
+
+sub _is_need_be_checked { 
+  my ($this, $msisdn) = @_; 
+  my $prov = providers; 
+
+  foreach my $group ( keys %{ $prov }) { 
+    if ($msisdn =~ providers->{$group}) {
+#      warn "Group = $group\n"; 
+      return $group; 
+    }
+  }
+
+  exit(0); 
 }
 
 sub _logoff { 
@@ -66,17 +86,14 @@ sub _logoff {
 
   $this->{manager}->sendcommand(Action => "Logoff"); 
   my $reply = $this->{manager}->receive_answer();
-  unless ( defined($reply) ) {
-      return undef;
-  }
 
 }
 
-sub _queue_status { 
+sub _status { 
   my $this = shift; 
   my $qname = shift; 
 
-  my $sent = $this->{manager}->sendcommand('Action' => 'QueueStatus'); 
+  my $sent = $this->{manager}->sendcommand('Action' => 'Status'); 
   unless ( defined($sent) ) {
       return undef;
   }
@@ -98,28 +115,34 @@ sub _queue_status {
   while (1) {
       $reply  = $this->{manager}->receive_answer();
       $status = $reply->{'Event'};
-      if ( $status =~ /QueueStatusComplete/i ) {
+      if ( $status =~ /StatusComplete/i ) {
           last;
       }
       push @replies, $reply;
   }
 
-  my $ready = 0; 
+  return @replies; 
 
-  foreach my $r (@replies) { 
-    if ($r->{'Event'} eq 'QueueMember') { 
-      if ($r->{'Queue'} eq $qname ) { # Наша очередь 
-        if ($r->{'Status'} eq '1') { 
-          if ($r->{'Paused'} eq '0') { 
-            $ready = $ready + 1; 
-          }
+}
+
+sub _busytrunk { 
+  my ($this, $channelmask, $msisdn, $provider, @events) = @_; 
+
+  my $busytrunk = 0; 
+
+#  warn Dumper \@events; 
+
+  foreach my $e (@events) { 
+    if ($e->{'Event'} eq 'Status') { 
+      if ($e->{'Channel'} =~ /$channelmask/ ) { 
+        if ($e->{'Extension'} =~ providers->{$provider}) { 
+          $this->agi->set_variable("BUSYTRUNK","1"); 
+          return 1; 
         }
       } 
     }  
   }
-  $this->agi->set_variable("READYTORECEIVE",$ready); 
-  $this->agi->verbose("READYTORECEIVE=$ready",3); 
-
+  return undef; 
 }
 
 sub _manager_connect { 
