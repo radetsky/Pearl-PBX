@@ -1,0 +1,66 @@
+<!-- Время входящих разговоров операторов в группе --> 
+
+<center><h2>Очередь/группа, операторы, время разговоров. </h2></center>
+<form class="well" onSubmit="return sum_calltime_operators_submit()">
+    <fieldset>
+        <input id='dateFrom_sum090' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeFrom_sum090' class="input-mini" type="text" value="00:00" />
+                to
+        <input id='dateTo_sum090' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='timeTo_sum090' class="input-mini" type="text" value="23:59" />
+
+        <select name="queues_sum090" id="queues_sum090" class="pearlpbx-list-queues">
+        </select>
+
+        <input type="submit" class="btn btn-primary" value="Поиск">
+    </fieldset>
+    </form>
+    <div id="sum_calltime_operators_result">
+    </div>
+
+<script type="text/javascript"> 
+
+function sum_calltime_operators_submit() { 
+  var dateFrom;
+  var timeFrom;
+  var dateTo;
+  var timeTo;
+  var parsed;
+  var queue; 
+
+  dateFrom = $('#dateFrom_sum090').val();
+  dateTo = $('#dateTo_sum090').val();
+  timeFrom = $('#timeFrom_sum090').val();
+  timeTo = $('#timeTo_sum090').val();
+
+  queue = $('select#queues_sum090 option:selected').val();
+  if (queue == false ) { 
+    return false; 
+  } 
+  if (queue == '' ) { 
+    return false; 
+  } 
+
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
+  if (parsed == false ) {
+    return false;
+  }
+
+  $('#sum_calltime_operators_result').html("Request sent...");
+
+  $.get("/reports.pl",
+    { "exec-report": "SumCalltimeByOperatorsInGroup",
+			dateFrom: dateFrom,
+      timeFrom: timeFrom,
+      dateTo: dateTo,
+      timeTo: timeTo,
+      queue: queue,
+    },function(data)
+    {
+      $('#sum_calltime_operators_result').html(data);
+			sum_calltime_operators_make_graph(); 
+    }, "html");
+	return false; 
+}
+</script>
+

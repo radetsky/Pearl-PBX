@@ -7,7 +7,7 @@
 #
 #  DESCRIPTION:  This software parses /var/log/asterisk/queue.log and save results
 #                to PostgreSQL.
-#								 Version 2.0 - based on NetSDS::App now. Patched by rad@.
+#				 Version 2.0 - based on NetSDS::App now. Patched by rad@.
 #
 #      OPTIONS:  tail callback mailnotif --nodaemon --verbose , etc.
 # REQUIREMENTS:  NetSDS, PearlPBX 
@@ -20,6 +20,7 @@
 #      CREATED:  19/12/2010
 #     MODIFIED:  12/12/2012 :) CAUSE: Add insert into VoiceInformer feature in case of ABANDON and tail
 #     MODIFIED:  15/07/2013 Added e-mail notification 
+#     MODIFIED:  05/12/2014 Added TRANSFER exit code 
 #===============================================================================
 
 =item queue_log
@@ -101,9 +102,10 @@ sub start {
     $this->mk_accessors('dbh');
     $this->_db_connect();
 
-	my $tail = undef; 
-	GetOptions ('tail!' => \$tail);
-    unless ( defined ( $tail ) ) { 
+	  my $tail = undef; 
+   	GetOptions ('tail!' => \$tail);
+    
+		unless ( defined ( $tail ) ) { 
         $this->{'tail'} = 1; 
         $this->log('info','Tail mode enabled.'); 
     } else {
@@ -371,8 +373,14 @@ sub process {
             $this->{'st_complete'}
               ->execute( $holdtime, $calltime, $pos, $event, $agent, $callid );
         }
+        elsif ( $event eq 'TRANSFER') { 
+            # The call was transferred to another extension.  
+            my ( $exten, $context, $holdtime, $calltime, $position ) = @par; 
+            $holdtime += 0; $calltime +=0; $position +=0;  
+            my $status = 'TRANSFER->'.$exten.'@'.$context; 
+            $this->{'st_complete'} -> execute ($holdtime, $calltime, $position, $status, $agent, $callid); 
+        }
         elsif ( $event eq 'CONNECT' ) {
-
             # The caller was connected to an agent.
             my $holdtime = $par[0] + 0;
             $this->{'st_connect'}->execute( $holdtime, $agent, $callid );

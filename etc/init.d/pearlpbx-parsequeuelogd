@@ -18,7 +18,7 @@
 PATH=/opt/NetSDS/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 NAME="PearlPBX-parsequeuelogd "
 DAEMON=/usr/sbin/PearlPBX-parsequeuelogd.pl  
-DESC="PearlPBX Queue Log parser v.2.0."
+DESC="PearlPBX Queue Log parser v.2.1."
 PIDFILE="/var/run/NetSDS/PearlPBX-parsequeuelogd.pid"
 UMASK=007 # by default
 #MAXFILES=1024 # (the system default)
