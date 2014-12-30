@@ -297,15 +297,25 @@ function pearlpbx_monitor_show_queue_status (msgs) {
 								+"<td>"+queuemembers[i].penalty+"</td>"
 								+"<td>"+queuemembers[i].callstaken+"</td>"
 								+"<td>"+queuemembers[i].lastcall+"</td>"
-								+"<td>"+queuemembers[i].status+"</td>"
-								+"<td>"+queuemembers[i].paused+"</td></tr>"; 
+								+"<td>"+queue_member_status(queuemembers[i].status)+"</td>"
+								+"<td>"+queue_member_paused(queuemembers[i].paused)+"</td></tr>"; 
 		//alert(table_string);
 		$('#pearlpbx_table_queue_details tbody').append(table_string); 
 	}
 
 
 }
+function queue_member_status (Status) { 
+	if (Status == 1) { return "<font color='green'>Not In Use</font>"; }
+	if (Status == 2) { return "<font color='blue'>In Use</font>"; }
+	if (Status == 5) { return "<font color='red'>Unavailable</font>"; }
+	if (Status == 6) { return "<font color='green'>Ringing</font>"; } 
+}
 
+function queue_member_paused ( Paused ) { 
+	if (Paused == 0) { return "<font color='green'>Online</font>"; }
+	if (Paused == 1) { return "<font color='red'>Paused</font>"; }
+}
 function pearlpbx_show_queue_details (QueueName) {
 	if (QueueName == "") { 
 		QueueName = $('#pearlpbx_queue_details_name').text(); 
