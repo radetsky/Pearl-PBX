@@ -243,7 +243,8 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 	var notinuse = new Array();
 	var paused = new Array();
 	var unavailable = new Array(); 
-
+  var readyagents = new Array(); 
+	var notreadyagents = new Array(); 
 
 	for (var i=1; i < msgs.length; i++) { 
 		var queue = new Object(); 
@@ -256,7 +257,9 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 			queue.notinuse = 0; 
 			queue.ringing   = 0;
 			queue.unavailable = 0; 
-			queue.paused = 0; 
+			queue.paused = 0;
+			queue.ready = 0; 
+			queue.notready = 0; 
 			queues.push(queue);
 		}
 	} 
@@ -275,23 +278,34 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 
 			if ( status == 2 ) { 
 				queue.inuse = queue.inuse + 1; 
+				queue.notready = queue.notready + 1;
 				inuse[name] = 1; 
+				notreadyagents[name] = 1; 
 			}
-			if ( status == 1 ) { 
-				queue.notinuse = queue.notinuse + 1; 
-				notinuse[name] = 1; 
+			if ( status == 1 ) {
+				if ( paused == 0 ) { 
+					queue.notinuse = queue.notinuse + 1; 
+					queue.ready = queue.ready + 1; 
+					notinuse[name] = 1;
+					readyagents[name] = 1; 
+				} else { 
+					queue.paused = queue.paused + 1; 
+					queue.notready = queue.notready + 1; 
+					paused[name] = 1; 
+					notreadyagents[name] = 1;
+					}
 			}
 			if ( status == 6 ) { 
-				queue.ringing = queue.ringing + 1; 
+				queue.ringing = queue.ringing + 1;
+				queue.ready = queue.ready + 1; 
 				notinuse[name] = 1; 
+				readyagents[name] = 1; 
 			}
 			if ( status == 5 ) { 
 				queue.unavailable = queue.unavailable + 1; 
+				queue.notready = queue.notready + 1; 
 				unavailable[name] = 1; 
-			}
-			if ( paused == 1 ) { 
-				queue.paused = queue.paused + 1;
-				paused[name] = 1; 
+				notreadyagents[name] = 1; 
 			}
 		}
 	}
@@ -302,9 +316,8 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 								+"<td>"+queues[i].calls+"</td>"
 								+"<td>"+queues[i].inuse+"</td>"
 								+"<td>"+queues[i].notinuse+"</td>"
-								+"<td>"+queues[i].ringing+"</td>"
-								+"<td>"+queues[i].paused+"</td>"
-								+"<td>"+queues[i].unavailable+"</td></tr>"; 
+								+"<td>"+queues[i].ready+"</td>"
+								+"<td>"+queues[i].notready+"</td></tr>"; 
 		//alert(table_string);
 		$('#pearlpbx_monitor_queue tbody').append(table_string); 
 	}
@@ -2015,8 +2028,8 @@ function pearlpbx_parse_internal_phone ( phone ) {
 		return false; 
 	}
 
-  if (phone.length < 3 ) { 
-		alert ("Введите номер телефона, где количество цифр >= 3 !"); 
+  if (phone.length != 3 ) { 
+		alert ("Введите номер телефона, где количество цифр = 3 !"); 
 		return false; 
 	}
 
