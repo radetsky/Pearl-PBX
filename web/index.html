@@ -1459,8 +1459,60 @@ function cdrfilter_submit () {
  </div>
 </div>
 
-
 <!-- Конец DIV-ы для модулей --> 
+
+<div class="modal fade" id="pearlpbx_queue_details" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
+  <div id="pearlpbx_queue_details_name" style="display: none;"></div>
+  <div class="modal-header">
+    <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_show_queue_details()'><span class='icon icon-refresh icon-white'></span></a>
+    <h3>Queue status</h3>
+  </div>
+  <div class="modal-body">
+  
+  <table class="table table-bordered">
+    <tr>  <th>Name</th>      <td id="qdx_name"></td></tr>
+    <tr>  <th>Calls</th>     <td id="qdx_calls"></td></tr>
+    <tr>  <th>Max</th>       <td id="qdx_max"></td></tr>
+    <tr>  <th>Strategy</th>  <td id="qdx_strategy"></td></tr>
+    <tr>  <th>Holdtime</th>  <td id="qdx_holdtime"></td></tr>
+    <tr>  <th>TalkTime</th>  <td id="qdx_talktime"></td></tr>
+    <tr>  <th>Completed</th> <td id="qdx_completed"></td></tr>
+    <tr>  <th>Abandoned</th> <td id="qdx_abandoned"></td></tr>
+    <tr>  <th>ServiceLevel</th> <td id="qdx_servicelevel"></td></tr>
+  </table>
+
+    <table class="table table-bordered" id="pearlpbx_table_queue_entries">
+      <thead>
+        <tr>
+          <th>Position</th>
+          <th>Caller ID</th>
+          <th>Wait</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+
+    <table class="table table-bordered" id="pearlpbx_table_queue_details">
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th>Penalty</th>
+          <th>Calls Taken</th>
+          <th>Last Call</th>
+          <th>Status</th>
+          <th>Paused</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+    
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn btn-primary" data-dismiss="modal">Close</a>
+  </div>
+</div>
 
 
 </body>

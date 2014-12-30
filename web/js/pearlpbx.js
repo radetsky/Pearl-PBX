@@ -216,6 +216,115 @@ function pearlpbx_monitor_get_parkedcalls () {
 	}
 }
 
+function pearlpbx_monitor_show_queue_status (msgs) { 
+	var QueueName = $('#pearlpbx_queue_details_name').text(); 
+	var queue = new Object(); 
+	var queuemembers = new Array(); 
+	var qentries = new Array(); 
+
+   /*	alert('QueueName='+QueueName);  */ 
+	$('#pearlpbx_table_queue_details tbody').empty();
+	$('#pearlpbx_table_queue_entries tbody').empty();
+
+	if (msgs[0].headers['response'] != 'Success') { 
+		if ( msgs[0].headers['response'] == 'Error') { 
+			if ( msgs[0].headers['message'] == 'Authentication Required') { 
+				pearlpbx_monitor_connected = false; 
+				pearlpbx_monitor_connect (pearlpbx_show_queue_details(QueueName)); 
+			}
+			if ( msgs[0].headers['message'] == 'Permission denied') { 
+				pearlpbx_monitor_connected = false;
+				pearlpbx_monitor_connect (pearlpbx_show_queue_details(QueueName));
+			}
+		}
+
+		$('#pearlpbx_table_queue_details tbody').append("Can't get info: " + msgs[0].headers['message']); 
+		return;		
+	}
+
+	for (var i=1; i < msgs.length; i++) { 
+		if ( msgs[i].headers['event'] == 'QueueParams') { 
+			if ( msgs[i].headers['queue'] == QueueName ) { 
+				$('#qdx_name').html(msgs[i].headers['queue']);
+				$('#qdx_calls').html(msgs[i].headers['calls']); 
+				$('#qdx_max').html(msgs[i].headers['max']);
+				$('#qdx_strategy').html(msgs[i].headers['strategy']); 
+				$('#qdx_holdtime').html(msgs[i].headers['holdtime']); 
+				$('#qdx_talktime').html(msgs[i].headers['talktime']); 
+				$('#qdx_completed').html(msgs[i].headers['completed']); 
+				$('#qdx_abandoned').html(msgs[i].headers['abandoned']); 
+				$('#qdx_servicelevel').html(msgs[i].headers['servicelevel']); 
+			}
+		}
+	} 
+
+
+	for (var i=1; i < msgs.length; i++) { 
+		var queuemember = new Object(); 		
+		var queueentry = new Object(); 
+		if ( msgs[i].headers['event'] == 'QueueMember') { 
+			if (msgs[i].headers['queue'] == QueueName ) { 
+				queuemember.name = msgs[i].headers['name'];
+				queuemember.penalty = msgs[i].headers['penalty']; 
+				queuemember.status = msgs[i].headers['status']; 
+				queuemember.paused = msgs[i].headers['paused']; 
+				queuemember.callstaken = msgs[i].headers['callstaken']; 
+				queuemember.lastcall = msgs[i].headers['lastcall']; 
+				queuemembers.push(queuemember);
+			} 
+		}
+		if ( msgs[i].headers['event'] == 'QueueEntry') {
+			if (msgs[i].headers['queue'] == QueueName ) { 
+				queueentry.position = msgs[i].headers['position']; 
+				queueentry.callerid = msgs[i].headers['calleridnum']; 
+				queueentry.wait = msgs[i].headers['wait']; 
+				qentries.push(queueentry); 
+			}
+		}	
+	}
+	for (var i=0; i < qentries.length; i++) { 
+		var table_string = "<tr>" 
+			+"<td>"+qentries[i].position+"</td>"
+			+"<td>"+qentries[i].callerid+"</td>"
+			+"<td>"+qentries[i].wait+"</td></tr>"; 
+		$('#pearlpbx_table_queue_entries tbody').append(table_string);
+	}
+
+	//alert("queues length: "+queues.length); 
+	for (var i=0; i < queuemembers.length; i++ ) {  
+		var table_string = "<tr>"
+								+"<td>"+queuemembers[i].name+"</td>"
+								+"<td>"+queuemembers[i].penalty+"</td>"
+								+"<td>"+queuemembers[i].callstaken+"</td>"
+								+"<td>"+queuemembers[i].lastcall+"</td>"
+								+"<td>"+queuemembers[i].status+"</td>"
+								+"<td>"+queuemembers[i].paused+"</td></tr>"; 
+		//alert(table_string);
+		$('#pearlpbx_table_queue_details tbody').append(table_string); 
+	}
+
+
+}
+
+function pearlpbx_show_queue_details (QueueName) {
+	if (QueueName == "") { 
+		QueueName = $('#pearlpbx_queue_details_name').text(); 
+	}
+
+	$('#pearlpbx_queue_details_name').text(QueueName); 
+
+	if ( pearlpbx_monitor_connected == false ) {
+		pearlpbx_monitor_connect (pearlpbx_show_queue_details(QueueName)); 
+	} else { 
+		astmanEngine.sendRequest('action=QueueStatus', 
+			pearlpbx_monitor_show_queue_status,
+			pearlpbx_monitor_fake_callback
+		); 
+	}
+
+}
+
+
 function pearlpbx_monitor_set_queue_status(msgs) { 
 
 	$('#pearlpbx_monitor_queue tbody').empty();
@@ -243,7 +352,7 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 	var notinuse = new Array();
 	var paused = new Array();
 	var unavailable = new Array(); 
-  var readyagents = new Array(); 
+    var readyagents = new Array(); 
 	var notreadyagents = new Array(); 
 
 	for (var i=1; i < msgs.length; i++) { 
@@ -312,7 +421,7 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 
 	//alert("queues length: "+queues.length); 
 	for (var i=0; i < queues.length; i++ ) {  
-		var table_string = "<tr><td>"+queues[i].name+"</td>"
+		var table_string = "<tr><td><a href=\"#pearlpbx_queue_details\" data-toggle=\"modal\" onClick=\"pearlpbx_show_queue_details('"+queues[i].name+"')\">"+queues[i].name+"</a></td>"
 								+"<td>"+queues[i].calls+"</td>"
 								+"<td>"+queues[i].inuse+"</td>"
 								+"<td>"+queues[i].notinuse+"</td>"
@@ -342,6 +451,7 @@ function pearlpbx_monitor_set_queue_status(msgs) {
 	pearlpbx_monitor_get_parkedcalls();
 
 }
+
 function pearlpbx_monitor_get_queue_status() { 
 	if ( pearlpbx_monitor_connected == false ) {
 		pearlpbx_monitor_connect (pearlpbx_monitor_get_queue_status); 
