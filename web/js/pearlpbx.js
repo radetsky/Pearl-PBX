@@ -2144,12 +2144,12 @@ $("#jquery_jplayer_1").jPlayer({
 
 function pearlpbx_parse_internal_phone ( phone ) { 
 	if (phone == '') { 
-		alert ("Введите 3 цифры номер телефона для поиска!"); 
+		alert ("Введите хотя бы 3 цифры номер телефона для поиска!"); 
 		return false; 
 	}
 
-  if (phone.length != 3 ) { 
-		alert ("Введите номер телефона, где количество цифр = 3 !"); 
+  if (phone.length < 3 ) { 
+		alert ("Введите номер телефона, где количество цифр >= 3 !"); 
 		return false; 
 	}
 
