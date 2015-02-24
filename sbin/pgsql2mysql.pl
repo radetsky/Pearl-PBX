@@ -24,9 +24,9 @@ use constant PgDSN => 'dbi:Pg:dbname=asterisk;host=localhost';
 use constant PgUser => 'asterisk'; 
 use constant PgPass => 'supersecret'; 
 
-use constant MyDSN => 'DBI:mysql:database=cityNE;host=89.184.70.76';
-use constant MyUser => 'u_cityofficeusr1'; 
-use constant MyPass => 'Zfnch15C3D1aAp'; 
+use constant MyDSN => 'DBI:mysql:database=xxx;host=x.x.x.x';
+use constant MyUser => 'xxxx'; 
+use constant MyPass => 'xxxxx'; 
 
 use constant PgSQL1 => "select * from cdr";
 use constant PgSQL2 => "select * from queue_log"; 

@@ -2,6 +2,8 @@
 -- Name: get_dial_route5(character varying, character varying, integer); Type: FUNCTION; Schema: routing; Owner: asterisk
 --
 
+set search_path to routing;
+
 CREATE FUNCTION get_dial_route5(exten character varying, current_try integer) RETURNS TABLE(dst_str character varying, dst_type character varying, try integer)
     LANGUAGE plpgsql
     AS $_$
@@ -126,4 +128,6 @@ $_$;
 
 
 ALTER FUNCTION routing.get_dial_route5(exten character varying, current_try integer) OWNER TO asterisk;
+
+set search_path to public;
 

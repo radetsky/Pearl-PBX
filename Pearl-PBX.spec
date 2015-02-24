@@ -1,5 +1,5 @@
 Name: Pearl-PBX
-Version: 1.3.2
+Version: 1.3.3
 Release: centos6
 
 Summary: Contact-center for SMB written by Alex Radetsky <rad@rad.kiev.ua> 
@@ -44,7 +44,7 @@ Requires: rpmforge-release
 Requires: epel-release
 Requires: tftp-server
 Requires: sox
-Requires: perl-Data-Simple 
+Requires: perl-Date-Simple 
 
 %description
 Web GUI for Asterisk written by Alex Radetsky <rad@rad.kiev.ua>
@@ -157,6 +157,10 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/sbin/PearlPBX-recd.pl
 /usr/sbin/missedcallnotification.pl
 /usr/sbin/removedublicatefromqueuelog.pl
+/usr/sbin/PearlPBX-callbackd.pl
+/usr/sbin/csv2integration.pl
+/usr/sbin/csv2sip_peers.pl
+/usr/sbin/pgsql2mysql.pl
 /usr/share/asterisk/sounds/en/pearlpbx-nomorelines.alaw
 /usr/share/asterisk/sounds/en/pearlpbx-nomorelines.mp3
 /usr/share/asterisk/sounds/en/pearlpbx-nomorelines.wav
@@ -233,6 +237,9 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/share/asterisk/agi-bin/NetSDS-AGI-integration.pl
 /usr/share/asterisk/agi-bin/NetSDS-route.pl
 /usr/share/asterisk/agi-bin/PearlPBX-addmissed.pl
+/usr/share/asterisk/agi-bin/PearlPBX-ChannelCheck.pl
+/usr/share/asterisk/agi-bin/PearlPBX-QueueCheck.pl
+/usr/share/asterisk/agi-bin/PearlPBX-mail
 /var/tmp/pg_hba.conf
 /var/lib/tftpboot/lang/spa502g_en.xml
 /var/lib/tftpboot/lang/spa502g_ru.xml
@@ -431,8 +438,20 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/share/perl5/PearlPBX/Report/CityComSumReceived.pm
 /usr/share/perl5/PearlPBX/Report/CityComSumSent.pm
 /usr/share/perl5/PearlPBX/Report/CityComTalks.pm
+/usr/share/pearlpbx/reports/summary/090-sum-calltime-operators-in-groups.html
+/usr/share/pearlpbx/reports/summary/099-academia.html
+/usr/share/pearlpbx/reports/templates/SumCalltimeByOperatorsInGroup.html
+/usr/share/pearlpbx/reports/templates/callbacklist.html
+/usr/share/pearlpbx/reports/templates/Academia.html
+/usr/share/perl5/PearlPBX/Report/Academia.pm
+/usr/share/perl5/PearlPBX/Report/SumCalltimeByOperatorsInGroup.pm
+/usr/share/perl5/PearlPBX/Report/callbacklist.pm
 
 %changelog
+* Mon Jan 19 2015 Alex Radetsky <rad@rad.kiev.ua> 1.3.3-centos6
+- Upgrade to PearPBX 1.3.3 
+- Many new features, agis, sbin, web and bugs 
+
 * Fri Dec 13 2013 Alex Radetsky <rad@rad.kiev.ua> 1.2-centos6
 - Upgrade to PearlPBX 1.2 
 - Many new features, fixes and bugs 
