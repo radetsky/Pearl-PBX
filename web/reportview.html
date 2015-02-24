@@ -86,59 +86,19 @@
         <div class="span3">
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
-              <li class="nav-header">Настройки</li>
-              <li>
-								<a href="javascript:void(0)" onClick="pearlpbx_show('#sip-connections')">SIP-подключения</a></li>
-							<li><a href="javascript:void(0)" onClick="pearlpbx_show_queues()">Группы/Очереди</a><li>
-              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#trunkgroups')">Транкгруппы</a></li>
-              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#directions')">Направления</a></li>
-              <li><a href="javascript:void(0)" onClick="pearlpbx_reload_permissions(); pearlpbx_show('#pearlpbx_permissions');">Права доступа</a></li>
-              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#pearlpbx_set_callerid')">Установка номеров А</a></li>
-              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#pearlpbx_convert_extension')">Установка номеров Б</a></li>
-              
-              
               <li class="nav-header">Отчеты</li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-general')">Общие</a></li>
               <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#cdr-filter')">CDR-фильтр</a></li>
 							<li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-summary')">Количественные</a></li>
 
-              <li class="nav-header">Модули</li>
-              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-admin-ivr')"> Визуальное управление IVR </a></li>
-              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-katyusha')"> 
-              Автодозвон </a></li>
-              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-konference')"> 
-              Конференц-связь </a></li>
-              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-backup')"> 
-              Резервное копирование </a></li>
-                            
-
               <li class='nav-header'> Пользователь </li>
-              <li> <button class='btn btn-info'>Мой профиль</button>
               <li> <button class='btn btn-danger' onClick='pearlpbx_logout()'>Закончить сессию</button>
             </ul>
           </div><!--/.well -->   
-
-        <div class="span3">
-              <h2>Проверка маршрутизации</h2>
-              <form>
-              <label>Канал А</label>
-              <select id="check_routing_channel" name="check_routing_channel">
-              </select>
-              <label>Номер Б</label>
-              <input id="check_routing_destination" type="text" placeholder="Введите номер">
-              <p><a class="btn btn-success" href="#" onClick="pearlpbx_check_routing();">Проверить</a></p>
-            </form>
-            </div><!--/span-->
-         </div><!--/span-->
-
+</div>
 				<!-- Здесь начинается div с "телом" кредита :)-->
 
         <div class="span9" id="pearl-pbx-main-container">
-          <div class="hero-unit">
-            <h1>Привет !</h1>
-            <p>Это главная страница Radetsky Pearl PBX.
-            <a class="btn btn-primary btn-large" href='http://www.pearlpbx.com'>Learn more &raquo;</a></p>
-          </div>
           <div class="row-fluid">
             <div class="span4">
               <h2 style='float: left;'>Краткая сводка</h2>
@@ -185,8 +145,9 @@
                     <th>Wait</th>
                     <th>Use</th>
                     <th>Not</th>
-                    <th>Ready</th>
-                    <th>N/R</th>
+                    <th>Ring</th>
+                    <th>Paused</th>
+                    <th>n/a</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1168,11 +1129,8 @@ function cdrfilter_submit () {
           <th>Номер А</th>
           <th>Дата и время потерянного звонка</th>
           <th>Время ожидания на линии</th>
-          <th>Дата и время повторного звонка</th>
+          <th>Дата и время принятого звонка</th>
           <th>Время ожидания на линии</th>
-          <th>Дата и время исходящего звонка</th>
-          <th>Оператор</th>
-          <th>Время разговора</th>
         </tr>
       </thead>
 
@@ -1462,60 +1420,8 @@ function cdrfilter_submit () {
  </div>
 </div>
 
+
 <!-- Конец DIV-ы для модулей --> 
-
-<div class="modal fade" id="pearlpbx_queue_details" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
-  <div id="pearlpbx_queue_details_name" style="display: none;"></div>
-  <div class="modal-header">
-    <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_show_queue_details()'><span class='icon icon-refresh icon-white'></span></a>
-    <h3>Queue status</h3>
-  </div>
-  <div class="modal-body">
-  
-  <table class="table table-bordered">
-    <tr>  <th>Name</th>      <td id="qdx_name"></td></tr>
-    <tr>  <th>Calls</th>     <td id="qdx_calls"></td></tr>
-    <tr>  <th>Max</th>       <td id="qdx_max"></td></tr>
-    <tr>  <th>Strategy</th>  <td id="qdx_strategy"></td></tr>
-    <tr>  <th>Holdtime</th>  <td id="qdx_holdtime"></td></tr>
-    <tr>  <th>TalkTime</th>  <td id="qdx_talktime"></td></tr>
-    <tr>  <th>Completed</th> <td id="qdx_completed"></td></tr>
-    <tr>  <th>Abandoned</th> <td id="qdx_abandoned"></td></tr>
-    <tr>  <th>ServiceLevel</th> <td id="qdx_servicelevel"></td></tr>
-  </table>
-
-    <table class="table table-bordered" id="pearlpbx_table_queue_entries">
-      <thead>
-        <tr>
-          <th>Position</th>
-          <th>Caller ID</th>
-          <th>Wait</th>
-        </tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
-
-    <table class="table table-bordered" id="pearlpbx_table_queue_details">
-      <thead>
-        <tr>
-          <th>Member</th>
-          <th>Penalty</th>
-          <th>Calls Taken</th>
-          <th>Last Call</th>
-          <th>Status</th>
-          <th>Paused</th>
-        </tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
-    
-  </div>
-  <div class="modal-footer">
-    <a href="#" class="btn btn-primary" data-dismiss="modal">Close</a>
-  </div>
-</div>
 
 
 </body>

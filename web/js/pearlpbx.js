@@ -989,6 +989,9 @@ function pearlpbx_load_lost_calls (queuename, sincedatetime,tilldatetime) {
 				+"<td>"+this['holdtime']+"</td>"
 				+"<td>"+this['lucky']+"</td>"
 				+"<td>"+this['luckyhold']+"</td>"
+				+"<td>"+this['outtime']+"</td>"
+				+"<td>"+this['source']+"</td>"
+				+"<td>"+this['billsec']+"</td>"
 				+"</tr>");
 		}); 		
 	} );	

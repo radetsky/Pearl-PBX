@@ -80,9 +80,12 @@ sub report {
     my $sincedatetime = $this->filldatetime( $params->{'dateFrom'}, $params->{'timeFrom'} );
     my $tilldatetime  = $this->filldatetime( $params->{'dateTo'},  $params->{'timeTo'} );
 
-    my $sql =
-"select count(queuename) as s,queuename from queue_log where event in ('ABANDON','EXITWITHKEY','EXITWITHTIMEOUT') 
-    and time between ? and ? group by queuename order by count(queuename) desc"; 
+#    my $sql =
+#"select count(queuename) as s,queuename from queue_log where event in ('ABANDON','EXITWITHKEY','EXITWITHTIMEOUT') 
+#    and time between ? and ? group by queuename order by count(queuename) desc"; 
+    my $sql = "select count(queue) as s,queue as queuename from public.queue_parsed 
+      where time between ? and ? and success=0 group by queue order by count(queue) desc"; 
+
     my $sth = $this->{dbh}->prepare($sql);
     eval { $sth->execute( $sincedatetime, $tilldatetime ); };
     if ($@) {
