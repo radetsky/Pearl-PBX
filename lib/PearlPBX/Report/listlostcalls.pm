@@ -67,7 +67,7 @@ sub report {
         and callerid=? and success=1 and time between ? and ? order by time desc limit 1"; 
 
     my $sql_operator_redial = "select calldate, billsec, src from public.cdr where dst=? 
-        and calldate between ? and ? and disposition = 'ANSWER' order by calldate limit 1"; 
+        and calldate between ? and ? and disposition = 'ANSWERED' order by calldate limit 1"; 
 
     my $sth = $this->{dbh}->prepare($sql);
 
