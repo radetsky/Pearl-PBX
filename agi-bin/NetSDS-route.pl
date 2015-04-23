@@ -42,6 +42,8 @@ use Data::Dumper;
 use Asterisk::AGI;
 use File::Path;
 use NetSDS::Asterisk::Manager;
+use NetSDS::Util::Translit qw/trans_cyr_lat/; 
+use NetSDS::Util::String qw/str_trim/; 
 
 sub start {
     my $this = shift;
@@ -244,6 +246,8 @@ sub _get_callerid {
         }
 
         $this->agi->exec( "Set", "CALLERID(all)=$callerid" );
+        $this->{callerid_num} = $callerid; 
+
     }
     else {
         unless ( defined($set_own) ) {
@@ -253,6 +257,7 @@ sub _get_callerid {
             $callerid = $this->_cut_the_plus($callerid);
             $callerid = $this->_cut_local_callerid($callerid);
             $this->agi->exec( "Set", "CALLERID(all)=$callerid" );
+            $this->{callerid_num} = $callerid; 
         }
         $this->agi->verbose( "$peername does not change own CallerID", 3 );
         $this->log( "info", "$peername does not change own CallerID" );
@@ -505,7 +510,9 @@ sub _init_mixmonitor {
     mkpath($directory);
 
     if ( $this->{'exten'} > 0 ) {
-        $this->agi->exec( "MixMonitor", "$filename" );
+	if ($this->{conf}->{'mixmonitor'} =~ /yes/) { 
+	        $this->agi->exec( "MixMonitor", "$filename" );
+	}
     }
     else {
         $this->agi->verbose(
@@ -804,17 +811,16 @@ sub _init_uline {
     my $caller_name = $this->_get_callername($callerid_num);
     unless ( defined($caller_name) ) {
 
-        $this->agi->exec( "Set", "CALLERID(name)=LINE $uline $callerid_num" );
-        $this->log( "info", "CALLERID(name)=LINE $uline $callerid_num" );
+        $this->agi->exec( "Set", "CALLERID(name)=$callerid_num" );
+        $this->log( "info", "CALLERID(name)=$callerid_num" );
+	    $this->{'callerid_name'} = "$callerid_num"; 
 
     }
     else {
 
-        $this->agi->exec( "Set",
-            "CALLERID(name)=LINE $uline $caller_name $callerid_num" );
-        $this->log( "info",
-            "CALLERID(name)=LINE $uline $caller_name $callerid_num" );
-
+        $this->agi->exec( "Set", "CALLERID(name)=$caller_name" );
+             $this->log( "info", "CALLERID(name)=$caller_name" );
+    	$this->{'callerid_name'} = "$caller_name"; 
     }
 
     $sth = $this->dbh->prepare(
@@ -837,6 +843,25 @@ sub _init_uline {
     $this->_add_new_recording( $callerid_num, $cdr_start, $uline );
 
 }
+
+sub _get_term { 
+    my ( $this, $name ) = @_; 
+    my $sql = "select a.name, b.teletype from public.sip_peers a, integration.workplaces b where a.name=? and a.id=b.sip_id"; 
+    my $sth = $this->dbh->prepare($sql); 
+    eval { $sth->execute ($name); }; 
+    if ($@) { 
+	$this->agi->verbose( $this->dbh->errstr ); 
+	exit(-1); 
+    }
+    my $res         = $sth->fetchrow_hashref;
+    return $res->{'teletype'}; 
+}
+sub _translit_callerid_name { 
+    my $this = shift; 
+
+    $this->agi->exec ("Set","CALLERID(name)=".trans_cyr_lat($this->{'callerid_name'},'ru')); 
+
+} 
 
 sub _get_callername {
     my ( $this, $callerid ) = @_;
@@ -946,6 +971,19 @@ sub _get_status {
     return @replies;
 }
 
+sub _send_message { 
+    my ($this, $from, $dst, $text) = @_; 
+
+    $this->agi->exec("Set","MESSAGE(body)=$text"); 
+    $this->agi->exec("MessageSend","sip:$dst,$from"); 
+    
+}
+
+sub _queue_message { 
+    my ($this, $from, $dst, $text) = @_; 
+    $this->agi->exec("System","/usr/local/bin/astqueue.sh -SRC '".$from."' -DST '".$dst."' -MSG '".$text."'");
+}
+
 sub process {
     my $this = shift;
 
@@ -1020,8 +1058,12 @@ sub process {
         my $res = undef;
 
         if ( ( $dst_type eq "user" ) or ( $dst_type eq "lmask" ) ) {
+            my $terminal = $this->_get_term($dst_str); 
+    	    if ($terminal =~ /GrandStreamGXP1200/) { 
+        		$this->_translit_callerid_name(); 
+    	    }
             $this->agi->verbose( "Dial SIP/$dst_str", 3 );
-            $res = $this->agi->exec( "Dial", "SIP/$dst_str,120,mtT" );
+            $res = $this->agi->exec( "Dial", "SIP/$dst_str,120,tT" );
             $this->agi->verbose( "result = $res", 3 );
             $dialstatus = $this->agi->get_variable("DIALSTATUS");
             $this->agi->verbose( "DIALSTATUS=" . $dialstatus, 3 );
@@ -1029,9 +1071,18 @@ sub process {
                 exit(0);
             }
             if ( $dialstatus =~ /^BUSY/ ) {
-		        $this->agi->exec( "Busy", "5"); 
+                if ( ( $this->{conf}->{'textsupport'} =~ /yes/ ) and ( $this->{conf}->{'textnotify'} =~ /yes/ ) ) { 
+                    $this->_send_message("ServiceCenter",$dst_str,"Vam zvonil abonent ".$this->{callerid_name} . "<".$this->{callerid_num}.">");
+                    $this->_send_message("ServiceCenter",$this->{callerid_num},"Abonent $dst_str zanyat."); 
+                }
+                $this->agi->exec( "Busy", "5"); 
                 $this->agi->exec( "Hangup", "17" );
                 exit(0);
+            } else { 
+                if ( ( $this->{conf}->{'textsupport'} ) and ( $this->{conf}->{'textnotify'}) ) { 
+                    $this->_queue_message("ServiceCenter",$dst_str,"Vam zvonil abonent ".$this->{callerid_name} . "<".$this->{callerid_num}.">");
+                    $this->_send_message("ServiceCenter",$this->{callerid_num},"Абонент $dst_str не может принять звонок, потому что он недоступен."); 
+                }
             }
         }
         if ( $dst_type eq "trunk" ) {
@@ -1045,7 +1096,7 @@ sub process {
                 exit(0);
             }
             if ( $dialstatus =~ /^BUSY/ ) {
-		$this->agi->exec( "Busy", "5");
+        		$this->agi->exec( "Busy", "5");
                 $this->agi->exec( "Hangup", "17" );
                 exit(0);
             }
