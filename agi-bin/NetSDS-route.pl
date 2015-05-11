@@ -44,6 +44,7 @@ use File::Path;
 use NetSDS::Asterisk::Manager;
 use NetSDS::Util::Translit qw/trans_cyr_lat/; 
 use NetSDS::Util::String qw/str_trim/; 
+use Net::LDAP; 
 
 sub start {
     my $this = shift;
@@ -744,6 +745,7 @@ sub _init_uline {
     if ( defined($uline) ) {
         if ( $this->{'exten'} > 0 ) {
             $this->_add_next_recording( $callerid_num, $cdr_start, $uline );
+            $this->_set_callerid_name($callerid_num); 
         }
         return;
     }
@@ -774,6 +776,8 @@ sub _init_uline {
                 if ( $this->{'exten'} > 0 ) {
                     $this->_add_next_recording( $callerid_num, $cdr_start,
                         $uline );
+                    $this->_set_callerid_name($callerid_num); 
+
                 }
                 return;
             }
@@ -808,20 +812,7 @@ sub _init_uline {
     $this->agi->set_variable( "CDR(userfield)", "$uline" );
     $this->agi->set_variable( "ULINE",          "$uline" );
 
-    my $caller_name = $this->_get_callername($callerid_num);
-    unless ( defined($caller_name) ) {
-
-        $this->agi->exec( "Set", "CALLERID(name)=$callerid_num" );
-        $this->log( "info", "CALLERID(name)=$callerid_num" );
-	    $this->{'callerid_name'} = "$callerid_num"; 
-
-    }
-    else {
-
-        $this->agi->exec( "Set", "CALLERID(name)=$caller_name" );
-             $this->log( "info", "CALLERID(name)=$caller_name" );
-    	$this->{'callerid_name'} = "$caller_name"; 
-    }
+    $this->_set_callerid_name($callerid_num); 
 
     $sth = $this->dbh->prepare(
 "update integration.ulines set status='busy',callerid_num=?,cdr_start=?,channel_name=?,uniqueid=? where id=?"
@@ -844,6 +835,25 @@ sub _init_uline {
 
 }
 
+sub _set_callerid_name { 
+    my ($this, $callerid_num) = @_; 
+
+    my $caller_name = $this->_get_callername($callerid_num);
+    unless ( defined($caller_name) ) {
+
+        $this->agi->exec( "Set", "CALLERID(name)=$callerid_num" );
+        $this->log( "info", "CALLERID(name)=$callerid_num" );
+        $this->{'callerid_name'} = "$callerid_num"; 
+
+    }
+    else {
+
+        $this->agi->exec( "Set", "CALLERID(name)=$caller_name" );
+        $this->log( "info", "CALLERID(name)=$caller_name" );
+        $this->{'callerid_name'} = "$caller_name"; 
+    }
+}
+
 sub _get_term { 
     my ( $this, $name ) = @_; 
     my $sql = "select a.name, b.teletype from public.sip_peers a, integration.workplaces b where a.name=? and a.id=b.sip_id"; 
@@ -864,10 +874,22 @@ sub _translit_callerid_name {
 } 
 
 sub _get_callername {
+
     my ( $this, $callerid ) = @_;
+
+    $this->agi->verbose("Searching for $callerid in LDAP...",3); 
+
+	  # Приоритет имеет LDAP, но если _ldap_search вернет undef, то мы продолжим использовать локальную базу. 
+	  my $ldap_result = $this->_ldap_search($callerid); 		
+	  if ( defined ( $ldap_result ) ) { 
+			return $ldap_result; 
+		} 
 
     my $sql = "select comment from public.sip_peers where name=?";
     my $adr = "select displayname from ivr.addressbook where msisdn=?";
+
+
+    $this->agi->verbose ("Searching for $callerid in local sip_peers...",3); 
 
     my $sth = $this->dbh->prepare($sql);
     eval { $sth->execute($callerid) };
@@ -881,6 +903,8 @@ sub _get_callername {
     if ( defined($displayname) and ( $displayname ne '' ) ) {
         return $displayname;
     }
+
+    $this->agi->verbose ("Searching for $callerid in ivr.addressbook...",3); 
 
     $sth = $this->dbh->prepare($adr);
     eval { $sth->execute($callerid) };
@@ -898,6 +922,49 @@ sub _get_callername {
     return undef;
 
 }
+
+sub _ldap_search { 
+    my ($this, $callerid) = @_; 
+
+    unless ( defined ( $this->{conf}->{'ldap'}->{'host'})) { 
+        return undef; 
+    }
+    my $ldap = Net::LDAP->new ( $this->{conf}->{'ldap'}->{'host'} ) or return undef; 
+
+    unless ( defined ( $this->{conf}->{'ldap'}->{'user'})) { 
+        return undef; 
+    }
+    unless ( defined ( $this->{conf}->{'ldap'}->{'password'})) { 
+        return undef; 
+    }
+    my $mesg = $ldap->bind ( 
+        $this->{conf}->{'ldap'}->{'user'} ,
+        password => $this->{conf}->{'ldap'}->{'password'}
+    );
+
+    unless ( defined ( $this->{conf}->{'ldap'}->{'base'})) { 
+        return undef; 
+    }
+    my $base = $this->{conf}->{'ldap'}->{'base'}; 
+
+    unless ( defined ( $this->{conf}->{'ldap'}->{'filter'})) { 
+        return undef; 
+    } 
+    my $filter =  $this->{conf}->{'ldap'}->{'filter'};
+
+    my $result = $ldap->search ( base => $base, filter => $filter );
+
+    foreach my $entry ($result->entries) {
+        # print Dumper $entry->{'asn'}->{'objectName'};
+        foreach my $attr ( @{ $entry->{'asn'}->{'attributes'} } ) {
+            if ($attr->{'type'} =~ /displayName/ ) {
+                return $attr->{'vals'}[0];
+            }
+        }
+    }
+    return undef;
+}
+
 
 sub _manager_connect {
     my $this = shift;
@@ -1059,7 +1126,7 @@ sub process {
 
         if ( ( $dst_type eq "user" ) or ( $dst_type eq "lmask" ) ) {
             my $terminal = $this->_get_term($dst_str); 
-    	    if ($terminal =~ /GrandStreamGXP1200/) { 
+    	    if (($terminal =~ /GrandStreamGXP1200/) or ($terminal =~ /oldhardphone/)) { 
         		$this->_translit_callerid_name(); 
     	    }
             $this->agi->verbose( "Dial SIP/$dst_str", 3 );

@@ -1,9 +1,12 @@
 <!-- Это шаблон для отчета LostInGroups -->
-<table class="table table-stripped" style="float: left; width: 200px;">
+<table class="table table-stripped" style="float: left; width: 300px;">
 <thead>
 <tr>
 <th>Группа</th>
-<th>Кол-во</th>
+<th>Пропущенных</th>
+<th>Дозвонились</th>
+<th>Операторы</th>
+<th>Осталось</th>
 </tr>
 </thead>
 <tbody>
@@ -16,6 +19,9 @@
   </a>
 </td>
 <td>[% cdr_key.s %]</td>
+<td>[% cdr_key.lucky %]</td>
+<td>[% cdr_key.done %]</td>
+<td>[% cdr_key.left %]</td>
 </tr>
 [% END %]
 </tbody>

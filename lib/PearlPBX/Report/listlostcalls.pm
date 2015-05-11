@@ -87,9 +87,11 @@ sub report {
 
     my @rows; 
     foreach my $row (@first_rows) { 
-        my $lucky = $this->_lucky($callerid, $first_time, $sth_redial, $queuename, $tilldatetime); 
+	my $callerid = $row->{'callerid'};
+	my $first_time = $row->{'time'}; 
+    
+	my $lucky = $this->_lucky($callerid, $first_time, $sth_redial, $queuename, $tilldatetime); 
         my $outtime = $this->_outtime($callerid, $first_time, $sth_outtime, $tilldatetime); 
-
         push @rows, { 
             "datetimelost" => $row->{'time'},
             "msisdn" => $row->{'callerid'},
@@ -112,10 +114,11 @@ sub _outtime {
         $this->{error} = $this->{dbh}->errstr;
         return undef; 
     }
-    my $outtime = $sth->fetchrow_hashref; 
+    my $outtime = $sth->fetchrow_hashref;
+#    warn Dumper $outtime;  
     unless ( defined ( $outtime->{'calldate'}) ) { 
         $outtime->{'calldate'} = ''; 
-        $outtime->{'source'} = ''; 
+        $outtime->{'src'} = ''; 
         $outtime->{'billsec'} = ''; 
     }    
     return $outtime; 
