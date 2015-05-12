@@ -926,15 +926,19 @@ sub _get_callername {
 sub _ldap_search { 
     my ($this, $callerid) = @_; 
 
-    unless ( defined ( $this->{conf}->{'ldap'}->{'host'})) { 
+    $this->log("info","LDAP searching");
+    unless ( defined ( $this->{conf}->{'ldap'}->{'host'})) {
+	$this->log("info","LDAP host not defined"); 
         return undef; 
     }
     my $ldap = Net::LDAP->new ( $this->{conf}->{'ldap'}->{'host'} ) or return undef; 
 
     unless ( defined ( $this->{conf}->{'ldap'}->{'user'})) { 
+	$this->log("info","LDAP user not defined");
         return undef; 
     }
     unless ( defined ( $this->{conf}->{'ldap'}->{'password'})) { 
+	$this->log("info","LDAP password not defined");
         return undef; 
     }
     my $mesg = $ldap->bind ( 
@@ -943,25 +947,29 @@ sub _ldap_search {
     );
 
     unless ( defined ( $this->{conf}->{'ldap'}->{'base'})) { 
+	$this->log("info","LDAP base not defined");
         return undef; 
     }
     my $base = $this->{conf}->{'ldap'}->{'base'}; 
 
     unless ( defined ( $this->{conf}->{'ldap'}->{'filter'})) { 
+	$this->log("info","LDAP filter not defined");
         return undef; 
     } 
-    my $filter =  $this->{conf}->{'ldap'}->{'filter'};
-
+    my $filter =  sprintf($this->{conf}->{'ldap'}->{'filter'},$callerid,$callerid);
+    $this->log("info","LDAP filter: $filter"); 
     my $result = $ldap->search ( base => $base, filter => $filter );
 
     foreach my $entry ($result->entries) {
         # print Dumper $entry->{'asn'}->{'objectName'};
         foreach my $attr ( @{ $entry->{'asn'}->{'attributes'} } ) {
-            if ($attr->{'type'} =~ /displayName/ ) {
+            if ($attr->{'type'} eq 'sn' ) {
+		$this->log("info","LDAP found " . $attr->{'vals'}[0]); 
                 return $attr->{'vals'}[0];
             }
         }
     }
+    $this->log("info","LDAP search not found anything"); 
     return undef;
 }
 
