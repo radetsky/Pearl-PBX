@@ -144,10 +144,10 @@ sub process {
 		my $text = '<body><table style="border-collapse: collapse; border: 1px solid black;"><tr><th>Оператор</th><th>Кто звонил</th><th>Куда звонил</th><th>Когда</th><th>Время разговора</th><th>Приложенный файл</th></tr>'; 
 
 		my $subject = sprintf("Случайный разговор за последние %s сутки длительностью более 30 секунд",$this->{'dayz'}); 
-	  my $from       = $this->{conf}->{'email_from'};
+	   my $from       = $this->{conf}->{'email_from'};
   	unless ( defined ( $this->{conf}->{'email_from'} )) { $from = 'pearlpbx@pearlpbx.com'; }
 
-		### Create the multipart "container":
+	### Create the multipart "container":
   	my $msg = MIME::Lite->new(
         From    => $from,
         To      => $this->{'email'},

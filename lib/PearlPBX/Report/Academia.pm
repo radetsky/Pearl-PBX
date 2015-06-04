@@ -74,7 +74,7 @@ sub report {
 # Информация по сменам   
 #--------------------------------------------- 
 
-	my @periods = $this->_periods($date);
+	my @periods = $this->_periods($date, $queue);
 	my $position; 
 
 	foreach my $period ( @periods ) { 
@@ -117,34 +117,7 @@ sub report {
 		
 }
 
-sub _periods { 
-	my ($this, $date) = @_; 
-	my $dow = date($date); 
-	if ( $dow == 0) { # Воскресенье
-		return ( { 
-			'name' => sprintf("Воскресная смена: %s 7:30 - %s 20:00 ", $date, $date ), 
-			'sql' => sprintf(" between '%s 07:30:00' and '%s 20:00:00' ", $date, $date ),
-			'graphid' => 'graph_sunday'
-			} ); 
-	}
-	if ( $dow == 6) { # Суббота
-		return ( { 
-			'name' => sprintf("Субботняя смена: %s 7:30 - %s 20:00 ", $date, $date ), 
-			'sql' => sprintf(" between '%s 07:30:00' and '%s 20:00:00' ", $date, $date),
-			'graphid' => 'graph_saturday'
-		} ); 
-	}
-	return ( { 
-			'name' => sprintf("Первая смена: %s 7:30 - %s 13:59:59 ", $date, $date ), 
-			'sql' =>  sprintf(" between '%s 07:30:00' and '%s 13:59:59' ", $date, $date),
-			'graphid' => 'graph_1'
-		}, 
-		{ 
-			'name' => sprintf("Вторая смена: %s 14:00 - %s 20:00:00 ", $date, $date), 
-			'sql' => sprintf(" between '%s 14:00:00' and '%s 20:00:00' ", $date, $date),
-			'graphid' => 'graph_2'
-		} ); 
-}
+
 
 sub _fetch_data { 
 	my ($this, $queries) = @_; 
@@ -169,6 +142,67 @@ sub _fetch_data2 {
 	return $hash_ref->{$name}; 
 }
 
+sub _periods { 
+	my ($this, $date, $queue) = @_; 
+	my $dow = date($date); 
+	if ( $dow == 0) { # Воскресенье
+		return $this->_sunday_period ($date, $queue);  
+	}
+	if ( $dow == 6) { # Суббота
+		return $this->_saturday_period ($date, $queue); 
+	} 
+
+	return _work_period ($date, $queue); 
+
+}
+
+sub _sunday_period { 
+	my ( $this, $date, $queue) = @_; 
+	my $begin; my $end; 
+
+	return ( { 
+			'name' => sprintf("Воскресная смена: %s %s - %s %s ", $date, $begin, $date, $end ), 
+			'sql' => sprintf(" between '%s %s' and '%s %s' ", $date, $begin, $date, $end ),
+			'graphid' => 'graph_sunday'
+			} ); 
+
+}
+
+sub _saturday_period { 
+		my ( $this, $date, $queue) = @_; 
+
+		return ( { 
+			'name' => sprintf("Субботняя смена: %s 7:30 - %s 20:00 ", $date, $date ), 
+			'sql' => sprintf(" between '%s 07:30:00' and '%s 20:00:00' ", $date, $date),
+			'graphid' => 'graph_saturday'
+		} ); 
+}
+
+sub _work_period { 
+	my ( $this, $date, $queue) = @_; 
+
+	my $s = { 'support' => { 0 => 
+		{ 
+			begin => '07:00', 
+		  	end => '15:00'
+		},
+		{
+			begin => '15:00', 
+			end => '22:00'
+		} 
+	}}; 
+
+	return ( { 
+			'name' => sprintf("Первая смена: %s 7:30 - %s 13:59:59 ", $date, $date ), 
+			'sql' =>  sprintf(" between '%s 07:30:00' and '%s 13:59:59' ", $date, $date),
+			'graphid' => 'graph_1'
+		}, 
+		{ 
+			'name' => sprintf("Вторая смена: %s 14:00 - %s 20:00:00 ", $date, $date), 
+			'sql' => sprintf(" between '%s 14:00:00' and '%s 20:00:00' ", $date, $date),
+			'graphid' => 'graph_2'
+		} ); 
+}
 1;
 
 __END__

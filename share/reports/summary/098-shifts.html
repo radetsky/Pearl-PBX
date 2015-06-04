@@ -1,0 +1,45 @@
+<!-- Отчет по сменам --> 
+
+<center><h2>Отчет по сменам</h2></center>
+<form class="well" onSubmit="return shifts_submit()">
+    <fieldset>
+        <input id='dateFrom_sum098' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <select name="queues098" id="queues098" class="pearlpbx-list-queues">
+        </select>
+
+        <input type="submit" class="btn btn-primary" value="Получить отчет">
+    </fieldset>
+    </form>
+    <div id="shifts_result">
+    </div>
+
+<script type="text/javascript"> 
+
+function shifts_submit() { 
+  var dateFrom;
+  var queue; 
+
+  dateFrom = $('#dateFrom_sum098').val();
+  queue = $('select#queues098 option:selected').val();
+  if (queue == false ) { 
+    return false; 
+  } 
+  if (queue == '' ) { 
+    return false; 
+  } 
+
+  $('#academia_result').html("Request sent...");
+
+  $.get("/reports.pl",
+    { "exec-report": "Shifts",
+      dateFrom: dateFrom,
+      queue: queue,
+    },function(data)
+    {
+      $('#shifts_result').html(data);
+			shifts_make_graph(); 
+    }, "html");
+	return false; 
+}
+</script>
+

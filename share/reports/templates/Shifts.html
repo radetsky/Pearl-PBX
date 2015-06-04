@@ -1,0 +1,60 @@
+<!-- Это шаблон для отчета Shifts -->
+[% FOREACH position IN positions %]
+<div style="float: left;">
+<center><h4>[% position.name %]</h4></center>
+<table class="table table-stripped" style="float: left; width: 200px;">
+<tbody>
+<tr>
+<th> Всего звонков </th>
+<td>[% position.sum1 %]</td>
+</tr>
+<tr>
+<th> Обработано </th>
+<td>[% position.connected %]</td>
+</tr>
+<tr>
+<th> Пропущено </th>
+<td>[% position.lost %]</td>
+</tr>
+
+</tbody>
+</table>
+
+<div id='[% position.graphid %]' style="float: left; width: 600px; height: 200px; ">
+</div>
+<hr> 
+</div>
+[% END %] 
+
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.pieRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.barRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+<script type="text/javascript">
+
+function shifts_make_graph() { 
+	var data; 
+[% FOREACH position IN positions %]
+
+		data = [% position.jdata %];
+
+    jQuery.jqplot ('[% position.graphid %]', [data], 
+    { 
+      seriesDefaults: {
+        renderer: jQuery.jqplot.BarRenderer, 
+        rendererOptions: {
+				   varyBarColor: true
+        }
+      },
+			axes:{
+            xaxis:{
+                renderer: jQuery.jqplot.CategoryAxisRenderer
+            }
+      } 
+    }
+  );
+
+[% END %]
+
+}
+</script>
+
