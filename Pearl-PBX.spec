@@ -1,15 +1,15 @@
 Name: Pearl-PBX
-Version: 1.3.3
-Release: centos6
+Version: 1.4
+Release: centos7
 
-Summary: Contact-center for SMB written by Alex Radetsky <rad@rad.kiev.ua> 
+Summary: WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>  
 
 License: GPL
 
 Group: Networking/Other
 Url: http://www.pearlpbx.com/
 
-Packager: Alex Radetsky <rad@rad.kiev.ua>
+Packager: Alex Radetsky <rad@pearlpbx.com>
 
 BuildArch: noarch
 Source0: %name-%version.tar
@@ -18,7 +18,7 @@ Source0: %name-%version.tar
 #BuildRequires: perl-CGI perl-Class-Accessor-Class perl-Config-General perl-DBI perl-Encode perl-FCGI perl-Unix-Syslog
 #BuildRequires: perl-NetSDS perl-Class-Accessor-Class perl-Class-Accessor
 
-Requires: asterisk > 11
+Requires: asterisk > 13
 Requires: asterisk-pgsql
 Requires: asterisk-voicemail 
 Requires: postgresql-server
@@ -47,7 +47,7 @@ Requires: sox
 Requires: perl-Date-Simple 
 
 %description
-Web GUI for Asterisk written by Alex Radetsky <rad@rad.kiev.ua>
+WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>
 
 %prep
 %setup -n %name-%version

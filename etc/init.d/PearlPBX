@@ -41,13 +41,13 @@ cat /tmp/pg_hba.conf | sed 's/ident$/trust/' >/var/lib/pgsql/data/pg_hba.conf
 /etc/init.d/postgresql start
 psql -U postgres -f /etc/NetSDS/sql/create_user_asterisk.sql
 psql -U postgres -f /etc/NetSDS/sql/asterisk.sql
-psql -U asterisk -f /etc/NetSDS/sql/local_route.sql
 psql -U asterisk -f /etc/NetSDS/sql/callback.sql
 psql -U asterisk -f /etc/NetSDS/sql/directions_list.sql
 psql -U asterisk -f /etc/NetSDS/sql/directions.sql
 psql -U asterisk -f /etc/NetSDS/sql/sip_conf.sql
 psql -U asterisk -f /etc/NetSDS/sql/extensions_conf.sql
 psql -U asterisk -f /etc/NetSDS/sql/route.sql
+psql -U asterisk -f /etc/NetSDS/sql/local_route.sql
 psql -U asterisk -f /etc/NetSDS/sql/cal.sql
 psql -U asterisk -f /etc/NetSDS/sql/ivr.sql
 mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/
