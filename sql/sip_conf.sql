@@ -58,7 +58,7 @@ ALTER SEQUENCE sip_conf_id_seq OWNED BY sip_conf.id;
 -- Name: sip_conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: asterisk
 --
 
-SELECT pg_catalog.setval('sip_conf_id_seq', 60, true);
+SELECT pg_catalog.setval('sip_conf_id_seq', 100, true);
 
 
 --
@@ -88,8 +88,8 @@ INSERT INTO sip_conf VALUES (44, 0, 19, 0, 'sip.conf', 'general', 'tlsenable', '
 INSERT INTO sip_conf VALUES (45, 0, 20, 0, 'sip.conf', 'general', 'tlsbindaddr', '0.0.0.0');
 INSERT INTO sip_conf VALUES (48, 0, 23, 0, 'sip.conf', 'general', 'tlscipher', 'ALL');
 INSERT INTO sip_conf VALUES (49, 0, 24, 0, 'sip.conf', 'general', 'tlsclientmethod', 'tlsv1');
-INSERT INTO sip_conf VALUES (46, 0, 21, 0, 'sip.conf', 'general', 'tlscertfile', '/etc/asterisk/keys/1/tls/asterisk-keycert.pem');
-INSERT INTO sip_conf VALUES (47, 0, 22, 0, 'sip.conf', 'general', 'tlscafile', '/etc/asterisk/keys/1/tls/rootCA/cacert.pem');
+INSERT INTO sip_conf VALUES (46, 0, 21, 0, 'sip.conf', 'general', 'tlscertfile', '/etc/asterisk/keys/asterisk.pem');
+INSERT INTO sip_conf VALUES (47, 0, 22, 0, 'sip.conf', 'general', 'tlscafile', '/etc/asterisk/keys/ca.crt');
 INSERT INTO sip_conf VALUES (35, 0, 15, 1, 'sip.conf', 'general', 'localnet', '192.168.0.0/24');
 INSERT INTO sip_conf VALUES (50, 0, 25, 1, 'sip.conf', 'general', 'engine', 'asterisk');
 INSERT INTO sip_conf VALUES (23, 0, 3, 0, 'sip.conf', 'general', 'bindaddr', '0.0.0.0');
@@ -106,6 +106,7 @@ INSERT INTO sip_conf VALUES (57, 0, 32, 0, 'sip.conf', 'general', 'directrtpsetu
 INSERT INTO sip_conf VALUES (34, 0, 14, 1, 'sip.conf', 'general', 'externip', '204.26.62.251');
 INSERT INTO sip_conf VALUES (58, 0, 33, 0, 'sip.conf', 'general', 'tcpenable', 'yes');
 INSERT INTO sip_conf VALUES (59, 0, 34, 0, 'sip.conf', 'general', 'tcpbindaddr', '0.0.0.0');
+INSERT INTO sip_conf VALUES (60, 0, 35, 0, 'sip.conf', 'general', 'icesupport', 'yes'); 
 
 
 --
