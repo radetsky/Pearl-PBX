@@ -1,8 +1,8 @@
 check process NetSDS-hangupd with pidfile /var/run/NetSDS/NetSDS-hangupd.pid
         group asterisk
         group services
-        start program = "/etc/init.d/pearlpbx-hangupd start"
-        stop  program = "/etc/init.d/pearlpbx-hangupd stop"
+        start program = "systemctl start pearlpbx-hangupd.service"
+        stop  program = "systemctl stop pearlpbx-hangupd.service"
         if mem > 20% for 5 cycles then restart
         if cpu > 90% for 5 cycles then restart
         if 5 restarts with 5 cycles then timeout

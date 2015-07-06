@@ -1,6 +1,6 @@
 check asterisk with pidfile /var/run/asterisk/asterisk.pid
         if mem > 900.0 MB for 5 cycles then restart
         if cpu > 95% for 5 cycles then restart
-        start program = "/etc/init.d/asterisk start"
-        stop  program = "/etc/init.d/asterisk stop"
+        start program = "systemctl start asterisk.service"
+        stop  program = "systemctl stop asterisk.service"
 

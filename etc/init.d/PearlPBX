@@ -28,17 +28,19 @@ mkdir -p /var/run/NetSDS
 first_run_pearlpbx() {
 
 ln -sf /etc/NetSDS /etc/PearlPBX
-chkconfig pearlpbx-parsequeuelogd off
-chkconfig pearlpbx-hangupd off
-chkconfig PearlPBX on 
-chkconfig asterisk off
-chkconfig postgresql off
-chkconfig httpd on
-chkconfig monit on
-/etc/init.d/postgresql initdb
+systemctl disable pearlpbx-parsequeuelogd.service 
+systemctl disable pearlpbx-hangupd.service
+systemctl enable PearlPBX.service
+systemctl disable asterisk.service
+systemctl disable postgresql.service 
+systemctl disable httpd.service  
+systemctl enable monit.service  
+/usr/bin/postgresql-setup initdb
 cp /var/lib/pgsql/data/pg_hba.conf /tmp/pg_hba.conf 
-cat /tmp/pg_hba.conf | sed 's/ident$/trust/' >/var/lib/pgsql/data/pg_hba.conf 
-/etc/init.d/postgresql start
+cat /tmp/pg_hba.conf | sed 's/ident$/trust/' >/var/lib/pgsql/data/pg_hba.conf
+cp /var/lib/pgsql/data/pg_hba.conf /tmp/pg_hba.conf 
+cat /tmp/pg_hba.conf | sed 's/peer$/trust/' >/var/lib/pgsql/data/pg_hba.conf
+systemctl start postgresql.service
 psql -U postgres -f /etc/NetSDS/sql/create_user_asterisk.sql
 psql -U postgres -f /etc/NetSDS/sql/asterisk.sql
 psql -U asterisk -f /etc/NetSDS/sql/callback.sql
@@ -57,7 +59,14 @@ mkdir /var/www/pearlpbx/files
 chown apache:apache /var/www/pearlpbx/files
 mkdir /usr/share/asterisk/sounds/ru/pearlpbx
 chown apache:apache /usr/share/asterisk/sounds/ru/pearlpbx
-/etc/init.d/postgresql stop
+systemctl stop postgresql 
+
+firewall-cmd --permanent  --add-service=http
+firewall-cmd --permanent  --add-port=5060/udp 
+firewall-cmd --permanent  --add-port=5060/tcp 
+firewall-cmd --permanent  --add-port=5061/tcp 
+firewall-cmd --reload 
+
 echo "Installed" >/etc/sysconfig/PearlPBX
 
 }
@@ -65,14 +74,14 @@ echo "Installed" >/etc/sysconfig/PearlPBX
 
 start() {
 		echo "Starting $DESC: $NAME"
-		/etc/init.d/postgresql start 
+		systemctl start postgresql
 		sleep 3
-		/etc/init.d/asterisk start 
-		/etc/init.d/pearlpbx-hangupd start 
-		/etc/init.d/pearlpbx-parsequeuelogd start
+		systemctl start asterisk 
+		systemctl start pearlpbx-hangupd 
+		systemctl start pearlpbx-parsequeuelogd 
 		/usr/sbin/asterisk -rx "queue show"
-		/etc/init.d/httpd start 
-	  echo "."
+		systemctl start httpd 
+		echo "."
 }
 
 stop() { 

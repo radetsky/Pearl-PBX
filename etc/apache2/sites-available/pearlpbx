@@ -15,7 +15,7 @@
         Alias /recordings "/var/spool/asterisk/monitor/"
         <Directory "/var/spool/asterisk/monitor/">
                 AllowOverride AuthConfig 
-                Options -MultiViews +SymLinksIfOwnerMatch Indexes
+                Options -MultiViews +SymLinksIfOwnerMatch -Indexes
                 Order deny,allow 
                 Allow from all
         </Directory>
