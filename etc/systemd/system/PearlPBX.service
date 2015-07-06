@@ -1,0 +1,14 @@
+[Unit]
+Description=PearlPBX service  
+Requires=pearlpbx-first.service postgresql.service asterisk.service pearlpbxd.service parsequeuelogd.service httpd.service
+After=   pearlpbx-first.service postgresql.service asterisk.service pearlpbxd.service parsequeuelogd.service httpd.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/bin/echo PearlPBX
+
+[Install]
+WantedBy=multi-user.target
+

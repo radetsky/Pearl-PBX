@@ -1,0 +1,14 @@
+[Unit]
+Description=PearlPBX first run service. If some file exists we initialize our infrastructure 
+Requires=
+After=
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/PearlPBX-initall.sh 
+
+[Install]
+WantedBy=multi-user.target
+

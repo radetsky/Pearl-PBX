@@ -1,0 +1,19 @@
+[Unit]
+Description=PearlPBX Parse Queue Log daemon 
+Requires=postgresql.service asterisk.service
+After=postgresql.service asterisk.service 
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/sbin/PearlPBX-parsequeuelogd.pl tail 
+PIDFile=/var/run/NetSDS/PearlPBX-parsequeuelogd.pid
+
+# safe_asterisk emulation
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

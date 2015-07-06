@@ -1,0 +1,19 @@
+[Unit]
+Description=PearlPBX daemon 
+Requires=postgresql.service asterisk.service
+After=postgresql.service asterisk.service 
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/sbin/NetSDS-hangupd.pl
+PIDFile=/var/run/NetSDS/NetSDS-hangupd.pid
+
+# safe_asterisk emulation
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
