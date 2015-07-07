@@ -44,7 +44,7 @@ COPY directions (dr_id, dr_list_item, dr_prefix, dr_prio) FROM stdin;
 30	10	^099	4
 31	11	^063	4
 32	11	^093	4
-65	4	^380442391515$	5
+33	11	^073	4
 80	6	^091	5
 \.
 

@@ -115,7 +115,9 @@ CREATE TABLE sip_peers (
     path VARCHAR(256), 
     supportpath yes_no_values, 
     PRIMARY KEY (id), 
-    UNIQUE (name)
+    UNIQUE (name),
+    CONSTRAINT sip_peers_name_check CHECK (((name)::text <> ''::text))
+
 );
 
 CREATE INDEX sip_peers_name ON sip_peers (name);
@@ -439,7 +441,7 @@ CREATE INDEX ps_endpoint_id_ips_id ON ps_endpoint_id_ips (id);
 
 -- Running upgrade 43956d550a44 -> 581a4264e537
 
-CREATE TABLE extensions (
+CREATE TABLE extensions_conf (
     id BIGSERIAL NOT NULL, 
     context VARCHAR(40) NOT NULL, 
     exten VARCHAR(40) NOT NULL, 

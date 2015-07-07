@@ -7,6 +7,7 @@ CREATE TABLE alembic_version (
 -- Running upgrade None -> 210693f3123d
 
 CREATE TABLE cdr (
+    calldate timestamp with time zone DEFAULT now() NOT NULL, 
     accountcode VARCHAR(20), 
     src VARCHAR(80), 
     dst VARCHAR(80), 

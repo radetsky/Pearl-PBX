@@ -11,7 +11,11 @@ cp /var/lib/pgsql/data/pg_hba.conf /tmp/pg_hba.conf
 cat /tmp/pg_hba.conf | sed 's/peer$/trust/' >/var/lib/pgsql/data/pg_hba.conf
 systemctl start postgresql.service
 psql -U postgres -f /etc/NetSDS/sql/create_user_asterisk.sql
-psql -U postgres -f /etc/NetSDS/sql/asterisk.sql
+psql -U asterisk -f /etc/NetSDS/sql/postgresql_config.sql 
+psql -U asterisk -f /etc/NetSDS/sql/postgresql_cdr.sql 
+psql -U asterisk -f /etc/NetSDS/sql/postgresql_voicemail.sql 
+psql -U asterisk -f /etc/NetSDS/sql/pearlpbx.sql 
+#psql -U postgres -f /etc/NetSDS/sql/asterisk.sql
 psql -U asterisk -f /etc/NetSDS/sql/callback.sql
 psql -U asterisk -f /etc/NetSDS/sql/directions_list.sql
 psql -U asterisk -f /etc/NetSDS/sql/directions.sql
