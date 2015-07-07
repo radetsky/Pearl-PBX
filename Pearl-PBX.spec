@@ -33,10 +33,9 @@ Requires: httpd
 Requires: asterisk-sounds-ru-wav
 Requires: asterisk-sounds-ru-gsm
 Requires: asterisk-sounds-ru-alaw
-Requires: uuid-pgsql
 Requires: perl-CGI-Session
 Requires: perl-CGI-Session-Auth
-Requires: system-config-network-tui 
+Requires: NetworkManager-tui 
 Requires: monit 
 Requires: pwgen 
 Requires: perl-File-Tail 
@@ -44,7 +43,9 @@ Requires: rpmforge-release
 Requires: epel-release
 Requires: tftp-server
 Requires: sox
-Requires: perl-Date-Simple 
+Requires: perl-Date-Simple
+Requires: fail2ban 
+ 
 
 %description
 WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>
@@ -60,6 +61,8 @@ rm -rf %{buildroot}
 
 mkdir -p %buildroot/var/run/NetSDS
 chmod 777 %buildroot/var/run/NetSDS
+
+mkdir -p %buildroot/usr/share/asterisk/moh 
 
 mkdir -p %buildroot/usr/share/asterisk/agi-bin
 install -m 755  agi-bin/NetSDS-AGI-integration.pl %buildroot/usr/share/asterisk/agi-bin
@@ -150,6 +153,12 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/bin/permissions.pl
 /usr/bin/tftpprovisor.sh
 /usr/bin/ulines.pl
+/usr/bin/astqueue.sh
+/usr/bin/backup.sh
+/usr/bin/makeusers.pl
+/usr/bin/restore.sh
+/usr/sbin/import_blacklist.pl
+/usr/sbin/katyusha4.pl
 /usr/sbin/NetSDS-hangupd.pl
 /usr/sbin/NetSDS-parsequeuelogd.pl
 /usr/sbin/PearlPBX-gui-passwd.pl
@@ -446,8 +455,23 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/share/perl5/PearlPBX/Report/Academia.pm
 /usr/share/perl5/PearlPBX/Report/SumCalltimeByOperatorsInGroup.pm
 /usr/share/perl5/PearlPBX/Report/callbacklist.pm
+/usr/share/asterisk/agi-bin/PearlPBX-callback-add.pl
+/usr/share/asterisk/agi-bin/PearlPBX-mail-fax.pl
+/usr/share/asterisk/agi-bin/PearlPBX-translit.pl
+/usr/share/pearlpbx/reports/011-ivr-callbacklist.html
+/usr/share/pearlpbx/reports/summary/098-shifts.html
+/usr/share/pearlpbx/reports/templates/Shifts.html
+/usr/share/perl5/PearlPBX/Report/Shifts.pm
+/var/www/pearlpbx/reportview.html
+/usr/bin/PearlPBX-initall.sh 
+
 
 %changelog
+* Wed Jun 10 2015 Alex Radetsky <rad@pearlpbx.com> 1.4-centos7
+- Upgrade to 1.4 
+- Moved to Centos7 
+- Many new features 
+
 * Mon Jan 19 2015 Alex Radetsky <rad@rad.kiev.ua> 1.3.3-centos6
 - Upgrade to PearPBX 1.3.3 
 - Many new features, agis, sbin, web and bugs 
