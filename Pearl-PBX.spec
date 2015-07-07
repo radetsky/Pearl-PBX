@@ -46,7 +46,6 @@ Requires: sox
 Requires: perl-Date-Simple
 Requires: fail2ban 
  
-
 %description
 WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>
 
@@ -64,10 +63,10 @@ chmod 777 %buildroot/var/run/NetSDS
 
 mkdir -p %buildroot/usr/share/asterisk/moh 
 
-mkdir -p %buildroot/usr/share/asterisk/agi-bin
-install -m 755  agi-bin/NetSDS-AGI-integration.pl %buildroot/usr/share/asterisk/agi-bin
-install -m 755  agi-bin/NetSDS-route.pl %buildroot/usr/share/asterisk/agi-bin
-install -m 755  agi-bin/PearlPBX* %buildroot/usr/share/asterisk/agi-bin 
+mkdir -p %buildroot/var/lib/asterisk/agi-bin
+install -m 755  agi-bin/NetSDS-AGI-integration.pl %buildroot/var/lib/asterisk/agi-bin
+install -m 755  agi-bin/NetSDS-route.pl %buildroot/var/lib/asterisk/agi-bin
+install -m 755  agi-bin/PearlPBX* %buildroot/var/lib/asterisk/agi-bin 
 
 mkdir -p %buildroot/usr/bin
 mkdir -p %buildroot/usr/sbin
@@ -78,6 +77,9 @@ install -d -m 755  %buildroot/etc/NetSDS
 install -m 644  etc/NetSDS/asterisk-router.conf %buildroot/etc/NetSDS
 
 install -D -m 644  etc/apache2/sites-available/pearlpbx %buildroot/etc/httpd/conf.d/pearlpbx.conf 
+
+install -d -m 755 %buildroot/etc/systemd/system
+install -D -m 755 etc/systemd/system/*.service %buildroot/etc/systemd/system
 
 install -d -m 755 %buildroot/etc/monit.d
 install -d -m 755 %{buildroot}%{_initrddir} 
@@ -95,8 +97,10 @@ install -d -m 755  %buildroot/etc/cron.d
 install -D -m 644  etc/cron.d/* %buildroot/etc/cron.d/ 
 
 install -d -m 755  %buildroot/etc/NetSDS/asterisk
-install -D -m 755  etc/asterisk1.8/* %buildroot/etc/NetSDS/asterisk/
-
+install -d -m 700  %buildroot/etc/NetSDS/asterisk/keys 
+install -D -m 400  etc/asterisk13/keys/* %buildroot/etc/NetSDS/asterisk/keys/
+install -D -m 755  etc/asterisk13/*.conf %buildroot/etc/NetSDS/asterisk/
+install -D -m 755  etc/asterisk13/*.ael  %buildroot/etc/NetSDS/asterisk/
 install -d -m 755 %buildroot/etc/NetSDS/sql
 install -D -m 644 sql/* %buildroot/etc/NetSDS/sql/
 
@@ -158,7 +162,6 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/bin/makeusers.pl
 /usr/bin/restore.sh
 /usr/sbin/import_blacklist.pl
-/usr/sbin/katyusha4.pl
 /usr/sbin/NetSDS-hangupd.pl
 /usr/sbin/NetSDS-parsequeuelogd.pl
 /usr/sbin/PearlPBX-gui-passwd.pl
@@ -243,12 +246,12 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/share/perl5/PearlPBX/Report/outgoingToCustomer.pm
 /usr/share/perl5/PearlPBX/Route.pm
 /usr/share/perl5/PearlPBX/SIP.pm
-/usr/share/asterisk/agi-bin/NetSDS-AGI-integration.pl
-/usr/share/asterisk/agi-bin/NetSDS-route.pl
-/usr/share/asterisk/agi-bin/PearlPBX-addmissed.pl
-/usr/share/asterisk/agi-bin/PearlPBX-ChannelCheck.pl
-/usr/share/asterisk/agi-bin/PearlPBX-QueueCheck.pl
-/usr/share/asterisk/agi-bin/PearlPBX-mail
+/var/lib/asterisk/agi-bin/NetSDS-AGI-integration.pl
+/var/lib/asterisk/agi-bin/NetSDS-route.pl
+/var/lib/asterisk/agi-bin/PearlPBX-addmissed.pl
+/var/lib/asterisk/agi-bin/PearlPBX-ChannelCheck.pl
+/var/lib/asterisk/agi-bin/PearlPBX-QueueCheck.pl
+/var/lib/asterisk/agi-bin/PearlPBX-mail
 /var/tmp/pg_hba.conf
 /var/lib/tftpboot/lang/spa502g_en.xml
 /var/lib/tftpboot/lang/spa502g_ru.xml
@@ -435,14 +438,14 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/share/pearlpbx/provision/GrandStreamGXP1200.cfg
 /usr/share/pearlpbx/provision/SPA502G.cfg
 /usr/share/pearlpbx/provision/SPA504G.cfg
-/usr/share/asterisk/agi-bin/PearlPBX-addressbook.pl
-/usr/share/asterisk/agi-bin/PearlPBX-advfilter.pl
-/usr/share/asterisk/agi-bin/PearlPBX-blacklist.pl
-/usr/share/asterisk/agi-bin/PearlPBX-calendar.pl
-/usr/share/asterisk/agi-bin/PearlPBX-hint.pl
-/usr/share/asterisk/agi-bin/PearlPBX-language.pl
-/usr/share/asterisk/agi-bin/PearlPBX-poperator.pl
-/usr/share/asterisk/agi-bin/PearlPBX-whitelist.pl
+/var/lib/asterisk/agi-bin/PearlPBX-addressbook.pl
+/var/lib/asterisk/agi-bin/PearlPBX-advfilter.pl
+/var/lib/asterisk/agi-bin/PearlPBX-blacklist.pl
+/var/lib/asterisk/agi-bin/PearlPBX-calendar.pl
+/var/lib/asterisk/agi-bin/PearlPBX-hint.pl
+/var/lib/asterisk/agi-bin/PearlPBX-language.pl
+/var/lib/asterisk/agi-bin/PearlPBX-poperator.pl
+/var/lib/asterisk/agi-bin/PearlPBX-whitelist.pl
 /usr/share/perl5/PearlPBX/Report/CityComSumLost.pm
 /usr/share/perl5/PearlPBX/Report/CityComSumReceived.pm
 /usr/share/perl5/PearlPBX/Report/CityComSumSent.pm
@@ -455,18 +458,27 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/share/perl5/PearlPBX/Report/Academia.pm
 /usr/share/perl5/PearlPBX/Report/SumCalltimeByOperatorsInGroup.pm
 /usr/share/perl5/PearlPBX/Report/callbacklist.pm
-/usr/share/asterisk/agi-bin/PearlPBX-callback-add.pl
-/usr/share/asterisk/agi-bin/PearlPBX-mail-fax.pl
-/usr/share/asterisk/agi-bin/PearlPBX-translit.pl
+/var/lib/asterisk/agi-bin/PearlPBX-callback-add.pl
+/var/lib/asterisk/agi-bin/PearlPBX-mail-fax.pl
+/var/lib/asterisk/agi-bin/PearlPBX-translit.pl
 /usr/share/pearlpbx/reports/011-ivr-callbacklist.html
 /usr/share/pearlpbx/reports/summary/098-shifts.html
 /usr/share/pearlpbx/reports/templates/Shifts.html
 /usr/share/perl5/PearlPBX/Report/Shifts.pm
 /var/www/pearlpbx/reportview.html
 /usr/bin/PearlPBX-initall.sh 
-
+/var/www/pearlpbx/index.english.html 
+/usr/sbin/ast_tls_cert.sh
+/etc/systemd/system/PearlPBX.service
+/etc/systemd/system/asterisk.service
+/etc/systemd/system/parsequeuelogd.service
+/etc/systemd/system/pearlpbx-first.service
+/etc/systemd/system/pearlpbxd.service
 
 %changelog
+* Tue Jul 07 2015 Alex Radetsky <rad@pearlpbx.com> 1.4-centos7
+- Patches to 1.4 
+
 * Wed Jun 10 2015 Alex Radetsky <rad@pearlpbx.com> 1.4-centos7
 - Upgrade to 1.4 
 - Moved to Centos7 
