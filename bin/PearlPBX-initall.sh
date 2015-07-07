@@ -7,10 +7,12 @@ ln -sf /etc/NetSDS /etc/PearlPBX
 /usr/bin/postgresql-setup initdb
 cp /var/lib/pgsql/data/pg_hba.conf /tmp/pg_hba.conf 
 cat /tmp/pg_hba.conf | sed 's/ident$/trust/' >/var/lib/pgsql/data/pg_hba.conf
-cp /var/lib/pgsql/data/pg_hba.conf /tmp/pg_hba.conf 
+rm /tmp/pg_hba.conf
+cp  /var/lib/pgsql/data/pg_hba.conf /tmp/pg_hba.conf 
 cat /tmp/pg_hba.conf | sed 's/peer$/trust/' >/var/lib/pgsql/data/pg_hba.conf
 systemctl start postgresql.service
 psql -U postgres -f /etc/NetSDS/sql/create_user_asterisk.sql
+createdb -U postgres asterisk -O asterisk
 psql -U asterisk -f /etc/NetSDS/sql/postgresql_config.sql 
 psql -U asterisk -f /etc/NetSDS/sql/postgresql_cdr.sql 
 psql -U asterisk -f /etc/NetSDS/sql/postgresql_voicemail.sql 
@@ -25,7 +27,9 @@ psql -U asterisk -f /etc/NetSDS/sql/route.sql
 psql -U asterisk -f /etc/NetSDS/sql/local_route.sql
 psql -U asterisk -f /etc/NetSDS/sql/cal.sql
 psql -U asterisk -f /etc/NetSDS/sql/ivr.sql
+FIXME !!!! # Найти пропавший asterisk.conf
 mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/
+chown asterisk:asterisk /etc/asterisk -R 
 /usr/sbin/PearlPBX-gui-passwd.pl admin admin
 /usr/bin/ulines.pl
 mkdir /var/www/pearlpbx/files

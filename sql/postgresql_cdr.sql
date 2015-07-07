@@ -1,5 +1,7 @@
 BEGIN;
 
+DROP TABLE alembic_version;
+
 CREATE TABLE alembic_version (
     version_num VARCHAR(32) NOT NULL
 );

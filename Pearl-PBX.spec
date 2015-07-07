@@ -44,7 +44,7 @@ Requires: epel-release
 Requires: tftp-server
 Requires: sox
 Requires: perl-Date-Simple
-Requires: fail2ban 
+Requires: fail2ban-all 
  
 %description
 WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>
