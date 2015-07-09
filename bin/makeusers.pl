@@ -65,18 +65,23 @@ my $conf = "/etc/PearlPBX/asterisk-router.conf";
    
     unless ( defined ( $dbh ))  { die "Cant connect to DBMS!\n"; }
  
- 	my $sql = "insert into public.sip_peers (name,secret) values (?,?)"; 
-
+ 	my $sql = "insert into public.sip_peers (name,secret) values (?,?) returning id"; 
+	my $sql2 = "insert into integration.workplaces (sip_id,teletype,autoprovision,integration_type) values (?,'oldhardphone','f','nointegration')"; 
  	my $sth = $dbh->prepare($sql); 
+	my $sth2 = $dbh->prepare($sql2); 
 
 	for (my $i = $ARGV[0]+0; $i <= $ARGV[1]+0; $i++) { 
-		my $newsecret = `pwgen -c 8 -s`; 
-		print $name . " " . $newsecret . "\n"; 
-		# $sth->execute($i,$newsecret);
+		my $newsecret = `pwgen -c 8 -s`;
+		chomp $newsecret;  
+		print $i . " " . $newsecret . "\n"; 
+		$sth->execute($i,$newsecret);
+		my $res = $sth->fetchrow_hashref; 
+		my $id = $res->{'id'}; 
+		$sth2->execute($id); 
 	}
 
  	$dbh->commit; 
- 	print "Ulines was generated  successful.\n"; 
+ 	print "Users was generated  successful.\n"; 
  	exit(0); 
 
 1;
