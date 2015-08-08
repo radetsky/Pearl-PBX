@@ -37,7 +37,7 @@ COPY directions (dr_id, dr_list_item, dr_prefix, dr_prio) FROM stdin;
 23	8	^910\\d$	5
 22	7	^2\\d\\d$	5
 25	2	^0[3-6]	5
-26	12	^068	4
+26	2	^068	4
 27	10	^050	4
 28	10	^095	4
 29	10	^066	4

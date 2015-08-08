@@ -1059,6 +1059,28 @@ sub _queue_message {
     $this->agi->exec("System","/usr/local/bin/astqueue.sh -SRC '".$from."' -DST '".$dst."' -MSG '".$text."'");
 }
 
+sub _global_blacklist {
+    my ($this, $callerid_num) = @_;
+
+    my $sql = "select count(*) as blacklisted from public.blacklist where number=?";
+    my $sth = $this->dbh->prepare($sql);
+    eval { $sth->execute ( $callerid_num ); };
+    if ( $@ ) {
+        $this->agi->verbose ( $this->dbh->errstr );
+        exit(-1);
+    }
+    my $res = $sth->fetchrow_hashref;
+    my $blacklisted = $res->{'blacklisted'};
+
+    $this->agi->set_variable ('BLACKLISTED','0');
+    if ( $blacklisted > 0 ) {
+        $this->agi->set_variable ('BLACKLISTED',$blacklisted);
+        $this->agi->exec("Hangup","17");
+    }
+    return;
+}
+
+
 sub process {
     my $this = shift;
 
@@ -1087,6 +1109,8 @@ sub process {
     if ( $this->{proto} ne "Local" ) { 
         $this->_get_callerid( $this->{peername}, $this->{extension} ) 
     } 
+
+    $this->_global_blacklist($this->{'callerid_num'}); 
 
     # Init MixMonitor
     $this->_init_mixmonitor();

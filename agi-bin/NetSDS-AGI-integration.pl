@@ -41,6 +41,8 @@ use base qw(NetSDS::App);
 use Data::Dumper;
 use Asterisk::AGI;
 use IO::Socket::INET; 
+use LWP::UserAgent;
+
 
 sub start {
     my $this = shift;
@@ -269,7 +271,42 @@ sub _open_blank_taxi_office {
     undef $socket;
 
 }
+sub _open_blank_your_taxi {
+    my $this  = shift;
+    my $iinfo = shift;
+    my $answered_id = shift; 
 
+    my $ua = LWP::UserAgent->new;
+    $ua->timeout(1);
+    $ua->env_proxy;
+
+    my $callerid = $this->agi->get_variable("CALLERID(num)");
+    my $calleridlen = length($callerid);
+    $callerid = substr($callerid,$calleridlen-10,10); 
+    my $uline    = $this->agi->get_variable("PARKINGEXTEN");
+
+    my $your_taxi_server_ip = '192.168.0.210'; 
+    my $your_taxi_provider_id = '00000000-0000-0000-0000-000000000010'; 
+
+    my $url = sprintf("http://%s/ru/ManagePBX/IncomingCall?provider=%s&from=%s&to=%s",
+        $your_taxi_server_ip,
+        $your_taxi_provider_id,
+        $callerid,
+        $answered_id ); 
+
+    $this->log("info",$url);
+    my $response = $ua->get($url);
+ 
+    if ($response->is_success) {
+        $this->log("info",$response->decoded_content);
+    }
+    else {
+        $this->log("error", $response->status_line);
+        $this->_exit($response->status_line);
+    }
+
+
+}
 sub process {
     my $this = shift;
 
@@ -309,14 +346,20 @@ sub process {
     # Currently we support only TaxiOffice mode.
 
     if ( $itype =~ /^TaxiOffice$/i ) {
-	$this->log("info","Calling TaxiOffice open blank");
+    	$this->log("info","Calling TaxiOffice open blank");
         $this->_open_blank_taxi_office($iinfo);
     }
 
     if ( $itype =~ /^TaxiNavigator$/i ) {
-	$this->log("info","Calling TaxiNavigator open blank");
+    	$this->log("info","Calling TaxiNavigator open blank");
         $this->_open_blank_taxi_navigator($iinfo, $sip_name);
     }
+
+    if ( $itype =~ /^YourTaxi$/i ) {
+        $this->log("info","Calling YourTaxi open blank");
+        $this->_open_blank_your_taxi($iinfo, $sip_name);
+    }
+    
 
 
 }

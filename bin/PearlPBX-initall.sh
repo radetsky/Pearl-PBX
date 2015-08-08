@@ -27,7 +27,6 @@ psql -U asterisk -f /etc/NetSDS/sql/route.sql
 psql -U asterisk -f /etc/NetSDS/sql/local_route.sql
 psql -U asterisk -f /etc/NetSDS/sql/cal.sql
 psql -U asterisk -f /etc/NetSDS/sql/ivr.sql
-FIXME !!!! # Найти пропавший asterisk.conf
 mv -f /etc/PearlPBX/asterisk/* /etc/asterisk/
 chown asterisk:asterisk /etc/asterisk -R 
 /usr/sbin/PearlPBX-gui-passwd.pl admin admin
@@ -41,7 +40,8 @@ systemctl stop postgresql
 firewall-cmd --permanent  --add-service=http
 firewall-cmd --permanent  --add-port=5060/udp 
 firewall-cmd --permanent  --add-port=5060/tcp 
-firewall-cmd --permanent  --add-port=5061/tcp 
+firewall-cmd --permanent  --add-port=5061/tcp
+firewall-cmd --permanent  --add-port=10000-20000/udp 
 firewall-cmd --reload 
 
 echo "Installed" >/etc/sysconfig/PearlPBX

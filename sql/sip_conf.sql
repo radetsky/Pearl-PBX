@@ -101,7 +101,7 @@ INSERT INTO sip_conf VALUES (32, 0, 12, 0, 'sip.conf', 'general', 'minexpiry', '
 INSERT INTO sip_conf VALUES (33, 0, 13, 0, 'sip.conf', 'general', 'maxexpiry', '300');
 INSERT INTO sip_conf VALUES (55, 0, 30, 0, 'sip.conf', 'general', 'pedantic', 'no');
 INSERT INTO sip_conf VALUES (42, 0, 17, 0, 'sip.conf', 'general', 'videosupport', 'no');
-INSERT INTO sip_conf VALUES (56, 0, 31, 1, 'sip.conf', 'general', 'domain', 'asterisk');
+INSERT INTO sip_conf VALUES (56, 0, 31, 0, 'sip.conf', 'general', 'progressinband', 'yes');
 INSERT INTO sip_conf VALUES (57, 0, 32, 0, 'sip.conf', 'general', 'directrtpsetup', 'yes');
 INSERT INTO sip_conf VALUES (34, 0, 14, 1, 'sip.conf', 'general', 'externip', '204.26.62.251');
 INSERT INTO sip_conf VALUES (58, 0, 33, 0, 'sip.conf', 'general', 'tcpenable', 'yes');

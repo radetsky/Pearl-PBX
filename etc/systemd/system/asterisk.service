@@ -5,10 +5,10 @@ Requires=postgresql.service
 After=postgresql.service
 
 [Service]
-Type=simple
-User=asterisk
-Group=asterisk
-ExecStart=/usr/sbin/asterisk -f -C /etc/asterisk/asterisk.conf
+Type=forking
+User=root
+Group=root
+ExecStart=/usr/sbin/safe_asterisk -U asterisk -G asterisk
 ExecStop=/usr/sbin/asterisk -rx 'core stop now'
 ExecReload=/usr/sbin/asterisk -rx 'core reload'
 
