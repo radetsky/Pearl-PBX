@@ -51,7 +51,7 @@ CREATE TABLE sip_peers (
     pickupgroup VARCHAR(40), 
     language VARCHAR(40), 
     disallow VARCHAR(200) not null default 'all', 
-    allow VARCHAR(200) not null default 'ulaw,alaw,g729,gsm,h263,h264,h264p', 
+    allow VARCHAR(200) not null default 'ulaw,alaw,g729,gsm,h263,h264', 
     insecure VARCHAR(40), 
     trustrpid yes_no_values, 
     progressinband sip_progressinband_values, 

@@ -37,3 +37,7 @@ INSERT INTO alembic_version (version_num) VALUES ('210693f3123d');
 
 COMMIT;
 
+create index cdr_src on cdr(src); 
+create index cdr_dst on cdr(dst);
+create index cdr_disposition on cdr(disposition); 
+

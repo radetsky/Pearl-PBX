@@ -550,7 +550,7 @@ sub setpeer {
         $sip_ipaddr, $sip_insecure, $sip_id ; 
   } 
   if ($sip_id eq '' ) { 
-    $sql = "insert into public.sip_peers (name,username,defaultuser,secret,comment,nat,\"call-limit\",
+    $sql = "insert into public.sip_peers (name,fromuser,defaultuser,secret,comment,nat,\"call-limit\",
     type,host,permit,deny,ipaddr,insecure) values (?,?,?,?,?,?,?,?,?,?,?,?,?)"; 
 
     push @sip_params, $sip_name, $sip_username, $sip_defaultuser, $sip_secret, $sip_comment, $sip_nat, 

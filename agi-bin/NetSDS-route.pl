@@ -1050,13 +1050,13 @@ sub _send_message {
     my ($this, $from, $dst, $text) = @_; 
 
     $this->agi->exec("Set","MESSAGE(body)=$text"); 
-    $this->agi->exec("MessageSend","sip:$dst,$from"); 
+    $this->agi->exec("MessageSend","sip:$dst,\"\"<$from>"); 
     
 }
 
 sub _queue_message { 
     my ($this, $from, $dst, $text) = @_; 
-    $this->agi->exec("System","/usr/local/bin/astqueue.sh -SRC '".$from."' -DST '".$dst."' -MSG '".$text."'");
+    $this->agi->exec("System","/usr/bin/astqueue.sh -SRC '".$from."' -DST '".$dst."' -MSG '".$text."'");
 }
 
 sub _global_blacklist {
@@ -1079,7 +1079,6 @@ sub _global_blacklist {
     }
     return;
 }
-
 
 sub process {
     my $this = shift;
@@ -1171,16 +1170,16 @@ sub process {
             }
             if ( $dialstatus =~ /^BUSY/ ) {
                 if ( ( $this->{conf}->{'textsupport'} =~ /yes/ ) and ( $this->{conf}->{'textnotify'} =~ /yes/ ) ) { 
-                    $this->_send_message("ServiceCenter",$dst_str,"Vam zvonil abonent ".$this->{callerid_name} . "<".$this->{callerid_num}.">");
-                    $this->_send_message("ServiceCenter",$this->{callerid_num},"Abonent $dst_str zanyat."); 
+                    $this->_queue_message($this->{callerid_num},$dst_str,"Vam zvonil abonent ".$this->{callerid_name} . "<".$this->{callerid_num}.">");
+                    $this->_send_message($dst_str,$this->{callerid_num},"Abonent $dst_str zanyat."); 
                 }
                 $this->agi->exec( "Busy", "5"); 
                 $this->agi->exec( "Hangup", "17" );
                 exit(0);
             } else { 
                 if ( ( $this->{conf}->{'textsupport'} ) and ( $this->{conf}->{'textnotify'}) ) { 
-                    $this->_queue_message("ServiceCenter",$dst_str,"Vam zvonil abonent ".$this->{callerid_name} . "<".$this->{callerid_num}.">");
-                    $this->_send_message("ServiceCenter",$this->{callerid_num},"Абонент $dst_str не может принять звонок, потому что он недоступен."); 
+                    $this->_queue_message($this->{callerid_num},$dst_str,"Vam zvonil abonent ".$this->{callerid_name} . "<".$this->{callerid_num}.">");
+                    $this->_send_message($dst_str,$this->{callerid_num},"Абонент $dst_str не может принять звонок, потому что он недоступен."); 
                 }
             }
         }

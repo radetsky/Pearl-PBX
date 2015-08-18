@@ -1889,4 +1889,9 @@ alter table auth.sysusers owner to asterisk;
 set search_path to integration;
 create index prev_record_idx on recordings(previous_record); 
 
+create index next_uline_id on recordings(uline_id, next_record); 
+
+create index rec_cdr_start on recordings(cdr_start);
+create index rec_cdr_src on recordings (cdr_src);
+
 
