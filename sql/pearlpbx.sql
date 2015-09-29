@@ -758,7 +758,9 @@ CREATE TABLE ulines (
     callerid_num character varying,
     cdr_start character varying,
     channel_name character varying,
-    uniqueid character varying
+    uniqueid character varying,
+		userfield character varying not null default '',
+		integration_type character varying default '' not null
 );
 
 
@@ -1894,4 +1896,8 @@ create index next_uline_id on recordings(uline_id, next_record);
 create index rec_cdr_start on recordings(cdr_start);
 create index rec_cdr_src on recordings (cdr_src);
 
+create index queue_parsed_id_idx on queue_parsed ( id );
+create index queue_parsed_callerid_idx on queue_parsed ( callerid );
+create index queue_parsed_queue_idx on queue_parsed ( queue );
+create index quque_parsed_status_idx on queue_parsed (status);
 
