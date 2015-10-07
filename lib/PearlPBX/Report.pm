@@ -219,11 +219,12 @@ sub pearlpbx_player {
 	my $cdr_start = shift; 
 	my $cdr_src = shift; 
 	my $cdr_dst = shift;
-	my $disposition = shift; 
+	my $disposition = shift;
+    my $uniqueid = shift;  
 
 	if ($disposition =~ /ANSWERED/i ) { 
 
-		return '<a data-toggle="modal" href="#pearlpbx_player" onClick="turnOnPBXPlayer(\''.$cdr_start.'\',\''.$cdr_src.'\',\''.$cdr_dst.'\')">link</a>';
+		return '<a data-toggle="modal" href="#pearlpbx_player" onClick="turnOnPBXPlayer(\''.$cdr_start.'\',\''.$cdr_src.'\',\''.$cdr_dst.'\',\''.$uniqueid.'\')">link</a>';
 
   } 
 	return ''; 

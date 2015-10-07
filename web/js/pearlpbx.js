@@ -2105,18 +2105,20 @@ function pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo) {
 
 }
 
-function turnOnPBXPlayer (cdr_start, cdr_src, cdr_dst ) { 
+function turnOnPBXPlayer (cdr_start, cdr_src, cdr_dst, uniqueid ) { 
 
  //alert (cdr_start + ' ' + cdr_src + ' ' + cdr_dst ); 
  $('#param_cdr_start').text(cdr_start);
  $('#param_cdr_src').text(cdr_src);
  $('#param_cdr_dst').text(cdr_dst);  
+ $('#param_uniqueid').text(uniqueid); 
 
  $.get("recordings.pl",
     { "list-recordings": 1,
 			start: cdr_start,
 			src: cdr_src, 
-			dst: cdr_dst 
+			dst: cdr_dst,
+            uniqueid: uniqueid 
     },function(data)
     {
 

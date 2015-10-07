@@ -721,7 +721,8 @@ CREATE TABLE recordings (
     next_record bigint,
 		cdr_start timestamp with time zone,
 		cdr_src character varying,
-		cdr_dst character varying
+		cdr_dst character varying,
+		cdr_uniqueid character varying (150)
 );
 
 
@@ -1896,8 +1897,12 @@ create index next_uline_id on recordings(uline_id, next_record);
 create index rec_cdr_start on recordings(cdr_start);
 create index rec_cdr_src on recordings (cdr_src);
 
+create index rec_uniqueid on recordings (cdr_uniqueid); 
+
+set search_path to public; 
 create index queue_parsed_id_idx on queue_parsed ( id );
 create index queue_parsed_callerid_idx on queue_parsed ( callerid );
 create index queue_parsed_queue_idx on queue_parsed ( queue );
 create index quque_parsed_status_idx on queue_parsed (status);
+
 
