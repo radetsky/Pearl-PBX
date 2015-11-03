@@ -433,7 +433,7 @@ sub getpeer {
   my ($this,$id) = @_; 
 
   my $sql = "select id, name, comment, secret, context, host, insecure, nat, permit, deny, qualify, 
-  type, username, defaultuser, ipaddr, \"call-limit\" as cl  
+  type, fromuser, defaultuser, ipaddr, \"call-limit\" as cl  
   from public.sip_peers where id = ?"; 
 
   my $sth = $this->{dbh}->prepare($sql);
@@ -444,9 +444,10 @@ sub getpeer {
   my $row = $sth->fetchrow_hashref; 
   $row->{'comment'} = str_encode($row->{'comment'}); 
 
-  my $username = $row->{'username'};
+  my $fromuser = $row->{'fromuser'};
+  $row->{'username'} = $row->{'fromuser'}; 
 
-  $sql = "select id, var_val,commented from public.sip_conf where var_name='register' and var_val like '".$username.":%' "; 
+  $sql = "select id, var_val,commented from public.sip_conf where var_name='register' and var_val like '".$fromuser.":%' "; 
   $sth = $this->{dbh}->prepare($sql); 
   eval { $sth->execute();}; 
   if ($@) { 
@@ -508,7 +509,7 @@ sub setpeer {
   my $sip_comment = $params->{'sip_comment'}; 
   my $sip_name = $params->{'sip_name'};  
   my $sip_username = $params->{'sip_username'}; 
-	my $sip_defaultuser = $params->{'sip_username'}; 
+  my $sip_defaultuser = $params->{'sip_username'}; 
   my $sip_secret = $params->{'sip_secret'}; 
   my $sip_remote_register = $params->{'sip_remote_register'}; 
   my $sip_regstr_id = $params->{'sip_remote_regstr_id'};  
@@ -542,7 +543,7 @@ sub setpeer {
 
 
   if ($sip_id ne '') { 
-    $sql = "update public.sip_peers set name=?,username=?,defaultuser=?,secret=?,
+    $sql = "update public.sip_peers set name=?,fromuser=?,defaultuser=?,secret=?,
                       comment=?,nat=?,\"call-limit\"=?,
                       type=?,host=?,permit=?,deny=?,ipaddr=?,insecure=? where id=?"; 
     push @sip_params, $sip_name, $sip_username, $sip_defaultuser, $sip_secret, $sip_comment, $sip_nat, 
