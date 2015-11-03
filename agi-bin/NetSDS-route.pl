@@ -2,20 +2,10 @@
 #===============================================================================
 #
 #         FILE:  NetSDS-route.pl
-#
-#        USAGE:  ./NetSDS-route.pl
-#
 #  DESCRIPTION:
-#
-#      OPTIONS:  ---
-# REQUIREMENTS:  ---
-#         BUGS:  ---
-#        NOTES:  ---
 #       AUTHOR:  Alex Radetsky (Rad), <rad@rad.kiev.ua>
-#      COMPANY:  Net.Style
-#      VERSION:  1.0
+#      VERSION:  2.0
 #      CREATED:  11/30/11 21:22:55 EET
-#     REVISION:  ---
 #===============================================================================
 
 use 5.8.0;
@@ -480,6 +470,7 @@ sub _mixmonitor_filename {
     my $this         = shift;
     my $cdr_start    = shift;
     my $callerid_num = shift;
+    my $uniqueid     = shift; 
 
     $cdr_start =~ /(\d{4})-(\d{1,2})-(\d{1,2}) (\d{1,2}):(\d{1,2}):(\d{1,2})/;
 
@@ -493,8 +484,8 @@ sub _mixmonitor_filename {
     my $directory =
       sprintf( "/var/spool/asterisk/monitor/%s/%s/%s", $year, $mon, $day );
 
-    my $filename = sprintf( "%s/%s/%s/%s%s%s-%s.wav",
-        $year, $mon, $day, $hour, $min, $sec, $callerid_num );
+    my $filename = sprintf( "%s/%s/%s/%s%s%s-%s-%s.wav",
+        $year, $mon, $day, $hour, $min, $sec, $callerid_num, $uniqueid );
 
     return ( $directory, $filename );
 
@@ -505,22 +496,23 @@ sub _init_mixmonitor {
 
     my $cdr_start    = $this->agi->get_variable('CDR(start)');
     my $callerid_num = $this->agi->get_variable('CALLERID(num)');
+    my $uniqueid     = $this->agi->get_variable('CDR(uniqueid)');
     my ( $directory, $filename ) =
-      $this->_mixmonitor_filename( $cdr_start, $callerid_num );
+      $this->_mixmonitor_filename( $cdr_start, $callerid_num, $uniqueid );
 
     mkpath($directory);
 
     if ( $this->{'exten'} > 0 ) {
 	if ($this->{conf}->{'mixmonitor'} =~ /yes/) { 
 	        $this->agi->exec( "MixMonitor", "$filename" );
-	}
+       	}
     }
     else {
         $this->agi->verbose(
             "This channel going to park. We do not Monitor it.");
     }
 
-    $this->agi->verbose("CallerID(num)+CDR(start)=$callerid_num $cdr_start");
+    # $this->agi->verbose("CallerID(num)+CDR(start)=$callerid_num $cdr_start");
     $this->_init_uline( $callerid_num, $cdr_start );
 
     if ( length( $this->{'exten'} ) < 4 ) {
@@ -620,19 +612,20 @@ sub _add_new_recording {
     my $cdr_start    = shift;
     my $uline        = shift;
 
-    my $cdr_src = $this->agi->get_variable('CDR(src)');
-    my $cdr_dst = $this->agi->get_variable('CDR(dst)');
+    my $cdr_src  = $this->agi->get_variable('CDR(src)');
+    my $cdr_dst  = $this->agi->get_variable('CDR(dst)');
+    my $uniqueid = $this->agi->get_variable('CDR(uniqueid)');  
 
     $this->_begin;
     my $sth = $this->dbh->prepare(
-"insert into integration.recordings (uline_id,original_file,cdr_start,cdr_src,cdr_dst) values (?,?,?,?,?) returning id"
+"insert into integration.recordings (uline_id,original_file,cdr_start,cdr_src,cdr_dst,cdr_uniqueid) values (?,?,?,?,?,?) returning id"
     );
     my ( $directory, $original_file ) =
-      $this->_mixmonitor_filename( $cdr_start, $callerid_num );
+      $this->_mixmonitor_filename( $cdr_start, $callerid_num, $uniqueid );
     eval {
         my $rv =
           $sth->execute( $uline, $original_file, $cdr_start, $cdr_src,
-            $cdr_dst );
+            $cdr_dst, $uniqueid );
     };
 
     if ($@) {
@@ -664,6 +657,7 @@ sub _add_next_recording {
 
     my $cdr_src = $this->agi->get_variable('CDR(src)');
     my $cdr_dst = $this->agi->get_variable('CDR(dst)');
+    my $uniqueid = $this->agi->get_variable('CDR(uniqueid)');
 
     $this->_begin;
     my $sth = $this->dbh->prepare(
@@ -684,14 +678,14 @@ sub _add_next_recording {
     my $id = $result->{'id'};
 
     $sth = $this->dbh->prepare(
-"insert into integration.recordings (uline_id,original_file,previous_record,cdr_start,cdr_src,cdr_dst) values (?,?,?,?,?,?) returning id"
+"insert into integration.recordings (uline_id,original_file,previous_record,cdr_start,cdr_src,cdr_dst,cdr_uniqueid) values (?,?,?,?,?,?,?) returning id"
     );
     my ( $directory, $original_file ) =
-      $this->_mixmonitor_filename( $cdr_start, $callerid_num );
+      $this->_mixmonitor_filename( $cdr_start, $callerid_num, $uniqueid );
     eval {
         my $rv =
           $sth->execute( $uline, $original_file, $id, $cdr_start, $cdr_src,
-            $cdr_dst );
+            $cdr_dst,$uniqueid );
     };
     if ($@) {
         $this->_exit( $this->dbh->errstr );
@@ -812,7 +806,7 @@ sub _init_uline {
     $this->agi->set_variable( "CDR(userfield)", "$uline" );
     $this->agi->set_variable( "ULINE",          "$uline" );
 
-    $this->_set_callerid_name($callerid_num); 
+    $this->_set_callerid_name("LINE $uline $callerid_num"); 
 
     $sth = $this->dbh->prepare(
 "update integration.ulines set status='busy',callerid_num=?,cdr_start=?,channel_name=?,uniqueid=? where id=?"
@@ -838,7 +832,7 @@ sub _init_uline {
 sub _set_callerid_name { 
     my ($this, $callerid_num) = @_; 
 
-    my $caller_name = $this->_get_callername($callerid_num);
+    my $caller_name = undef; # $this->_get_callername($callerid_num);
     unless ( defined($caller_name) ) {
 
         $this->agi->exec( "Set", "CALLERID(name)=$callerid_num" );
@@ -1050,34 +1044,13 @@ sub _send_message {
     my ($this, $from, $dst, $text) = @_; 
 
     $this->agi->exec("Set","MESSAGE(body)=$text"); 
-    $this->agi->exec("MessageSend","sip:$dst,\"\"<$from>"); 
+    $this->agi->exec("MessageSend","sip:$dst,$from"); 
     
 }
 
 sub _queue_message { 
     my ($this, $from, $dst, $text) = @_; 
-    $this->agi->exec("System","/usr/bin/astqueue.sh -SRC '".$from."' -DST '".$dst."' -MSG '".$text."'");
-}
-
-sub _global_blacklist {
-    my ($this, $callerid_num) = @_;
-
-    my $sql = "select count(*) as blacklisted from public.blacklist where number=?";
-    my $sth = $this->dbh->prepare($sql);
-    eval { $sth->execute ( $callerid_num ); };
-    if ( $@ ) {
-        $this->agi->verbose ( $this->dbh->errstr );
-        exit(-1);
-    }
-    my $res = $sth->fetchrow_hashref;
-    my $blacklisted = $res->{'blacklisted'};
-
-    $this->agi->set_variable ('BLACKLISTED','0');
-    if ( $blacklisted > 0 ) {
-        $this->agi->set_variable ('BLACKLISTED',$blacklisted);
-        $this->agi->exec("Hangup","17");
-    }
-    return;
+    $this->agi->exec("System","/usr/local/bin/astqueue.sh -SRC '".$from."' -DST '".$dst."' -MSG '".$text."'");
 }
 
 sub process {
@@ -1108,8 +1081,6 @@ sub process {
     if ( $this->{proto} ne "Local" ) { 
         $this->_get_callerid( $this->{peername}, $this->{extension} ) 
     } 
-
-    $this->_global_blacklist($this->{'callerid_num'}); 
 
     # Init MixMonitor
     $this->_init_mixmonitor();
@@ -1170,16 +1141,16 @@ sub process {
             }
             if ( $dialstatus =~ /^BUSY/ ) {
                 if ( ( $this->{conf}->{'textsupport'} =~ /yes/ ) and ( $this->{conf}->{'textnotify'} =~ /yes/ ) ) { 
-                    $this->_queue_message($this->{callerid_num},$dst_str,"Vam zvonil abonent ".$this->{callerid_name} . "<".$this->{callerid_num}.">");
-                    $this->_send_message($dst_str,$this->{callerid_num},"Abonent $dst_str zanyat."); 
+                    $this->_send_message("ServiceCenter",$dst_str,"Vam zvonil abonent ".$this->{callerid_name} . "<".$this->{callerid_num}.">");
+                    $this->_send_message("ServiceCenter",$this->{callerid_num},"Abonent $dst_str zanyat."); 
                 }
                 $this->agi->exec( "Busy", "5"); 
                 $this->agi->exec( "Hangup", "17" );
                 exit(0);
             } else { 
-                if ( ( $this->{conf}->{'textsupport'} ) and ( $this->{conf}->{'textnotify'}) ) { 
-                    $this->_queue_message($this->{callerid_num},$dst_str,"Vam zvonil abonent ".$this->{callerid_name} . "<".$this->{callerid_num}.">");
-                    $this->_send_message($dst_str,$this->{callerid_num},"Абонент $dst_str не может принять звонок, потому что он недоступен."); 
+                if ( ( $this->{conf}->{'textsupport'} =~ /yes/ ) and ( $this->{conf}->{'textnotify'} =~ /yes/ ) ) { 
+                    $this->_queue_message("ServiceCenter",$dst_str,"Vam zvonil abonent ".$this->{callerid_name} . "<".$this->{callerid_num}.">");
+                    $this->_send_message("ServiceCenter",$this->{callerid_num},"Абонент $dst_str не может принять звонок, потому что он недоступен."); 
                 }
             }
         }

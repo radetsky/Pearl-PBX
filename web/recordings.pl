@@ -32,6 +32,7 @@ my $listrecordings = $pearl->{cgi}->param('list-recordings');
 my $cdr_start = $pearl->{cgi}->param('start'); 
 my $cdr_src = $pearl->{cgi}->param('src'); 
 my $cdr_dst = $pearl->{cgi}->param('dst');
+my $uniqueid = $pearl->{cgi}->param('uniqueid'); 
 
 unless ( defined ( $listrecordings ) 
 	or defined ( $cdr_start ) 

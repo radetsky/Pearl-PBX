@@ -91,7 +91,7 @@ sub report {
     my $dstchannel = $this->_sql_cond_dstchannel ($params->{'dstchannel'}); 
 
     my $sql = "select calldate,src,dst,split_part(channel,'-',1) as channel, 
-     split_part(dstchannel,'-',1) as dstchannel,disposition,billsec 
+     split_part(dstchannel,'-',1) as dstchannel,disposition,billsec,uniqueid 
       from public.cdr where calldate between ? and ? 
        and $sql_cond $src $dst $channel $dstchannel $disposition $billsec order by calldate";
 
