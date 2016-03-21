@@ -44,6 +44,7 @@ use base qw(NetSDS::App);
 use NetSDS::Asterisk::EventListener;
 use NetSDS::Asterisk::Manager;
 use Data::Dumper;
+use LWP::UserAgent;
 
 our @expire_list = (); 
 
@@ -298,6 +299,31 @@ sub _get_uline_by_channel {
 	return $result->{'id'}; 	
 }
 
+sub _integration_free { 
+    my ($this, $uline, $itype, $userfield ) = @_; 
+
+    if ($itype =~ /YourTaxi/) { 
+        my $ua = LWP::UserAgent->new;
+        $ua->timeout(1);
+        $ua->env_proxy;
+
+        my $your_taxi_server_ip = '192.168.0.210:8000';
+        my $url = sprintf("http://%s/YTaxi/ru/ManagePBX/HangUp?provider=%s&line=%s",
+            $your_taxi_server_ip,
+            $userfield,
+            $uline );
+       
+        $this->log("info",$url);
+        my $response = $ua->get($url);
+
+        if ($response->is_success) {
+            $this->log("info",$response->decoded_content);
+        } else {
+            $this->log("error", $response->status_line);
+        }    
+    }
+}
+
 sub _free_uline {
     my $this    = shift;
     my $channel = shift;
@@ -305,7 +331,7 @@ sub _free_uline {
     $this->_begin;
 
     my $sth = $this->dbh->prepare(
-        "select id from integration.ulines where channel_name=? and status='busy' order by id asc limit 1 for update");
+        "select id,integration_type,userfield from integration.ulines where channel_name=? and status='busy' order by id asc limit 1 for update");
 
     eval { my $rv = $sth->execute($channel); };
     if ($@) {
@@ -313,17 +339,20 @@ sub _free_uline {
     }
 
     my $result = $sth->fetchrow_hashref;
+
     unless ( defined($result) ) {
-        $this->log( "warning",
-"XZ. Got hangup for channel $channel, but integration.ulines does not has it."
-        );
+        $this->log("warning","Hangup $channel, but integration.ulines does not has it.");
         $this->dbh->rollback;
         return undef;
     }
 
 	my $id = $result->{'id'};
-	$this->log("info","Got ID = $id for update integration.ulines");
-	$this->speak ("Got ID = $id for update integration.ulines");
+    my $itype = $result->{'integration_type'}; 
+    my $userfield = $result->{'userfield'}; 
+
+	$this->log("info",sprintf("_free_uline: id=%s,itype=%s,userfield=%s",$id, $itype, $userfield));
+
+    $this->_integration_free($id, $itype, $userfield); 
 
     $sth = $this->dbh->prepare(
         "update integration.ulines set status='free' where id=?");
@@ -420,7 +449,7 @@ sub _expire_ulines {
 			$this->log("info","Time: $t to free uline $item->{'uline'} with $item->{'channel'}"); 
 			$this->_free_uline ($item->{'channel'}); 
 		} else { 
-			$this->log("info","First item in the expire_list has time in future. "); 
+            # $this->log("info","First item in the expire_list has time in future. "); 
 			unshift @expire_list,$item; 
 			last; 
 		} 
@@ -440,7 +469,7 @@ sub process {
 
         $event = $this->el->_getEvent();
         unless ($event) {
-	    $this->log("info","No event from AMI. Sleeping."); 
+	        # $this->log("info","No event from AMI. Sleeping."); 
             $this->{'count'} = $this->{'count'} + 1; 
     	    if ($this->{'count'} >= 300 ) { 
                 $this->_clear_ulines(); 
