@@ -40,9 +40,8 @@ package Integration;
 use base qw(NetSDS::App);
 use Data::Dumper;
 use Asterisk::AGI;
-use IO::Socket::INET; 
+use IO::Socket::INET;
 use LWP::UserAgent;
-
 
 sub start {
     my $this = shift;
@@ -123,6 +122,28 @@ sub _begin {
     }
 }
 
+sub _set_uline_userfield {
+    my $this      = shift;
+    my $uline     = shift;
+    my $userfield = shift;
+    my $itype     = shift;
+
+    my $sth = $this->dbh->prepare(
+        "update integration.ulines set userfield=?,integration_type=? where id=?"
+    );
+    $this->log(
+        "info",
+        sprintf(
+            "set_uline_userfield userfield='%s',integration_type='%s' where id=%s",
+            $userfield, $itype, $uline
+        )
+    );
+    eval { my $rv = $sth->execute( $userfield, $itype, $uline ); };
+    if ($@) {
+        $this->_exit( $this->dbh->errstr );
+    }
+}
+
 sub _find_sipid_by_name {
     my $this     = shift;
     my $sip_name = shift;
@@ -130,7 +151,7 @@ sub _find_sipid_by_name {
     $this->_begin;
 
     my $sth = $this->dbh->prepare(
-"select id,ipaddr from public.sip_peers where name=? order by id asc limit 1"
+        "select id,ipaddr from public.sip_peers where name=? order by id asc limit 1"
     );
     eval { my $rv = $sth->execute($sip_name); };
     if ($@) {
@@ -157,10 +178,10 @@ sub _get_iinfo {
     $this->_begin;
 
     my $sth = $this->dbh->prepare(
-"select * from integration.workplaces where sip_id=? and ip_addr_tel=? order by id asc limit 1"
+        "select * from integration.workplaces where sip_id=? and ip_addr_tel=? order by id asc limit 1"
     );
     my $sth2 = $this->dbh->prepare(
-"select * from integration.workplaces where sip_id=? order by id asc limit 1"
+        "select * from integration.workplaces where sip_id=? order by id asc limit 1"
     );
 
     eval { my $rv = $sth->execute( $sip_id, $sip_addr ); };
@@ -170,18 +191,20 @@ sub _get_iinfo {
     my $result = $sth->fetchrow_hashref;
     unless ( defined($result) ) {
         $this->agi->verbose(
-"CAN'T FIND INTEGRATION INFO FOR SIP ID=$sip_id AND IP ADDR='$sip_addr'. TRYING WITHOUT IP",
+            "CAN'T FIND INTEGRATION INFO FOR SIP ID=$sip_id AND IP ADDR='$sip_addr'. TRYING WITHOUT IP",
             3
         );
         $this->log( "warning",
-"CAN'T FIND INTEGRATION INFO FOR SIP ID=$sip_id AND IP ADDR='$sip_addr'. TRYING WITHOUT IP"
+            "CAN'T FIND INTEGRATION INFO FOR SIP ID=$sip_id AND IP ADDR='$sip_addr'. TRYING WITHOUT IP"
         );
 
         eval { my $rv = $sth2->execute($sip_id); };
         if ($@) {
+            $this->log( "warning", $@ );
+            $this->log( "warning", $this->dbh->errstr );
             $this->_exit( $this->dbh->errstr );
         }
-        $result = $sth->fetchrow_hashref;
+        $result = $sth2->fetchrow_hashref;
         unless ( defined($result) ) {
             $this->_exit("CAN'T FIND INTEGRATION INFO FOR SIP ID=$sip_id");
         }
@@ -192,12 +215,13 @@ sub _get_iinfo {
     return $result;
 
 }
-sub _open_blank_taxi_navigator {
-    my $this  = shift;
-    my $iinfo = shift;
-    my $sip_name = shift; 
 
-    my $socket = IO::Socket::INET->new (
+sub _open_blank_taxi_navigator {
+    my $this     = shift;
+    my $iinfo    = shift;
+    my $sip_name = shift;
+
+    my $socket = IO::Socket::INET->new(
         PeerAddr => $iinfo->{'ip_addr_pc'},
         PeerPort => $iinfo->{'tcp_port'},
         Proto    => "tcp",
@@ -206,40 +230,44 @@ sub _open_blank_taxi_navigator {
 
     unless ($socket) {
         $this->_exit( "CAN'T CONNECT TO "
-              . $iinfo->{'ip_addr_pc'} . ":"
-              . $iinfo->{'tcp_port'} );
+                . $iinfo->{'ip_addr_pc'} . ":"
+                . $iinfo->{'tcp_port'} );
     }
 
-    my $callerid = $this->agi->get_variable("CALLERID(num)");
+    my $callerid    = $this->agi->get_variable("CALLERID(num)");
     my $calleridlen = length($callerid);
-		if ($calleridlen > 10) { 
-    	$callerid = substr($callerid,$calleridlen-10,10); 
-		}
-    my $uline    = $this->agi->get_variable("PARKINGEXTEN");
+    if ( $calleridlen > 10 ) {
+        $callerid = substr( $callerid, $calleridlen - 10, 10 );
+    }
+    my $uline = $this->agi->get_variable("PARKINGEXTEN");
 
-    my $command = sprintf( "Message: ActivateCard. Operator: %s CallerID: %s \n\n", $sip_name, $callerid );
+    my $command =
+        sprintf( "Message: ActivateCard. Operator: %s CallerID: %s \n\n",
+        $sip_name, $callerid );
 
     if ( $socket->print($command) ) {
         $socket->flush;
-	my @result = $socket->getlines; 
-	$this->agi->verbose ( Dumper (\@result), 3); 
+        my @result = $socket->getlines;
+        $this->agi->verbose( Dumper( \@result ), 3 );
     }
     else {
         $this->_exit( "CAN'T WRITE TO THE SOCKET "
-              . $iinfo->{'ip_addr_pc'} . ":"
-              . $iinfo->{'port'} );
+                . $iinfo->{'ip_addr_pc'} . ":"
+                . $iinfo->{'port'} );
     }
-    $this->log("info","Sent ($command) to ".$iinfo->{'ip_addr_pc'}.":".$iinfo->{'tcp_port'});
+    $this->log( "info",
+              "Sent ($command) to "
+            . $iinfo->{'ip_addr_pc'} . ":"
+            . $iinfo->{'tcp_port'} );
     undef $socket;
 
 }
-
 
 sub _open_blank_taxi_office {
     my $this  = shift;
     my $iinfo = shift;
 
-    my $socket = IO::Socket::INET->new (
+    my $socket = IO::Socket::INET->new(
         PeerAddr => $iinfo->{'ip_addr_pc'},
         PeerPort => $iinfo->{'tcp_port'},
         Proto    => "tcp",
@@ -248,14 +276,14 @@ sub _open_blank_taxi_office {
 
     unless ($socket) {
         $this->_exit( "CAN'T CONNECT TO "
-              . $iinfo->{'ip_addr_pc'} . ":"
-              . $iinfo->{'tcp_port'} );
+                . $iinfo->{'ip_addr_pc'} . ":"
+                . $iinfo->{'tcp_port'} );
     }
 
-    my $callerid = $this->agi->get_variable("CALLERID(num)");
+    my $callerid    = $this->agi->get_variable("CALLERID(num)");
     my $calleridlen = length($callerid);
-    $callerid = substr($callerid,$calleridlen-10,10); 
-    my $uline    = $this->agi->get_variable("PARKINGEXTEN");
+    $callerid = substr( $callerid, $calleridlen - 10, 10 );
+    my $uline = $this->agi->get_variable("PARKINGEXTEN");
 
     my $command = sprintf( "COF\r\n%s\r\n-\r\n%s", $callerid, $uline );
 
@@ -264,49 +292,65 @@ sub _open_blank_taxi_office {
     }
     else {
         $this->_exit( "CAN'T WRITE TO THE SOCKET "
-              . $iinfo->{'ip_addr_pc'} . ":"
-              . $iinfo->{'tcp_port'} );
+                . $iinfo->{'ip_addr_pc'} . ":"
+                . $iinfo->{'tcp_port'} );
     }
-	$this->log("info","Sent ($command) to ".$iinfo->{'ip_addr_pc'}.":".$iinfo->{'tcp_port'});
+    $this->log( "info",
+              "Sent ($command) to "
+            . $iinfo->{'ip_addr_pc'} . ":"
+            . $iinfo->{'tcp_port'} );
     undef $socket;
 
 }
+
 sub _open_blank_your_taxi {
-    my $this  = shift;
-    my $iinfo = shift;
-    my $answered_id = shift; 
+    my $this        = shift;
+    my $iinfo       = shift;
+    my $answered_id = shift;
 
     my $ua = LWP::UserAgent->new;
     $ua->timeout(1);
     $ua->env_proxy;
 
-    my $callerid = $this->agi->get_variable("CALLERID(num)");
+    my $callerid    = $this->agi->get_variable("CALLERID(num)");
     my $calleridlen = length($callerid);
-    $callerid = substr($callerid,$calleridlen-10,10); 
-    my $uline    = $this->agi->get_variable("PARKINGEXTEN");
+    $callerid = substr( $callerid, $calleridlen - 10, 10 );
+    my $uline = $this->agi->get_variable("PARKINGEXTEN");
 
-    my $your_taxi_server_ip = '192.168.0.210'; 
-    my $your_taxi_provider_id = '00000000-0000-0000-0000-000000000010'; 
+    my $your_taxi_server_ip   = '192.168.0.210:8000';
+    my $your_taxi_provider_id = $this->agi->get_variable("YTAXIPROV");
+    unless ( defined($your_taxi_provider_id) ) {
+        $this->log( "error", "YTaxi integration: YTAXIPROV not found! " );
+        return;
+    }
 
-    my $url = sprintf("http://%s/ru/ManagePBX/IncomingCall?provider=%s&from=%s&to=%s",
-        $your_taxi_server_ip,
-        $your_taxi_provider_id,
-        $callerid,
-        $answered_id ); 
+    $this->_set_uline_userfield( $uline, $your_taxi_provider_id, "YourTaxi" );
 
-    $this->log("info",$url);
+    # Evacuator Киев
+    # 00000000-0000-0000-0000-000000000010
+    # Express Киев
+    # 00000000-0000-0000-0000-000000000012
+
+    #my $uline = $this->agi->get_variable("ULINE");
+
+    my $url = sprintf(
+        "http://%s/YTaxi/ru/ManagePBX/IncomingCall?provider=%s&from=%s&to=%s&line=%s",
+        $your_taxi_server_ip, $your_taxi_provider_id, $callerid, $answered_id,
+        $uline );
+
+    $this->log( "info", $url );
     my $response = $ua->get($url);
- 
-    if ($response->is_success) {
-        $this->log("info",$response->decoded_content);
+
+    if ( $response->is_success ) {
+        $this->log( "info", $response->decoded_content );
     }
     else {
-        $this->log("error", $response->status_line);
-        $this->_exit($response->status_line);
+        $this->log( "error", $response->status_line );
+        $this->_exit( $response->status_line );
     }
 
-
 }
+
 sub process {
     my $this = shift;
 
@@ -322,22 +366,22 @@ sub process {
     $memberinterface =~ /^SIP\/(.*)$/;
     my $sip_name = $1;
 
-	if ($this->{debug}) { 
-		$this->log("info","sip_name=$sip_name");
-	}
+    if ( $this->{debug} ) {
+        $this->log( "info", "sip_name=$sip_name" );
+    }
 
     # Get SIP ID + addr
 
     my ( $sip_id, $sip_addr ) = $this->_find_sipid_by_name($sip_name);
-	if ($this->{debug}) {
-		$this->log("info","sip_id=$sip_id, sip_addr = $sip_addr"); 
-	}
+    if ( $this->{debug} ) {
+        $this->log( "info", "sip_id=$sip_id, sip_addr = $sip_addr" );
+    }
 
     # GET Computer integration info
     my $iinfo = $this->_get_iinfo( $sip_id, $sip_addr );
-	if ($this->{debug}){ 
-		 $this->log("info",Dumper($iinfo)); 
-	}
+    if ( $this->{debug} ) {
+        $this->log( "info", Dumper($iinfo) );
+    }
 
     # Check the type of integration and execute it to Computer .
 
@@ -346,21 +390,21 @@ sub process {
     # Currently we support only TaxiOffice mode.
 
     if ( $itype =~ /^TaxiOffice$/i ) {
-    	$this->log("info","Calling TaxiOffice open blank");
+        $this->log( "info", "Calling YourTaxi open blank" );
+        $this->_open_blank_your_taxi( $iinfo, $sip_name );
+        $this->log( "info", "Calling TaxiOffice open blank" );
         $this->_open_blank_taxi_office($iinfo);
     }
 
     if ( $itype =~ /^TaxiNavigator$/i ) {
-    	$this->log("info","Calling TaxiNavigator open blank");
-        $this->_open_blank_taxi_navigator($iinfo, $sip_name);
+        $this->log( "info", "Calling TaxiNavigator open blank" );
+        $this->_open_blank_taxi_navigator( $iinfo, $sip_name );
     }
 
     if ( $itype =~ /^YourTaxi$/i ) {
-        $this->log("info","Calling YourTaxi open blank");
-        $this->_open_blank_your_taxi($iinfo, $sip_name);
+        $this->log( "info", "Calling YourTaxi open blank" );
+        $this->_open_blank_your_taxi( $iinfo, $sip_name );
     }
-    
-
 
 }
 

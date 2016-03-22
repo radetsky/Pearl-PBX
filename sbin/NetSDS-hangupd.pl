@@ -46,7 +46,7 @@ use NetSDS::Asterisk::Manager;
 use Data::Dumper;
 use LWP::UserAgent;
 
-our @expire_list = (); 
+our @expire_list = ();
 
 sub start {
     my $this = shift;
@@ -64,8 +64,8 @@ sub start {
     $this->_db_connect();
     $this->_clear_ulines();
 
-    $this->{'count'} = 0; 
- 
+    $this->{'count'} = 0;
+
     $this->_el_connect();
 
 }
@@ -147,7 +147,8 @@ sub _el_connect {
 sub _clear_ulines {
     my $this = shift;
 
-    $this->log("warning","Start clear ulines procedure."); 
+    $this->log( "warning", "Start clear ulines procedure." );
+
     # connect
     unless ( defined( $this->conf->{'el'}->{'host'} ) ) {
         $this->speak("Can't file el->host in configuration.");
@@ -182,13 +183,16 @@ sub _clear_ulines {
     my $connected = $manager->connect;
     unless ( defined($connected) ) {
 
-        $this->speak("Can't connect to the asterisk manager interface: ".$manager->geterror());
+        $this->speak( "Can't connect to the asterisk manager interface: "
+                . $manager->geterror() );
         $this->log( "warning",
-            "Can't connect to the asterisk manager interface: ".$manager->geterror());
+            "Can't connect to the asterisk manager interface: "
+                . $manager->geterror() );
         exit(-1);
     }
 
     $this->speak("Manager connected. Getting status.");
+
     # get status
     my @liststatus = $this->_get_status($manager);
     $this->speak("Got status. Getting busy ulines.");
@@ -213,8 +217,9 @@ sub _clear_ulines {
             $this->_free_uline($channel);
         }
     }
-    $manager->sendcommand('Action' => "Logoff"); 
+    $manager->sendcommand( 'Action' => "Logoff" );
     $manager->receive_answer();
+
     # clear offline channels
     $this->speak("Ulines cleared. Going to process().");
 }
@@ -267,7 +272,7 @@ sub _get_busy_ulines {
     $this->_begin;
 
     my $sth = $this->dbh->prepare(
-"select id,channel_name from integration.ulines where status='busy' order by id asc"
+        "select id,channel_name from integration.ulines where status='busy' order by id asc"
     );
     eval { my $rv = $sth->execute; };
     if ($@) {
@@ -279,48 +284,49 @@ sub _get_busy_ulines {
     return $busylines;
 }
 
-sub _get_uline_by_channel { 
+sub _get_uline_by_channel {
     my $this    = shift;
     my $channel = shift;
 
     $this->_begin;
     my $sth = $this->dbh->prepare(
-        "select id from integration.ulines where channel_name=? and status='busy' order by id asc limit 1");
+        "select id from integration.ulines where channel_name=? and status='busy' order by id asc limit 1"
+    );
     eval { my $rv = $sth->execute($channel); };
     if ($@) {
         $this->_exit( $this->dbh->errstr );
     }
     my $result = $sth->fetchrow_hashref;
-	$this->dbh->rollback; 
+    $this->dbh->rollback;
 
-	unless ( defined ( $result ) ) { 
-		return undef; 
-	}
-	return $result->{'id'}; 	
+    unless ( defined($result) ) {
+        return undef;
+    }
+    return $result->{'id'};
 }
 
-sub _integration_free { 
-    my ($this, $uline, $itype, $userfield ) = @_; 
+sub _integration_free {
+    my ( $this, $uline, $itype, $userfield ) = @_;
 
-    if ($itype =~ /YourTaxi/) { 
+    if ( $itype =~ /YourTaxi/ ) {
         my $ua = LWP::UserAgent->new;
         $ua->timeout(1);
         $ua->env_proxy;
 
         my $your_taxi_server_ip = '192.168.0.210:8000';
-        my $url = sprintf("http://%s/YTaxi/ru/ManagePBX/HangUp?provider=%s&line=%s",
-            $your_taxi_server_ip,
-            $userfield,
-            $uline );
-       
-        $this->log("info",$url);
+        my $url =
+            sprintf( "http://%s/YTaxi/ru/ManagePBX/HangUp?provider=%s&line=%s",
+            $your_taxi_server_ip, $userfield, $uline );
+
+        $this->log( "info", $url );
         my $response = $ua->get($url);
 
-        if ($response->is_success) {
-            $this->log("info",$response->decoded_content);
-        } else {
-            $this->log("error", $response->status_line);
-        }    
+        if ( $response->is_success ) {
+            $this->log( "info", $response->decoded_content );
+        }
+        else {
+            $this->log( "error", $response->status_line );
+        }
     }
 }
 
@@ -331,7 +337,8 @@ sub _free_uline {
     $this->_begin;
 
     my $sth = $this->dbh->prepare(
-        "select id,integration_type,userfield from integration.ulines where channel_name=? and status='busy' order by id asc limit 1 for update");
+        "select id,integration_type,userfield from integration.ulines where channel_name=? and status='busy' order by id asc limit 1 for update"
+    );
 
     eval { my $rv = $sth->execute($channel); };
     if ($@) {
@@ -341,18 +348,25 @@ sub _free_uline {
     my $result = $sth->fetchrow_hashref;
 
     unless ( defined($result) ) {
-        $this->log("warning","Hangup $channel, but integration.ulines does not has it.");
+        $this->log( "warning",
+            "Hangup $channel, but integration.ulines does not has it." );
         $this->dbh->rollback;
         return undef;
     }
 
-	my $id = $result->{'id'};
-    my $itype = $result->{'integration_type'}; 
-    my $userfield = $result->{'userfield'}; 
+    my $id        = $result->{'id'};
+    my $itype     = $result->{'integration_type'};
+    my $userfield = $result->{'userfield'};
 
-	$this->log("info",sprintf("_free_uline: id=%s,itype=%s,userfield=%s",$id, $itype, $userfield));
+    $this->log(
+        "info",
+        sprintf(
+            "_free_uline: id=%s,itype=%s,userfield=%s",
+            $id, $itype, $userfield
+        )
+    );
 
-    $this->_integration_free($id, $itype, $userfield); 
+    $this->_integration_free( $id, $itype, $userfield );
 
     $sth = $this->dbh->prepare(
         "update integration.ulines set status='free' where id=?");
@@ -375,28 +389,30 @@ sub _recording_set_final {
 
     $this->_begin;
 
-    my $sth = $this->dbh->prepare (
-    "select id from integration.recordings where uline_id=? and next_record is NULL 
-        order by id");
+    my $sth = $this->dbh->prepare(
+        "select id from integration.recordings where uline_id=? and next_record is NULL 
+        order by id"
+    );
 
     eval { my $rv = $sth->execute($uline_id); };
     if ($@) {
         $this->_exit( $this->dbh->errstr );
     }
-    my @ids = (); 
+    my @ids = ();
 
-    while  ( my $result = $sth->fetchrow_hashref ) { 
-        push @ids, $result->{'id'}; 
-    } 
+    while ( my $result = $sth->fetchrow_hashref ) {
+        push @ids, $result->{'id'};
+    }
     $sth = $this->dbh->prepare(
-            "update integration.recordings set next_record=0 where id=?");
+        "update integration.recordings set next_record=0 where id=?");
 
-    foreach my $rec_id ( @ids ) { 
+    foreach my $rec_id (@ids) {
         eval { my $rv = $sth->execute($rec_id); };
         if ($@) {
             $this->_exit( $this->dbh->errstr );
         }
-        $this->log( "info", "Record # $rec_id for line # $uline_id set as final." );
+        $this->log( "info",
+            "Record # $rec_id for line # $uline_id set as final." );
     }
 
     $this->dbh->commit;
@@ -422,61 +438,66 @@ sub _exit {
     exit(-1);
 }
 
-sub _add_2_expire  { 
-	my $this = shift; 
-	my $channel = shift; 
-	my $uline = shift; 
-	my $expire_time = shift; 
+sub _add_2_expire {
+    my $this        = shift;
+    my $channel     = shift;
+    my $uline       = shift;
+    my $expire_time = shift;
 
-	$this->log("info","added to expire list $uline $channel $expire_time"); 
-	push @expire_list, { channel => $channel, uline => $uline, expire_time => $expire_time } ; 
+    $this->log( "info", "added to expire list $uline $channel $expire_time" );
+    push @expire_list,
+        { channel => $channel, uline => $uline, expire_time => $expire_time };
+
+}
+
+sub _expire_ulines {
+    my $this = shift;
+    my $t    = undef;
+    my $item = undef;
+
+    while (1) {
+        $t    = time();
+        $item = shift @expire_list;
+        unless ($item) {
+
+            # $this->log("info","Empty expire list");
+            last;
+        }
+        if ( $item->{'expire_time'} <= $t ) {
+            $this->log( "info",
+                "Time: $t to free uline $item->{'uline'} with $item->{'channel'}"
+            );
+            $this->_free_uline( $item->{'channel'} );
+        }
+        else {
+            # $this->log("info","First item in the expire_list has time in future. ");
+            unshift @expire_list, $item;
+            last;
+        }
+    }
+
+    return 1;
 
 }
 
-sub _expire_ulines { 
-	my $this = shift; 
-	my $t = undef; 
-	my $item = undef; 
-
-	while (1) { 
-		$t = time(); 
-		$item = shift @expire_list; 
-		unless ( $item ) { 
-			# $this->log("info","Empty expire list");
-			last; 
-		} 
-		if ($item->{'expire_time'} <= $t ) {
-			$this->log("info","Time: $t to free uline $item->{'uline'} with $item->{'channel'}"); 
-			$this->_free_uline ($item->{'channel'}); 
-		} else { 
-            # $this->log("info","First item in the expire_list has time in future. "); 
-			unshift @expire_list,$item; 
-			last; 
-		} 
-	} 
-    
-   return 1; 
-
-}
 sub process {
     my $this = shift;
 
     my $event   = undef;
     my $channel = undef;
-	my $uline = undef; 
+    my $uline   = undef;
 
     while (1) {
-
         $event = $this->el->_getEvent();
         unless ($event) {
-	        # $this->log("info","No event from AMI. Sleeping."); 
-            $this->{'count'} = $this->{'count'} + 1; 
-    	    if ($this->{'count'} >= 300 ) { 
-                $this->_clear_ulines(); 
-                $this->{'count'} = 0; 
-            } 
-	    sleep(1);
-	    $this->_expire_ulines();
+            # $this->log("info","No event from AMI. Sleeping.");
+            $this->{'count'} = $this->{'count'} + 1;
+            if ( $this->{'count'} >= 300 ) {
+                $this->_clear_ulines();
+                $this->{'count'} = 0;
+            }
+            sleep(1);
+            $this->_expire_ulines();
             next;
         }
 
@@ -486,14 +507,14 @@ sub process {
         }
         if ( $event->{'Event'} =~ /Hangup/i ) {
             $channel = $event->{'Channel'};
-			$this->log("info","Got hangup for $channel"); 
-			$uline = $this->_get_uline_by_channel ($channel); 
-			unless ( defined ( $uline ) ) { 
-				next; 
-			}
-			$this->_add_2_expire ($channel, $uline , time()+3);
-		}
-		$this->_expire_ulines();
+            $this->log( "info", "Got hangup for $channel" );
+            $uline = $this->_get_uline_by_channel($channel);
+            unless ( defined($uline) ) {
+                next;
+            }
+            $this->_add_2_expire( $channel, $uline, time() + 3 );
+        }
+        $this->_expire_ulines();
     }
 
 }
