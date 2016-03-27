@@ -108,7 +108,7 @@ sub _db_connect {
     # If DBMS isn' t accessible - try reconnect
     if ( !$this->dbh or !$this->dbh->ping ) {
         $this->dbh(
-            DBI->connect ( $dsn, $user, $passwd, { AutoCommit => 0, RaiseError => 1 } )
+            DBI->connect ( $dsn, $user, $passwd, { AutoCommit => 1, RaiseError => 1 } )
         );
     }
 
@@ -449,8 +449,8 @@ sub save_mixmonitor_params {
     $this->_begin;
     my $sth = $this->dbh->prepare (
         "insert into integration.recordings \
-        (original_file,cdr_start,cdr_src,cdr_dst,cdr_uniqueid) \
-        values (?,?,?,?,?)" );
+        (original_file,cdr_start,cdr_src,cdr_dst,cdr_uniqueid,next_record) \
+        values (?,?,?,?,?,0)" );
 
     eval {
         my $rv = $sth->execute( $original_file, $cdr_start, $cdr_src,
@@ -461,7 +461,6 @@ sub save_mixmonitor_params {
         $this->_exit( $this->dbh->errstr );
     }
 
-    my $result = $sth->fetchrow_hashref;
     $this->dbh->commit;
     $this->agi->verbose ( "Save mixmonitor params: $cdr_start, $cdr_src, $cdr_dst, $uniqueid", 3);
 }
