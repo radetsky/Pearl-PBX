@@ -78,21 +78,21 @@ SET search_path = integration, pg_catalog;
 
 CREATE FUNCTION get_free_uline() RETURNS integer
     LANGUAGE plpgsql
-    AS $$declare 
+    AS $$declare
 
-UID integer; 
+UID integer;
 
-begin 
+begin
 
-select id into UID from integration.ulines 
-	where status='free' 
+select id into UID from integration.ulines
+	where status='free'
 	order by id asc limit 1
-	for update; 
-if not found then 
-	raise exception 'ALL LINES BUSY'; 
-end if; 
+	for update;
+if not found then
+	raise exception 'ALL LINES BUSY';
+end if;
 
-return UID; 
+return UID;
 
 end;
 $$;
@@ -120,42 +120,42 @@ CREATE FUNCTION get_callerid(peer_name character varying, number_b character var
 declare
 
 UID bigint;
-DIR_ID bigint; 
-CALLER_ID character varying; 
+DIR_ID bigint;
+CALLER_ID character varying;
 
 begin
 
 select id from public.sip_peers where name=$1 into UID;
-if not found then 
+if not found then
 	raise exception 'NO SOURCE PEER/USER BY CHANNEL';
-end if; 
+end if;
 
 --
 -- gettting direction_id by number_b
--- 
+--
 
-select dr_list_item into DIR_ID from routing.directions 
-	where $2 ~ dr_prefix 
-	order by dr_prio 
-	asc 
-	limit 1; 
+select dr_list_item into DIR_ID from routing.directions
+	where $2 ~ dr_prefix
+	order by dr_prio
+	asc
+	limit 1;
 
-if not found then 
-	raise exception 'NO DESTINATION BY NUMBER_B'; 
-end if; 
+if not found then
+	raise exception 'NO DESTINATION BY NUMBER_B';
+end if;
 
 --
 -- get caller id
 --
-select set_callerid into CALLER_ID from routing.callerid 
+select set_callerid into CALLER_ID from routing.callerid
 	where direction_id = DIR_ID and sip_id = UID;
 if not found then
-	select set_callerid into CALLER_ID from routing.callerid 
-		where direction_id = DIR_ID and sip_id is NULL; 
-	if not found then 
+	select set_callerid into CALLER_ID from routing.callerid
+		where direction_id = DIR_ID and sip_id is NULL;
+	if not found then
 		return '';
-	end if; 
-end if; 
+	end if;
+end if;
 
 return CALLER_ID;
 
@@ -171,7 +171,7 @@ ALTER FUNCTION routing.get_callerid(peer_name character varying, number_b charac
 -- Name: FUNCTION get_callerid(peer_name character varying, number_b character varying); Type: COMMENT; Schema: routing; Owner: asterisk
 --
 
-COMMENT ON FUNCTION get_callerid(peer_name character varying, number_b character varying) IS 'Находим и подставляем callerid. 
+COMMENT ON FUNCTION get_callerid(peer_name character varying, number_b character varying) IS 'Находим и подставляем callerid.
 ';
 
 
@@ -191,53 +191,53 @@ rname varchar(32);
 begin
 --
 -- Try to find direction by prefix;
--- 
-select * into dir from routing.directions 
-	where $1 ~ dr_prefix 
-	order by dr_prio 
-	asc 
-	limit 1; 
+--
+select * into dir from routing.directions
+	where $1 ~ dr_prefix
+	order by dr_prio
+	asc
+	limit 1;
 
-if not found then 
+if not found then
 	raise exception 'NO DIRECTION';
-end if; 
+end if;
 --
 -- Try to find route record that will give us type and destination id.
 --
-select * into r from routing.route 
-	where route_direction_id = dir.dr_list_item 
-	and route_step = $2  
-	order by route_step asc limit 1; 
+select * into r from routing.route
+	where route_direction_id = dir.dr_list_item
+	and route_step = $2
+	order by route_step asc limit 1;
 
-if not found then 
+if not found then
 	raise exception 'NO ROUTE';
-end if; 
+end if;
 
--- Try to find destination id and name; 
--- case route_type (user) 
-if r.route_type = 'user' then 
-	select name into rname from public.sip_users where id=r.route_dest_id; 
-	if not found then 
-		raise exception 'NO DESTINATION'; 
-	end if; 
+-- Try to find destination id and name;
+-- case route_type (user)
+if r.route_type = 'user' then
+	select name into rname from public.sip_users where id=r.route_dest_id;
+	if not found then
+		raise exception 'NO DESTINATION';
+	end if;
 	return rname;
-end if; 
--- case route_type (context) 
-if r.route_type = 'context' then 
+end if;
+-- case route_type (context)
+if r.route_type = 'context' then
 
 end if;
--- case route_type (trunk) 
-if r.route_type = 'trunk' then 
-	select name into rname from public.sip_peers where id=r.route_desi_id; 
-	if not found then 
-		raise exception 'NO DESTINATION'; 
+-- case route_type (trunk)
+if r.route_type = 'trunk' then
+	select name into rname from public.sip_peers where id=r.route_desi_id;
+	if not found then
+		raise exception 'NO DESTINATION';
 	end if;
-	return rname; 
-end if; 
--- case route_type (trunkgroup) 
-if r.route_type = 'tgroup' then 
+	return rname;
+end if;
+-- case route_type (trunkgroup)
+if r.route_type = 'tgroup' then
 
-end if; 
+end if;
 RAISE EXCEPTION 'This is the end. Some situation can not be handled.';
 return 'END';
 
@@ -266,87 +266,87 @@ declare
 dir routing.directions%ROWTYPE;
 r routing.route%ROWTYPE;
 rname varchar(32);
-trunk_id bigint; 
+trunk_id bigint;
 
 begin
 --
 -- Try to find direction by prefix;
--- 
-select * into dir from routing.directions 
-	where $1 ~ dr_prefix 
-	order by dr_prio 
-	asc 
-	limit 1; 
+--
+select * into dir from routing.directions
+	where $1 ~ dr_prefix
+	order by dr_prio
+	asc
+	limit 1;
 
-if not found then 
+if not found then
 	raise exception 'NO DIRECTION';
-end if; 
+end if;
 --
 -- Try to find route record that will give us type and destination id.
 --
-select * into r from routing.route 
-	where route_direction_id = dir.dr_list_item 
-	and route_step = $2  
-	order by route_step asc limit 1; 
+select * into r from routing.route
+	where route_direction_id = dir.dr_list_item
+	and route_step = $2
+	order by route_step asc limit 1;
 
-if not found then 
+if not found then
 	raise exception 'NO ROUTE';
-end if; 
+end if;
 
 dst_type = r.route_type;
-try = current_try; 
+try = current_try;
 
--- Try to find destination id and name; 
--- case route_type (user) 
-if r.route_type = 'user' then 
-	select name into dst_str from public.sip_peers where id=r.route_dest_id; 
-	if not found then 
-		raise exception 'NO DESTINATION'; 
-	end if; 
-	
+-- Try to find destination id and name;
+-- case route_type (user)
+if r.route_type = 'user' then
+	select name into dst_str from public.sip_peers where id=r.route_dest_id;
+	if not found then
+		raise exception 'NO DESTINATION';
+	end if;
+
 	return next;
 	return;
-end if; 
--- case route_type (trunk) 
-if r.route_type = 'trunk' then 
-	select name into dst_str from public.sip_peers where id=r.route_dest_id; 
-	if not found then 
-		raise exception 'NO DESTINATION'; 
+end if;
+-- case route_type (trunk)
+if r.route_type = 'trunk' then
+	select name into dst_str from public.sip_peers where id=r.route_dest_id;
+	if not found then
+		raise exception 'NO DESTINATION';
 	end if;
 	return next;
 	return;
-end if; 
+end if;
 
--- case route_type (context) 
-if r.route_type = 'context' then 
-	select context into dst_str from public.extensions_conf where id=r.route_dest_id; 
-	if not found then 
-		raise exception 'NO DESTINATION'; 
-	end if; 
-	return next; 
-	return; 
-end if; 
+-- case route_type (context)
+if r.route_type = 'context' then
+	select context into dst_str from public.extensions_conf where id=r.route_dest_id;
+	if not found then
+		raise exception 'NO DESTINATION';
+	end if;
+	return next;
+	return;
+end if;
 
--- case route_type (trunkgroup) 
-if r.route_type = 'tgrp' then 
+-- case route_type (trunkgroup)
+if r.route_type = 'tgrp' then
 -- находим последний транк в группе, который был заюзан крайний раз.
--- и уменьшаем кол-во попыток на -1 , что бы снова вернутся к группе. 
--- ВОПРОС: а как же определить заканчивание цикла ?  
--- ОТВЕТ: в перле. 
-	try = current_try - 1; 
+-- и уменьшаем кол-во попыток на -1 , что бы снова вернутся к группе.
+-- ВОПРОС: а как же определить заканчивание цикла ?
+-- ОТВЕТ: в перле.
+	try = current_try - 1;
 	select get_next_trunk_in_group into trunk_id from routing.get_next_trunk_in_group (r.route_dest_id);
-	if trunk_id < 0 then 
-		raise exception 'NO DESTINATION IN GROUP'; 
-	end if; 
+	if trunk_id < 0 then
+		raise exception 'NO DESTINATION IN GROUP';
+	end if;
 
-	select name into dst_str from public.sip_peers where id=trunk_id; 
-	if not found then 
-		raise exception 'NO DESTINATION'; 
+	select name into dst_str from public.sip_peers where id=trunk_id;
+	if not found then
+		raise exception 'NO DESTINATION';
 	end if;
 	return next;
 	return;
 
-end if; 
+end if;
 RAISE EXCEPTION 'This is the end. Some situation can not be handled.';
 return;
 
@@ -368,123 +368,123 @@ declare
 dir routing.directions%ROWTYPE;
 r routing.route%ROWTYPE;
 rname varchar(32);
-trunk_id bigint; 
-sip_id bigint; 
+trunk_id bigint;
+sip_id bigint;
 
 begin
 
 --
--- Get SIP ID from peername; 
--- 
+-- Get SIP ID from peername;
+--
 
-select id from public.sip_peers where name=$1 into sip_id; 
-if not found then 
+select id from public.sip_peers where name=$1 into sip_id;
+if not found then
 	raise exception 'NO SOURCE PEER/USER BY CHANNEL';
-end if; 
+end if;
 
 --
 -- Try to find direction by prefix;
--- 
-select * into dir from routing.directions 
-	where $2 ~ dr_prefix 
-	order by dr_prio 
-	asc 
-	limit 1; 
+--
+select * into dir from routing.directions
+	where $2 ~ dr_prefix
+	order by dr_prio
+	asc
+	limit 1;
 
-if not found then 
+if not found then
 	raise exception 'NO DIRECTION';
-end if; 
+end if;
 
 --
 -- Try to find route record that will give us type and destination id.
 --
- 
+
 --
--- First try to search route record with peer sip ID 
+-- First try to search route record with peer sip ID
 --
 
-select * into r from routing.route 
-	where route_direction_id = dir.dr_list_item 
-	and route_step = $3 
-	and route_sip_id = sip_id 
-	order by route_step asc limit 1; 
+select * into r from routing.route
+	where route_direction_id = dir.dr_list_item
+	and route_step = $3
+	and route_sip_id = sip_id
+	order by route_step asc limit 1;
 
-if not found then 
--- Try to find general route record with (route_sip_id = NULL) 
-	select * into r from routing.route 
-		where route_direction_id = dir.dr_list_item 
+if not found then
+-- Try to find general route record with (route_sip_id = NULL)
+	select * into r from routing.route
+		where route_direction_id = dir.dr_list_item
 		and route_step = $3
-		and route_sip_id is NULL   
-		order by route_step asc limit 1; 
-	if not found then 
+		and route_sip_id is NULL
+		order by route_step asc limit 1;
+	if not found then
 		raise exception 'NO ROUTE';
 	end if;
-end if;  
+end if;
 
 dst_type = r.route_type;
-try = current_try; 
+try = current_try;
 
--- Try to find destination id and name; 
--- case route_type (user) 
-if r.route_type = 'user' then 
-	select name into dst_str from public.sip_peers where id=r.route_dest_id; 
-	if not found then 
-		raise exception 'NO DESTINATION'; 
-	end if; 
-	
+-- Try to find destination id and name;
+-- case route_type (user)
+if r.route_type = 'user' then
+	select name into dst_str from public.sip_peers where id=r.route_dest_id;
+	if not found then
+		raise exception 'NO DESTINATION';
+	end if;
+
 	return next;
 	return;
-end if; 
--- case route_type (trunk) 
-if r.route_type = 'trunk' then 
-	select name into dst_str from public.sip_peers where id=r.route_dest_id; 
-	if not found then 
-		raise exception 'NO DESTINATION'; 
+end if;
+-- case route_type (trunk)
+if r.route_type = 'trunk' then
+	select name into dst_str from public.sip_peers where id=r.route_dest_id;
+	if not found then
+		raise exception 'NO DESTINATION';
 	end if;
 	return next;
 	return;
-end if; 
+end if;
 
--- case route_type (context) 
-if r.route_type = 'context' then 
-	select context into dst_str from public.extensions_conf where id=r.route_dest_id; 
-	if not found then 
-		raise exception 'NO DESTINATION'; 
-	end if; 
-	return next; 
-	return; 
-end if; 
+-- case route_type (context)
+if r.route_type = 'context' then
+	select context into dst_str from public.extensions_conf where id=r.route_dest_id;
+	if not found then
+		raise exception 'NO DESTINATION';
+	end if;
+	return next;
+	return;
+end if;
 
--- case route_type (lmask) 
-if r.route_type = 'lmask' then 
-	select name into dst_str from public.sip_peers where name=$2; 
-	if not found then 
+-- case route_type (lmask)
+if r.route_type = 'lmask' then
+	select name into dst_str from public.sip_peers where name=$2;
+	if not found then
 		raise exception 'LOCAL USER NOT FOUND';
-	end if; 
-	return next; 
+	end if;
+	return next;
 	return;
-end if; 
+end if;
 
--- case route_type (trunkgroup) 
-if r.route_type = 'tgrp' then 
+-- case route_type (trunkgroup)
+if r.route_type = 'tgrp' then
 -- находим последний транк в группе, который был заюзан крайний раз.
--- и уменьшаем кол-во попыток на -1 , что бы снова вернутся к группе. 
--- ВОПРОС: а как же определить заканчивание цикла ?  
--- ОТВЕТ: в перле. 
-	try = current_try - 1; 
+-- и уменьшаем кол-во попыток на -1 , что бы снова вернутся к группе.
+-- ВОПРОС: а как же определить заканчивание цикла ?
+-- ОТВЕТ: в перле.
+	try = current_try - 1;
 	select get_next_trunk_in_group into trunk_id from routing.get_next_trunk_in_group (r.route_dest_id);
-	if trunk_id < 0 then 
-		raise exception 'NO DESTINATION IN GROUP'; 
-	end if; 
+	if trunk_id < 0 then
+		raise exception 'NO DESTINATION IN GROUP';
+	end if;
 
-	select name into dst_str from public.sip_peers where id=trunk_id; 
-	if not found then 
-		raise exception 'NO DESTINATION'; 
+	select name into dst_str from public.sip_peers where id=trunk_id;
+	if not found then
+		raise exception 'NO DESTINATION';
 	end if;
 	return next;
 	return;
 
-end if; 
+end if;
 RAISE EXCEPTION 'This is the end. Some situation can not be handled.';
 return;
 
@@ -501,78 +501,78 @@ ALTER FUNCTION routing.get_dial_route4(peername character varying, exten charact
 CREATE FUNCTION get_next_trunk_in_group(group_id bigint) RETURNS bigint
     LANGUAGE plpgsql
     AS $_$
-declare 
+declare
 
 trunk_id bigint;
-new_id bigint; 
+new_id bigint;
 
-begin 
+begin
 
 -- Получаем последний занятый. Его надо обновить на свободный.
 
-select tgrp_item_peer_id into trunk_id 
-	from routing.trunkgroup_items 
-	where tgrp_item_group_id = $1 
-	and tgrp_item_last is true 
-	order by tgrp_item_peer_id 
-	asc limit 1 
+select tgrp_item_peer_id into trunk_id
+	from routing.trunkgroup_items
+	where tgrp_item_group_id = $1
+	and tgrp_item_last is true
+	order by tgrp_item_peer_id
+	asc limit 1
 	for update;
 
-if not found then 
-	select tgrp_item_peer_id into trunk_id 
+if not found then
+	select tgrp_item_peer_id into trunk_id
 		from routing.trunkgroup_items
-		where tgrp_item_group_id = $1 
-		order by tgrp_item_peer_id 
-		asc limit 1 
-		for update; 
--- Если в группе вообще ничего нет, то ошибка.
-	if not found then 
-		return -1; 
-	end if; 
--- Если есть. Занимаем первый транк.
-	update routing.trunkgroup_items 
-		set tgrp_item_last=true 
-		where tgrp_item_group_id = $1 
-		and tgrp_item_peer_id = trunk_id; 
-	return trunk_id; 
-
-else 
--- У нас есть trunk_id. Ищем сначала следующий. 
-	select tgrp_item_peer_id into new_id 
-		from routing.trunkgroup_items 
-		where tgrp_item_group_id = $1 
-		and tgrp_item_peer_id > trunk_id  
-		order by tgrp_item_peer_id 
-		asc limit 1 
+		where tgrp_item_group_id = $1
+		order by tgrp_item_peer_id
+		asc limit 1
 		for update;
--- Если не нашел, ищем с начала списка 
-	if not found then 
-		select tgrp_item_peer_id into new_id 
-			from routing.trunkgroup_items 
-			where tgrp_item_group_id = $1 
-			and tgrp_item_peer_id < trunk_id  
-			order by tgrp_item_peer_id 
-			asc limit 1 
-			for update;	
--- Если не нашел и сначала, то ошибка. В группе только 1(один!) транк. 
-		if not found then 
-			return -1; 
-		end if; 
-
-	end if; 
---Обновляем на "свободный" бывший занятый транк.
-	update routing.trunkgroup_items 
-		set tgrp_item_last=false
-		where tgrp_item_group_id = $1 
-		and tgrp_item_peer_id = trunk_id; 
--- Занимаем следующий транк 
-	update routing.trunkgroup_items 
+-- Если в группе вообще ничего нет, то ошибка.
+	if not found then
+		return -1;
+	end if;
+-- Если есть. Занимаем первый транк.
+	update routing.trunkgroup_items
 		set tgrp_item_last=true
-		where tgrp_item_group_id = $1 
-		and tgrp_item_peer_id = new_id; 
+		where tgrp_item_group_id = $1
+		and tgrp_item_peer_id = trunk_id;
+	return trunk_id;
 
-	return new_id; 
-end if; 
+else
+-- У нас есть trunk_id. Ищем сначала следующий.
+	select tgrp_item_peer_id into new_id
+		from routing.trunkgroup_items
+		where tgrp_item_group_id = $1
+		and tgrp_item_peer_id > trunk_id
+		order by tgrp_item_peer_id
+		asc limit 1
+		for update;
+-- Если не нашел, ищем с начала списка
+	if not found then
+		select tgrp_item_peer_id into new_id
+			from routing.trunkgroup_items
+			where tgrp_item_group_id = $1
+			and tgrp_item_peer_id < trunk_id
+			order by tgrp_item_peer_id
+			asc limit 1
+			for update;
+-- Если не нашел и сначала, то ошибка. В группе только 1(один!) транк.
+		if not found then
+			return -1;
+		end if;
+
+	end if;
+--Обновляем на "свободный" бывший занятый транк.
+	update routing.trunkgroup_items
+		set tgrp_item_last=false
+		where tgrp_item_group_id = $1
+		and tgrp_item_peer_id = trunk_id;
+-- Занимаем следующий транк
+	update routing.trunkgroup_items
+		set tgrp_item_last=true
+		where tgrp_item_group_id = $1
+		and tgrp_item_peer_id = new_id;
+
+	return new_id;
+end if;
 
 end;
 $_$;
@@ -594,47 +594,47 @@ COMMENT ON FUNCTION get_next_trunk_in_group(group_id bigint) IS 'Возвращ�
 CREATE FUNCTION get_permission(peer_name character varying, number_b character varying) RETURNS boolean
     LANGUAGE plpgsql
     AS $_$
-declare 
+declare
 
 UID bigint;
-DIR_ID bigint; 
+DIR_ID bigint;
 
 begin
 
 --
--- we getting UID 
+-- we getting UID
 --
 
 select id from public.sip_peers where name=$1 into UID;
-if not found then 
+if not found then
 	raise exception 'NO SOURCE PEER/USER BY CHANNEL';
-end if; 
+end if;
 
 --
 -- gettting direction_id by number_b
--- 
+--
 
-select dr_list_item into DIR_ID from routing.directions 
-	where $2 ~ dr_prefix 
-	order by dr_prio 
-	asc 
-	limit 1; 
+select dr_list_item into DIR_ID from routing.directions
+	where $2 ~ dr_prefix
+	order by dr_prio
+	asc
+	limit 1;
 
-if not found then 
-	raise exception 'NO DESTINATION BY NUMBER_B'; 
-end if; 
+if not found then
+	raise exception 'NO DESTINATION BY NUMBER_B';
+end if;
 
 
 
-perform id from routing.permissions 
-	where direction_id=DIR_ID 
+perform id from routing.permissions
+	where direction_id=DIR_ID
 	and peer_id=UID;
-	
-if not found then 
-	return false; 
-end if; 
 
-return true; 
+if not found then
+	return false;
+end if;
+
+return true;
 
 end;
 
@@ -651,13 +651,13 @@ ALTER FUNCTION routing.get_permission(peer_name character varying, number_b char
 -- Name: FUNCTION get_permission(peer_name character varying, number_b character varying); Type: COMMENT; Schema: routing; Owner: asterisk
 --
 
-COMMENT ON FUNCTION get_permission(peer_name character varying, number_b character varying) IS 'Процедура получения прав доступа на текущий звонок с номера А (канала А) на номер Б (направление Б). Исходные данные: 
-- обрезанное имя канала (SIP/kyivstar-000001 = kyivstar), 
-- номер Б 
+COMMENT ON FUNCTION get_permission(peer_name character varying, number_b character varying) IS 'Процедура получения прав доступа на текущий звонок с номера А (канала А) на номер Б (направление Б). Исходные данные:
+- обрезанное имя канала (SIP/kyivstar-000001 = kyivstar),
+- номер Б
 
-Задача: 
-1. найти указанное направление по номеру Б. 
-2. Получить хотя бы одну запись из таблицы permissions. 
+Задача:
+1. найти указанное направление по номеру Б.
+2. Получить хотя бы одну запись из таблицы permissions.
 
 Тогда право есть. Иначе - permission denied and get out :-) ';
 
@@ -668,30 +668,30 @@ COMMENT ON FUNCTION get_permission(peer_name character varying, number_b charact
 
 CREATE FUNCTION route_test() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$ 
-begin 
-if NEW.route_type = 'trunk' then  
-	perform  id from public.sip_peers where id=NEW.route_dest_id; 
-	if not found then 
+    AS $$
+begin
+if NEW.route_type = 'trunk' then
+	perform  id from public.sip_peers where id=NEW.route_dest_id;
+	if not found then
 		raise exception 'sip peer not found with same id';
 	end if;
-end if;  
-if NEW.route_type = 'user' then 
-	perform  id from public.sip_peers where id=NEW.route_dest_id; 
-	if not found then 
-		raise exception 'sip user not found with same id';
-	end if; 
 end if;
-if NEW.route_type = 'context' then 
-	perform id from public.extensions_conf where id=NEW.route_dest_id; 
-	if not found then 
-		raise exception 'context not found'; 
-	end if ; 
-end if; 
-if NEW.route_type = 'tgrp' then 
-	perform tgrp_id from routing.trunkgroups where tgrp_id=NEW.route_dest_id; 
-	if not found then 
-		raise exception 'trunkgroup not found'; 
+if NEW.route_type = 'user' then
+	perform  id from public.sip_peers where id=NEW.route_dest_id;
+	if not found then
+		raise exception 'sip user not found with same id';
+	end if;
+end if;
+if NEW.route_type = 'context' then
+	perform id from public.extensions_conf where id=NEW.route_dest_id;
+	if not found then
+		raise exception 'context not found';
+	end if ;
+end if;
+if NEW.route_type = 'tgrp' then
+	perform tgrp_id from routing.trunkgroups where tgrp_id=NEW.route_dest_id;
+	if not found then
+		raise exception 'trunkgroup not found';
 	end if;
 end if;
 return NEW;
@@ -708,7 +708,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: recordings; Type: TABLE; Schema: integration; Owner: asterisk; Tablespace: 
+-- Name: recordings; Type: TABLE; Schema: integration; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE recordings (
@@ -750,7 +750,7 @@ ALTER SEQUENCE recordings_id_seq OWNED BY recordings.id;
 
 
 --
--- Name: ulines; Type: TABLE; Schema: integration; Owner: asterisk; Tablespace: 
+-- Name: ulines; Type: TABLE; Schema: integration; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE ulines (
@@ -768,7 +768,7 @@ CREATE TABLE ulines (
 ALTER TABLE integration.ulines OWNER TO asterisk;
 
 --
--- Name: workplaces; Type: TABLE; Schema: integration; Owner: asterisk; Tablespace: 
+-- Name: workplaces; Type: TABLE; Schema: integration; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE workplaces (
@@ -810,7 +810,7 @@ ALTER SEQUENCE workplaces_id_seq OWNED BY workplaces.id;
 SET search_path = public, pg_catalog;
 
 --
--- Name: blacklist; Type: TABLE; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: blacklist; Type: TABLE; Schema: public; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE blacklist (
@@ -846,7 +846,7 @@ CREATE unique INDEX blacklist_idx on blacklist ( number);
 
 
 --
--- Name: queue_log; Type: TABLE; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: queue_log; Type: TABLE; Schema: public; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE queue_log (
@@ -884,7 +884,7 @@ ALTER SEQUENCE queue_log_id_seq OWNED BY queue_log.id;
 
 
 --
--- Name: queue_parsed; Type: TABLE; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: queue_parsed; Type: TABLE; Schema: public; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE queue_parsed (
@@ -926,7 +926,7 @@ ALTER SEQUENCE queue_parsed_id_seq OWNED BY queue_parsed.id;
 
 
 --
--- Name: queues; Type: TABLE; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: queues; Type: TABLE; Schema: public; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE queues (
@@ -963,7 +963,7 @@ CREATE TABLE queues (
     ringinuse boolean DEFAULT false,
     setinterfacevar boolean DEFAULT true,
 		autofill boolean DEFAULT true,
-		autopause varchar(5) not null default 'yes', 
+		autopause varchar(5) not null default 'yes',
     "monitor-type" character varying DEFAULT 'mixmonitor'::character varying NOT NULL
 );
 
@@ -971,7 +971,7 @@ CREATE TABLE queues (
 ALTER TABLE public.queues OWNER TO asterisk;
 
 --
--- Name: sip_conf; Type: TABLE; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: sip_conf; Type: TABLE; Schema: public; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE sip_conf (
@@ -1010,7 +1010,7 @@ ALTER SEQUENCE sip_conf_id_seq OWNED BY sip_conf.id;
 
 
 --
--- Name: whitelist; Type: TABLE; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: whitelist; Type: TABLE; Schema: public; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE whitelist (
@@ -1047,7 +1047,7 @@ create UNIQUE INDEX whitelist_idx on whitelist ( number);
 SET search_path = routing, pg_catalog;
 
 --
--- Name: callerid; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: callerid; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE callerid (
@@ -1064,12 +1064,12 @@ ALTER TABLE routing.callerid OWNER TO asterisk;
 -- Name: TABLE callerid; Type: COMMENT; Schema: routing; Owner: asterisk
 --
 
-COMMENT ON TABLE callerid IS 'Таблица подстановок CALLERID. 
-Пример: 
-По направлению  DR_ID, юзер/пир SIP_PEER_ID требует установки CALLERID = XXXX. 
-Если правило найдено, то CALLERID устанавливаем, а если не найдено, то не трогаем вообще. 
+COMMENT ON TABLE callerid IS 'Таблица подстановок CALLERID.
+Пример:
+По направлению  DR_ID, юзер/пир SIP_PEER_ID требует установки CALLERID = XXXX.
+Если правило найдено, то CALLERID устанавливаем, а если не найдено, то не трогаем вообще.
 
-Если SIP_ID is NULL, то устанавливаем правило несмотря на того, кто звонит. Очень удобно для корпоративов. Если нужно подставить значение, которое общее для всех. Все равно сначала ищем "для конкретного человека", а потом "для всего кагала". 
+Если SIP_ID is NULL, то устанавливаем правило несмотря на того, кто звонит. Очень удобно для корпоративов. Если нужно подставить значение, которое общее для всех. Все равно сначала ищем "для конкретного человека", а потом "для всего кагала".
 ';
 
 
@@ -1095,7 +1095,7 @@ ALTER SEQUENCE callerid_id_seq OWNED BY callerid.id;
 
 
 --
--- Name: directions; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: directions; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE directions (
@@ -1112,8 +1112,8 @@ ALTER TABLE routing.directions OWNER TO asterisk;
 -- Name: TABLE directions; Type: COMMENT; Schema: routing; Owner: asterisk
 --
 
-COMMENT ON TABLE directions IS 'Список направлений. Направление характеризуется: 
-1. Префиксом 
+COMMENT ON TABLE directions IS 'Список направлений. Направление характеризуется:
+1. Префиксом
 2. Названием
 3. Приоритетом. ';
 
@@ -1130,7 +1130,7 @@ COMMENT ON COLUMN directions.dr_list_item IS 'Ссылка на список н�
 --
 
 COMMENT ON COLUMN directions.dr_prefix IS 'Таки префикс, вплоть до самого номера. 067
-067220 
+067220
 0672201 :) ';
 
 
@@ -1138,11 +1138,11 @@ COMMENT ON COLUMN directions.dr_prefix IS 'Таки префикс, вплоть
 -- Name: COLUMN directions.dr_prio; Type: COMMENT; Schema: routing; Owner: asterisk
 --
 
-COMMENT ON COLUMN directions.dr_prio IS 'Приоритет маршрутизации. Чем меньше значение, тем выше приоритет. Пример: 
+COMMENT ON COLUMN directions.dr_prio IS 'Приоритет маршрутизации. Чем меньше значение, тем выше приоритет. Пример:
 067       Киевстар            5
-067220 Сотрудники_КС 1 
+067220 Сотрудники_КС 1
 
-При выборе направления выбираем по regexp и order by prio. 
+При выборе направления выбираем по regexp и order by prio.
 
 В данном примере будет 06722067 будет выбран 067220. ';
 
@@ -1169,7 +1169,7 @@ ALTER SEQUENCE directions_dr_id_seq OWNED BY directions.dr_id;
 
 
 --
--- Name: directions_list; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: directions_list; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE directions_list (
@@ -1209,7 +1209,7 @@ ALTER SEQUENCE "directions_list_DLIST_ID_seq" OWNED BY directions_list.dlist_id;
 
 
 --
--- Name: permissions; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: permissions; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE permissions (
@@ -1250,7 +1250,7 @@ ALTER SEQUENCE permissions_id_seq OWNED BY permissions.id;
 
 
 --
--- Name: route; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: route; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE route (
@@ -1271,7 +1271,7 @@ ALTER TABLE routing.route OWNER TO asterisk;
 -- Name: TABLE route; Type: COMMENT; Schema: routing; Owner: asterisk
 --
 
-COMMENT ON TABLE route IS 'Таблица маршрутизации. 
+COMMENT ON TABLE route IS 'Таблица маршрутизации.
 Направление, приоритет, транк/группа/контекст, название.';
 
 
@@ -1311,7 +1311,7 @@ ALTER SEQUENCE route_route_id_seq OWNED BY route.route_id;
 
 
 --
--- Name: trunkgroup_items; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: trunkgroup_items; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE trunkgroup_items (
@@ -1353,7 +1353,7 @@ ALTER SEQUENCE trunkgroup_items_tgrp_item_id_seq OWNED BY trunkgroup_items.tgrp_
 
 
 --
--- Name: trunkgroups; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: trunkgroups; Type: TABLE; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 CREATE TABLE trunkgroups (
@@ -1520,7 +1520,7 @@ ALTER TABLE trunkgroups ALTER COLUMN tgrp_id SET DEFAULT nextval('trunkgroups_tg
 SET search_path = integration, pg_catalog;
 
 --
--- Name: ULines_pkey; Type: CONSTRAINT; Schema: integration; Owner: asterisk; Tablespace: 
+-- Name: ULines_pkey; Type: CONSTRAINT; Schema: integration; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY ulines
@@ -1528,7 +1528,7 @@ ALTER TABLE ONLY ulines
 
 
 --
--- Name: recordings_pkey; Type: CONSTRAINT; Schema: integration; Owner: asterisk; Tablespace: 
+-- Name: recordings_pkey; Type: CONSTRAINT; Schema: integration; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY recordings
@@ -1536,7 +1536,7 @@ ALTER TABLE ONLY recordings
 
 
 --
--- Name: workplaces_pkey; Type: CONSTRAINT; Schema: integration; Owner: asterisk; Tablespace: 
+-- Name: workplaces_pkey; Type: CONSTRAINT; Schema: integration; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY workplaces
@@ -1546,7 +1546,7 @@ ALTER TABLE ONLY workplaces
 SET search_path = public, pg_catalog;
 
 --
--- Name: extensions_conf_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: extensions_conf_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY extensions_conf
@@ -1554,7 +1554,7 @@ ALTER TABLE ONLY extensions_conf
 
 
 --
--- Name: queue_members_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: queue_members_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY queue_members
@@ -1562,7 +1562,7 @@ ALTER TABLE ONLY queue_members
 
 
 --
--- Name: queues_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: queues_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY queues
@@ -1570,7 +1570,7 @@ ALTER TABLE ONLY queues
 
 
 --
--- Name: sip_conf_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: sip_conf_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY sip_conf
@@ -1578,7 +1578,7 @@ ALTER TABLE ONLY sip_conf
 
 
 --
--- Name: sip_peers_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: sip_peers_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY sip_peers
@@ -1588,7 +1588,7 @@ ALTER TABLE ONLY sip_peers
 SET search_path = routing, pg_catalog;
 
 --
--- Name: DLIST_PK; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: DLIST_PK; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY directions_list
@@ -1596,7 +1596,7 @@ ALTER TABLE ONLY directions_list
 
 
 --
--- Name: DLIST_UNIQ_NAME; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: DLIST_UNIQ_NAME; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY directions_list
@@ -1604,7 +1604,7 @@ ALTER TABLE ONLY directions_list
 
 
 --
--- Name: callerid_pkey; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: callerid_pkey; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY callerid
@@ -1612,7 +1612,7 @@ ALTER TABLE ONLY callerid
 
 
 --
--- Name: dr_pk; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: dr_pk; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY directions
@@ -1620,7 +1620,7 @@ ALTER TABLE ONLY directions
 
 
 --
--- Name: permissions_pkey; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: permissions_pkey; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY permissions
@@ -1628,7 +1628,7 @@ ALTER TABLE ONLY permissions
 
 
 --
--- Name: route_pkey; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: route_pkey; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY route
@@ -1636,7 +1636,7 @@ ALTER TABLE ONLY route
 
 
 --
--- Name: tgrp_name_uniq; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: tgrp_name_uniq; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY trunkgroups
@@ -1644,7 +1644,7 @@ ALTER TABLE ONLY trunkgroups
 
 
 --
--- Name: tgrp_pkey; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: tgrp_pkey; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY trunkgroups
@@ -1652,7 +1652,7 @@ ALTER TABLE ONLY trunkgroups
 
 
 --
--- Name: trunkgroup_items_pkey; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: trunkgroup_items_pkey; Type: CONSTRAINT; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 ALTER TABLE ONLY trunkgroup_items
@@ -1662,21 +1662,21 @@ ALTER TABLE ONLY trunkgroup_items
 SET search_path = public, pg_catalog;
 
 --
--- Name: cdr_calldate; Type: INDEX; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: cdr_calldate; Type: INDEX; Schema: public; Owner: asterisk; Tablespace:
 --
 
 CREATE INDEX cdr_calldate ON cdr USING btree (calldate);
 
 
 --
--- Name: queue_uniq; Type: INDEX; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: queue_uniq; Type: INDEX; Schema: public; Owner: asterisk; Tablespace:
 --
 
 CREATE UNIQUE INDEX queue_uniq ON queue_members USING btree (queue_name, interface);
 
 
 --
--- Name: sip_peers_name; Type: INDEX; Schema: public; Owner: asterisk; Tablespace: 
+-- Name: sip_peers_name; Type: INDEX; Schema: public; Owner: asterisk; Tablespace:
 --
 
 CREATE UNIQUE INDEX sip_peers_name ON sip_peers USING btree (name);
@@ -1685,28 +1685,28 @@ CREATE UNIQUE INDEX sip_peers_name ON sip_peers USING btree (name);
 SET search_path = routing, pg_catalog;
 
 --
--- Name: fki_direction_in_dlist; Type: INDEX; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: fki_direction_in_dlist; Type: INDEX; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 CREATE INDEX fki_direction_in_dlist ON permissions USING btree (direction_id);
 
 
 --
--- Name: fki_dr_name; Type: INDEX; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: fki_dr_name; Type: INDEX; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 CREATE INDEX fki_dr_name ON directions USING btree (dr_list_item);
 
 
 --
--- Name: fki_tgrp_item_fk; Type: INDEX; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: fki_tgrp_item_fk; Type: INDEX; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 CREATE INDEX fki_tgrp_item_fk ON trunkgroup_items USING btree (tgrp_item_peer_id);
 
 
 --
--- Name: fki_tgrp_item_group; Type: INDEX; Schema: routing; Owner: asterisk; Tablespace: 
+-- Name: fki_tgrp_item_group; Type: INDEX; Schema: routing; Owner: asterisk; Tablespace:
 --
 
 CREATE INDEX fki_tgrp_item_group ON trunkgroup_items USING btree (tgrp_item_group_id);
@@ -1788,22 +1788,22 @@ REVOKE ALL ON SCHEMA public FROM postgres;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
-set search_path to public; 
+set search_path to public;
 
-create table primary_operators ( 
+create table primary_operators (
 	id bigserial not null primary key,
 	msisdn character varying (20),
 	operator character varying (20),
-	create_date timestamp without time zone default now(), 
+	create_date timestamp without time zone default now(),
 	comment character varying (40)
 );
 
-create INDEX primary_operators_msisdn on primary_operators (msisdn); 
+create INDEX primary_operators_msisdn on primary_operators (msisdn);
 
 ALTER TABLE primary_operators OWNER TO asterisk;
 
 
-set search_path to routing; 
+set search_path to routing;
 CREATE SEQUENCE routing.convert_extension_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -1830,37 +1830,37 @@ COMMENT ON TABLE routing.convert_exten
 
 CREATE FUNCTION get_route_list_gui() RETURNS TABLE(route_id bigint, route_direction_id bigint, route_step smallint, route_type character varying, destname character varying, sipname character varying)
     LANGUAGE plpgsql
-    AS $$declare 
+    AS $$declare
 
-r record; 
+r record;
 
-begin 
-for r in select * from routing.route 
-	order by route_id LOOP 
-route_id = r.route_id; 
-route_direction_id = r.route_direction_id; 
-route_type = r.route_type; 
-route_step = r.route_step; 
+begin
+for r in select * from routing.route
+	order by route_id LOOP
+route_id = r.route_id;
+route_direction_id = r.route_direction_id;
+route_type = r.route_type;
+route_step = r.route_step;
 
-if r.route_type = 'trunk' then 
-	select name into destname from public.sip_peers where id=r.route_dest_id; 
-end if; 
-if r.route_type = 'tgrp' then 
-	select tgrp_name into destname from routing.trunkgroups where tgrp_id=r.route_dest_id; 
+if r.route_type = 'trunk' then
+	select name into destname from public.sip_peers where id=r.route_dest_id;
 end if;
-if r.route_type = 'user' then 
-	select name into destname from public.sip_peers where id=r.route_dest_id; 
+if r.route_type = 'tgrp' then
+	select tgrp_name into destname from routing.trunkgroups where tgrp_id=r.route_dest_id;
 end if;
-if r.route_type = 'lmask' then 
-	destname = 'Anybody'; 
-end if; 
-if r.route_type = 'context' then 
-	select context into destname from public.extensions_conf where id=r.route_dest_id; 
+if r.route_type = 'user' then
+	select name into destname from public.sip_peers where id=r.route_dest_id;
+end if;
+if r.route_type = 'lmask' then
+	destname = 'Anybody';
+end if;
+if r.route_type = 'context' then
+	select context into destname from public.extensions_conf where id=r.route_dest_id;
 end if;
 
 sipname = 'Anybody';
-if r.route_sip_id is not null then 
-	select name into sipname from public.sip_peers where id=r.route_sip_id; 
+if r.route_sip_id is not null then
+	select name into sipname from public.sip_peers where id=r.route_sip_id;
 end if;
 
 return next;
@@ -1878,31 +1878,76 @@ ALTER FUNCTION routing.get_route_list_gui() OWNER TO asterisk;
 -- Name: FUNCTION get_route_list_gui(); Type: COMMENT; Schema: routing; Owner: asterisk
 --
 
-COMMENT ON FUNCTION get_route_list_gui() IS 'Возвращает таблицу маршрутизации в удобочитаемом виде для человека. 
+COMMENT ON FUNCTION get_route_list_gui() IS 'Возвращает таблицу маршрутизации в удобочитаемом виде для человека.
 А именно вместо route_dest_id подставляется имя нужного узла,контекста или пользователя.
-Вместо route_sip_id подставляется номер (имя) внутреннего абонента. 
+Вместо route_sip_id подставляется номер (имя) внутреннего абонента.
 ';
 
 
-create schema auth; 
+create schema auth;
 ALTER SCHEMA auth OWNER TO asterisk;
-create table auth.sysusers (id bigserial primary key, login varchar(32), passwd_hash varchar(32)); 
+create table auth.sysusers (id bigserial primary key, login varchar(32), passwd_hash varchar(32));
 alter table auth.sysusers owner to asterisk;
 
 set search_path to integration;
-create index prev_record_idx on recordings(previous_record); 
+create index prev_record_idx on recordings(previous_record);
 
-create index next_uline_id on recordings(uline_id, next_record); 
+create index next_uline_id on recordings(uline_id, next_record);
 
 create index rec_cdr_start on recordings(cdr_start);
 create index rec_cdr_src on recordings (cdr_src);
 
-create index rec_uniqueid on recordings (cdr_uniqueid); 
+create index rec_uniqueid on recordings (cdr_uniqueid);
 
-set search_path to public; 
+set search_path to public;
 create index queue_parsed_id_idx on queue_parsed ( id );
 create index queue_parsed_callerid_idx on queue_parsed ( callerid );
 create index queue_parsed_queue_idx on queue_parsed ( queue );
 create index quque_parsed_status_idx on queue_parsed (status);
+
+set search_path to routing;
+
+CREATE FUNCTION get_callerid_for_local_forward ( number_b character varying ) RETURNS character varying
+    LANGUAGE plpgsql
+    AS $_$
+declare
+
+DIR_ID bigint;
+CALLER_ID character varying;
+
+begin
+
+--
+-- getting direction_id by number_b
+--
+
+select dr_list_item into DIR_ID from routing.directions
+	where $1 ~ dr_prefix
+	order by dr_prio
+	asc
+	limit 1;
+
+if not found then
+	raise exception 'NO DESTINATION BY NUMBER_B';
+end if;
+
+--
+-- get caller id
+--
+
+select set_callerid into CALLER_ID from routing.callerid
+	where direction_id = DIR_ID and sip_id is NULL;
+if not found then
+	return '';
+end if;
+
+return CALLER_ID;
+
+end;
+
+$_$;
+
+ALTER FUNCTION routing.get_callerid_for_local_forward( number_b character varying) OWNER TO asterisk;
+
 
 
