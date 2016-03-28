@@ -738,6 +738,7 @@ sub process {
 
     # Установка номера А. Если используется канал Local, то эта функция игнорируется.
     $this->_get_callerid( $this->{peername}, $this->{extension} );
+    $this->_set_callerid_name($this->{callerid_num});
 
     # Init MixMonitor
     $this->_init_mixmonitor();
