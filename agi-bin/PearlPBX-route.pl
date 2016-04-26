@@ -171,18 +171,22 @@ sub _get_callerid {
 
     my $sth;
     my @params;
+    my $result_name; 
 
     $this->agi->verbose("_get_callerid begins", 3);
     if ( $this->{proto} eq 'Local' ) {
         $sth = $this->dbh->prepare(
             "select * from routing.get_callerid_for_local_forward (?)");
         push @params, $exten;
+	$result_name = 'get_callerid_for_local_forward'; 
 
     } else {
         $sth = $this->dbh->prepare("select * from routing.get_callerid (?,?)");
         push @params, $peername, $exten;
+	$result_name = 'get_callerid'; 
     }
 
+    $this->agi->verbose("Protocol: ".$this->{proto} . "/" . $peername . "->".$exten , 3); 
     eval { my $rv = $sth->execute(@params); };
     if ($@) {
         $this->agi->verbose( $this->dbh->errstr, 3 );
@@ -190,7 +194,7 @@ sub _get_callerid {
         exit(-1);
     }
     my $result   = $sth->fetchrow_hashref;
-    my $callerid = $result->{'get_callerid'};
+    my $callerid = $result->{$result_name};
 
     my $set_own = undef;
     if ( $callerid ne '' ) {
@@ -523,8 +527,6 @@ sub _get_callername {
 
     my ( $this, $callerid ) = @_;
 
-    $this->agi->verbose( "Searching for $callerid in LDAP...", 3 );
-
     # Приоритет имеет LDAP, но если _ldap_search вернет undef, то мы продолжим использовать локальную базу.
     my $ldap_result = $this->_ldap_search($callerid);
     if ( defined($ldap_result) ) {
@@ -570,7 +572,8 @@ sub _get_callername {
 
 sub _ldap_search {
     my ( $this, $callerid ) = @_;
-
+    
+    $this->agi->verbose( "Searching for $callerid in LDAP...", 3 );
     $this->log( "info", "LDAP searching" );
     unless ( defined( $this->{conf}->{'ldap'}->{'host'} ) ) {
         $this->log( "info", "LDAP host not defined" );
