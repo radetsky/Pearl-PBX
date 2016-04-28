@@ -141,14 +141,12 @@ sub db_connect {
 =cut 
 sub list_internal { 
 	my $this = shift;
-#	my $sql = "select id,comment,name from public.sip_peers where name ~ E'^2\\\\d\\\\d\$' order by name";
   my $sql = "select a.id as id, a.comment as comment, a.name as name from public.sip_peers a, integration.workplaces b where b.sip_id = a.id order by a.name"; 
 	return $this->_list($sql,undef);
 }
 
 sub list_internalAsOption { 
   my $this = shift;
-#  my $sql = "select id,comment,name from public.sip_peers where name ~ E'^2\\\\d\\\\d\$' order by name";
   my $sql = "select a.id as id, a.comment as comment, a.name as name from public.sip_peers a, integration.workplaces b where b.sip_id = a.id order by a.name";
   return $this->_listAsOption($sql);  
 }

@@ -573,7 +573,6 @@ sub _get_callername {
 sub _ldap_search {
     my ( $this, $callerid ) = @_;
     
-    $this->agi->verbose( "Searching for $callerid in LDAP...", 3 );
     $this->log( "info", "LDAP searching" );
     unless ( defined( $this->{conf}->{'ldap'}->{'host'} ) ) {
         $this->log( "info", "LDAP host not defined" );
@@ -597,15 +596,16 @@ sub _ldap_search {
         $this->log( "info", "LDAP base not defined" );
         return undef;
     }
+    
     my $base = $this->{conf}->{'ldap'}->{'base'};
-
     unless ( defined( $this->{conf}->{'ldap'}->{'filter'} ) ) {
         $this->log( "info", "LDAP filter not defined" );
         return undef;
     }
-    my $filter = sprintf( $this->{conf}->{'ldap'}->{'filter'}, $callerid,
+     my $filter = sprintf( $this->{conf}->{'ldap'}->{'filter'}, $callerid,
         $callerid );
     $this->log( "info", "LDAP filter: $filter" );
+ 		$this->agi->verbose( "Searching for $callerid in LDAP...", 3 );
     my $result = $ldap->search( base => $base, filter => $filter );
 
     foreach my $entry ( $result->entries ) {
