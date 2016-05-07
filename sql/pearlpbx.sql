@@ -1,24 +1,3 @@
---
--- PostgreSQL database dump
---
-
-SET statement_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = off;
-SET check_function_bodies = false;
-SET client_min_messages = warning;
-SET escape_string_warning = off;
-
---
--- Name: asterisk; Type: DATABASE; Schema: -; Owner: asterisk
---
-
-CREATE DATABASE asterisk WITH TEMPLATE = template0 ENCODING = 'UTF8';
-
-
-ALTER DATABASE asterisk OWNER TO asterisk;
-
-\connect asterisk
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -925,50 +904,6 @@ ALTER TABLE public.queue_parsed_id_seq OWNER TO asterisk;
 ALTER SEQUENCE queue_parsed_id_seq OWNED BY queue_parsed.id;
 
 
---
--- Name: queues; Type: TABLE; Schema: public; Owner: asterisk; Tablespace:
---
-
-CREATE TABLE queues (
-    name character varying NOT NULL,
-    musiconhold character varying DEFAULT 'default'::character varying NOT NULL,
-    announce character varying,
-    context character varying,
-    timeout integer DEFAULT 0,
-    monitor_format character varying DEFAULT 'wav'::character varying NOT NULL,
-    queue_youarenext character varying,
-    queue_thereare character varying,
-    queue_callswaiting character varying,
-    queue_holdtime character varying,
-    queue_minutes character varying,
-    queue_seconds character varying,
-    queue_lessthan character varying,
-    queue_thankyou character varying,
-    queue_reporthold character varying,
-    retry integer DEFAULT 2,
-    wrapuptime integer DEFAULT 30,
-    maxlen integer DEFAULT 10,
-    servicelevel integer DEFAULT 0,
-    strategy character varying DEFAULT 'ringall'::character varying NOT NULL,
-    joinempty character varying DEFAULT 'no'::character varying NOT NULL,
-    leavewhenempty character varying DEFAULT 'yes'::character varying NOT NULL,
-    eventmemberstatus boolean DEFAULT true,
-    eventwhencalled boolean DEFAULT true,
-    reportholdtime boolean DEFAULT false,
-    memberdelay integer DEFAULT 0,
-    weight integer DEFAULT 0,
-    timeoutrestart boolean DEFAULT false,
-    periodic_announce character varying,
-    periodic_announce_frequency integer,
-    ringinuse boolean DEFAULT false,
-    setinterfacevar boolean DEFAULT true,
-		autofill boolean DEFAULT true,
-		autopause varchar(5) not null default 'yes',
-    "monitor-type" character varying DEFAULT 'mixmonitor'::character varying NOT NULL
-);
-
-
-ALTER TABLE public.queues OWNER TO asterisk;
 
 --
 -- Name: sip_conf; Type: TABLE; Schema: public; Owner: asterisk; Tablespace:
@@ -1435,6 +1370,13 @@ ALTER TABLE queue_log ALTER COLUMN id SET DEFAULT nextval('queue_log_id_seq'::re
 -- Name: uniqueid; Type: DEFAULT; Schema: public; Owner: asterisk
 --
 
+CREATE SEQUENCE public.queue_members_uniqueid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
 ALTER TABLE queue_members ALTER COLUMN uniqueid SET DEFAULT nextval('queue_members_uniqueid_seq'::regclass);
 
 
@@ -1545,29 +1487,6 @@ ALTER TABLE ONLY workplaces
 
 SET search_path = public, pg_catalog;
 
---
--- Name: extensions_conf_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace:
---
-
-ALTER TABLE ONLY extensions_conf
-    ADD CONSTRAINT extensions_conf_pkey PRIMARY KEY (id);
-
-
---
--- Name: queue_members_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace:
---
-
-ALTER TABLE ONLY queue_members
-    ADD CONSTRAINT queue_members_pkey PRIMARY KEY (uniqueid);
-
-
---
--- Name: queues_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace:
---
-
-ALTER TABLE ONLY queues
-    ADD CONSTRAINT queues_pkey PRIMARY KEY (name);
-
 
 --
 -- Name: sip_conf_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace:
@@ -1575,14 +1494,6 @@ ALTER TABLE ONLY queues
 
 ALTER TABLE ONLY sip_conf
     ADD CONSTRAINT sip_conf_pkey PRIMARY KEY (id);
-
-
---
--- Name: sip_peers_pkey; Type: CONSTRAINT; Schema: public; Owner: asterisk; Tablespace:
---
-
-ALTER TABLE ONLY sip_peers
-    ADD CONSTRAINT sip_peers_pkey PRIMARY KEY (id);
 
 
 SET search_path = routing, pg_catalog;
@@ -1673,13 +1584,6 @@ CREATE INDEX cdr_calldate ON cdr USING btree (calldate);
 --
 
 CREATE UNIQUE INDEX queue_uniq ON queue_members USING btree (queue_name, interface);
-
-
---
--- Name: sip_peers_name; Type: INDEX; Schema: public; Owner: asterisk; Tablespace:
---
-
-CREATE UNIQUE INDEX sip_peers_name ON sip_peers USING btree (name);
 
 
 SET search_path = routing, pg_catalog;
@@ -1886,7 +1790,14 @@ COMMENT ON FUNCTION get_route_list_gui() IS 'Возвращает таблицу
 
 create schema auth;
 ALTER SCHEMA auth OWNER TO asterisk;
-create table auth.sysusers (id bigserial primary key, login varchar(32), passwd_hash varchar(32));
+
+CREATE TYPE pearlpbx_role AS ENUM ('user','admin','reportview');
+
+create table auth.sysusers (
+	id bigserial primary key,
+	login varchar(64),
+	passwd_hash varchar(32)
+);
 alter table auth.sysusers owner to asterisk;
 
 set search_path to integration;
@@ -1903,7 +1814,8 @@ set search_path to public;
 create index queue_parsed_id_idx on queue_parsed ( id );
 create index queue_parsed_callerid_idx on queue_parsed ( callerid );
 create index queue_parsed_queue_idx on queue_parsed ( queue );
-create index quque_parsed_status_idx on queue_parsed (status);
+create index queue_parsed_status_idx on queue_parsed (status);
+
 
 set search_path to routing;
 

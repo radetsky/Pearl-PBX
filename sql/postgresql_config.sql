@@ -13,6 +13,7 @@ CREATE TYPE sip_transport_values AS ENUM ('udp','tcp','tls','ws','wss','udp,tcp'
 CREATE TYPE sip_dtmfmode_values AS ENUM ('rfc2833','info','shortinfo','inband','auto');
 
 CREATE TYPE sip_directmedia_values AS ENUM ('yes','no','nonat','update');
+CREATE TYPE sip_directmedia_values_v2 AS ENUM ('yes','no','nonat','update','outgoing');
 
 CREATE TYPE yes_no_values AS ENUM ('yes','no');
 
@@ -45,7 +46,7 @@ CREATE TABLE sip_peers (
     remotesecret VARCHAR(40), 
     transport sip_transport_values default 'udp', 
     dtmfmode sip_dtmfmode_values, 
-    directmedia sip_directmedia_values default 'no', 
+    directmedia sip_directmedia_values_v2 default 'no', 
     nat VARCHAR(29) default 'no', 
     callgroup VARCHAR(40) not null default '1', 
     pickupgroup VARCHAR(40) not null default '1', 
@@ -726,15 +727,6 @@ ALTER TABLE ps_transports ALTER COLUMN verifiy_server TYPE yesno_values;
 
 ALTER TABLE ps_transports RENAME verifiy_server TO verify_server;
 
--- Running upgrade 5950038a6ead -> 10aedae86a32
-
-CREATE TYPE sip_directmedia_values_v2 AS ENUM ('yes','no','nonat','update','outgoing');
-
-ALTER TABLE sip_peers ALTER COLUMN directmedia TYPE sip_directmedia_values_v2 USING directmedia::text::sip_directmedia_values_v2;
-
-DROP TYPE sip_directmedia_values;
-
--- Running upgrade 10aedae86a32 -> eb88a14f2a
 
 ALTER TABLE ps_endpoints ADD COLUMN media_encryption_optimistic yesno_values;
 
