@@ -714,6 +714,27 @@ sub _queue_message {
             . "'" );
 }
 
+sub _global_blacklist { 
+    my ($this, $callerid_num) = @_; 
+
+  my $sql = "select count(*) as blacklisted from public.blacklist where number=?"; 
+  my $sth = $this->dbh->prepare($sql);
+  eval { $sth->execute ( $callerid_num ); }; 
+  if ( $@ ) { 
+    $this->agi->verbose ( $this->dbh->errstr ); 
+    exit(-1);
+  }
+  my $res = $sth->fetchrow_hashref; 
+  my $blacklisted = $res->{'blacklisted'}; 
+    
+  $this->agi->set_variable ('BLACKLISTED','0'); 
+  if ( $blacklisted > 0 ) { 
+    $this->agi->set_variable ('BLACKLISTED',$blacklisted); 
+    $this->agi->exec("Hangup","17"); 
+  }
+  return;
+}
+
 sub process {
     my $this = shift;
 
@@ -742,6 +763,9 @@ sub process {
     # Установка номера А. Если используется канал Local, то эта функция игнорируется.
     $this->_get_callerid( $this->{peername}, $this->{extension} );
     $this->_set_callerid_name($this->{callerid_num});
+
+    # Global blacklist 
+    $this->_global_blacklist($this->{'callerid_num'}); 
 
     # Init MixMonitor
     $this->_init_mixmonitor();
