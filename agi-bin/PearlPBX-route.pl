@@ -171,22 +171,22 @@ sub _get_callerid {
 
     my $sth;
     my @params;
-    my $result_name; 
+    my $result_name;
 
     $this->agi->verbose("_get_callerid begins", 3);
     if ( $this->{proto} eq 'Local' ) {
         $sth = $this->dbh->prepare(
             "select * from routing.get_callerid_for_local_forward (?)");
         push @params, $exten;
-	$result_name = 'get_callerid_for_local_forward'; 
+	$result_name = 'get_callerid_for_local_forward';
 
     } else {
         $sth = $this->dbh->prepare("select * from routing.get_callerid (?,?)");
         push @params, $peername, $exten;
-	$result_name = 'get_callerid'; 
+	$result_name = 'get_callerid';
     }
 
-    $this->agi->verbose("Protocol: ".$this->{proto} . "/" . $peername . "->".$exten , 3); 
+    $this->agi->verbose("Protocol: ".$this->{proto} . "/" . $peername . "->".$exten , 3);
     eval { my $rv = $sth->execute(@params); };
     if ($@) {
         $this->agi->verbose( $this->dbh->errstr, 3 );
@@ -425,19 +425,48 @@ sub _mixmonitor_filename {
 
 }
 
-sub _init_mixmonitor {
+sub _part_mixmonitor {
+
+    my ($this, $callerid_num, $extension) = @_;
+
+    my $sql = "select count(*) as need_monitor from monitor_list where number in (?,?)";
+    my $sth = $this->dbh->prepare($sql);
+    eval {
+        my $res = $sth->execute($callerid_num, $extension);
+    };
+    if ( $@ ) {
+        $this->agi->verbose ( $this->dbh->errstr );
+        exit(-1);
+    }
+    my $res = $sth->fetchrow_hashref;
+    my $need_monitor = $res->{'need_monitor'};
+    if ( $need_monitor > 0 ) {
+        return $this->_init_mixmonitor();
+    }
+    return undef;
+}
+
+sub _global_mixmonitor {
     my $this = shift;
 
     if ( $this->{conf}->{'mixmonitor'} =~ /yes/ ) {
-        my $cdr_start    = $this->agi->get_variable('CDR(start)');
-        my $callerid_num = $this->agi->get_variable('CALLERID(num)');
-        my $uniqueid     = $this->agi->get_variable('CDR(uniqueid)');
-        my ( $directory, $filename )
-            = $this->_mixmonitor_filename( $cdr_start, $callerid_num, $uniqueid );
-        mkpath($directory);
-        $this->agi->exec( "MixMonitor", "$filename" );
-        $this->save_mixmonitor_params ( $callerid_num, $cdr_start, $uniqueid, $filename );
+        return $this->_init_mixmonitor();
     }
+
+    return undef;
+}
+
+sub _init_mixmonitor {
+    my $this = shift;
+    my $cdr_start    = $this->agi->get_variable('CDR(start)');
+    my $callerid_num = $this->agi->get_variable('CALLERID(num)');
+    my $uniqueid     = $this->agi->get_variable('CDR(uniqueid)');
+    my ( $directory, $filename )
+        = $this->_mixmonitor_filename( $cdr_start, $callerid_num, $uniqueid );
+    mkpath($directory);
+    $this->agi->exec( "MixMonitor", "$filename" );
+    $this->save_mixmonitor_params ( $callerid_num, $cdr_start, $uniqueid, $filename );
+    return 1;
 }
 
 sub save_mixmonitor_params {
@@ -572,7 +601,7 @@ sub _get_callername {
 
 sub _ldap_search {
     my ( $this, $callerid ) = @_;
-    
+
     $this->log( "info", "LDAP searching" );
     unless ( defined( $this->{conf}->{'ldap'}->{'host'} ) ) {
         $this->log( "info", "LDAP host not defined" );
@@ -596,7 +625,7 @@ sub _ldap_search {
         $this->log( "info", "LDAP base not defined" );
         return undef;
     }
-    
+
     my $base = $this->{conf}->{'ldap'}->{'base'};
     unless ( defined( $this->{conf}->{'ldap'}->{'filter'} ) ) {
         $this->log( "info", "LDAP filter not defined" );
@@ -714,26 +743,27 @@ sub _queue_message {
             . "'" );
 }
 
-sub _global_blacklist { 
-    my ($this, $callerid_num) = @_; 
+sub _global_blacklist {
+  my ($this, $callerid_num) = @_;
 
-  my $sql = "select count(*) as blacklisted from public.blacklist where number=?"; 
+  my $sql = "select count(*) as blacklisted from public.blacklist where number=?";
   my $sth = $this->dbh->prepare($sql);
-  eval { $sth->execute ( $callerid_num ); }; 
-  if ( $@ ) { 
-    $this->agi->verbose ( $this->dbh->errstr ); 
+  eval { $sth->execute ( $callerid_num ); };
+  if ( $@ ) {
+    $this->agi->verbose ( $this->dbh->errstr );
     exit(-1);
   }
-  my $res = $sth->fetchrow_hashref; 
-  my $blacklisted = $res->{'blacklisted'}; 
-    
-  $this->agi->set_variable ('BLACKLISTED','0'); 
-  if ( $blacklisted > 0 ) { 
-    $this->agi->set_variable ('BLACKLISTED',$blacklisted); 
-    $this->agi->exec("Hangup","17"); 
+  my $res = $sth->fetchrow_hashref;
+  my $blacklisted = $res->{'blacklisted'};
+
+  $this->agi->set_variable ('BLACKLISTED','0');
+  if ( $blacklisted > 0 ) {
+    $this->agi->set_variable ('BLACKLISTED',$blacklisted);
+    $this->agi->exec("Hangup","17");
   }
   return;
 }
+
 
 sub process {
     my $this = shift;
@@ -764,11 +794,14 @@ sub process {
     $this->_get_callerid( $this->{peername}, $this->{extension} );
     $this->_set_callerid_name($this->{callerid_num});
 
-    # Global blacklist 
-    $this->_global_blacklist($this->{'callerid_num'}); 
+    # Global blacklist
+    $this->_global_blacklist($this->{'callerid_num'});
 
     # Init MixMonitor
-    $this->_init_mixmonitor();
+    # Если не включена глобальная запись, то проверятся частичная.
+    unless ( $this->_global_mixmonitor() ) {
+        $this->_part_mixmonitor($this->{'callerid_num'}, $extension);
+    }
 
     # Проверка прав доступа.  Если используется канал "Local", то эта функция игнорируется.
     if ( $this->{proto} ne "Local" ) {
