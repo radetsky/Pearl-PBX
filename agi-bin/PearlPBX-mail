@@ -1,4 +1,4 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 #===============================================================================
 #
 #         FILE:  PearlPBX-mail.pl
@@ -7,7 +7,7 @@
 #
 #  DESCRIPTION:  Mail about missed call to support@ (see config)
 #
-#      OPTIONS:  ${CALLERID1}, ${CALLERID2} 
+#      OPTIONS:  ${CALLERID1}, ${CALLERID2}
 # REQUIREMENTS:  ---
 #         BUGS:  ---
 #        NOTES:  ---
@@ -15,10 +15,9 @@
 #      COMPANY:  PearlPBX
 #      VERSION:  1.0
 #      CREATED:  05.09.2014
-#     REVISION:  001
+#     MODIFIED:  06.12.2016
+#     REVISION:  002
 #===============================================================================
-
-
 
 use 5.8.0;
 use strict;
@@ -42,10 +41,9 @@ package Mail;
 
 use base 'PearlPBX::IVR';
 use Data::Dumper;
-use NetSDS::Util::String;  
-use MIME::Base64; 
+use NetSDS::Util::String;
+use MIME::Base64;
 use NetSDS::Util::DateTime;
-
 
 sub process {
     my $this = shift;
@@ -54,7 +52,7 @@ sub process {
         $this->agi->verbose(
             "Usage: "
               . $this->name
-              . ' ${CALLERID(name)} ${CALLERID(num)}',
+              . ' email@dest.com ${CALLERID(num)}',
             3
         );
         exit(-1);
@@ -63,26 +61,26 @@ sub process {
         $this->agi->verbose(
             "Usage: "
               . $this->name
-              . ' ${CALLERID(name)} ${CALLERID(num)}',
+              . ' email@dest.com ${CALLERID(num)}',
             3
         );
         exit(-1);
     }
-    $this->_mail($ARGV[0], $ARGV[1]); 
+    $this->_mail($ARGV[0], $ARGV[1]);
 
     exit(0);
 }
 
 
-sub _mail { 
+sub _mail {
 
-my ($this, $param1, $param2) = @_; 
+my ($this, $param1, $param2) = @_;
 
 my $sendmail   = '/usr/sbin/sendmail';
-my $from       = $this->{conf}->{'email_from'}; 
-my $to         = $this->{conf}->{'email'};
+my $from       = $this->{conf}->{'email_from'};
+my $to         = $param1;
 
-my $subject = 'Пропущенный звонок с номера: ' . $param1 . ' ' . $param2;
+my $subject = 'Пропущенный звонок с номера: ' . $param2;
 my $body = "С уважением, PearlPBX\n";
 
 #utf8::encode($subject);
@@ -103,9 +101,9 @@ EOF
 
 close MAIL;
 
-return 1; 
-} 
+return 1;
+}
 
-1; 
+1;
 
 
