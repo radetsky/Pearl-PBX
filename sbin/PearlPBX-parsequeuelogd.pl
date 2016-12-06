@@ -1,4 +1,4 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 #===============================================================================
 #
 #         FILE:  PearlPBX-parsequeuelog.pl
@@ -10,7 +10,7 @@
 #				 Version 2.0 - based on NetSDS::App now. Patched by rad@.
 #
 #      OPTIONS:  tail callback mailnotif --nodaemon --verbose , etc.
-# REQUIREMENTS:  NetSDS, PearlPBX 
+# REQUIREMENTS:  NetSDS, PearlPBX
 #         BUGS:  ---
 #        NOTES:  ---
 #		AUTHOR:  Anatoly Matyah (zmeuka), protopartorg@gmail.com
@@ -19,8 +19,8 @@
 #      VERSION:  2.1
 #      CREATED:  19/12/2010
 #     MODIFIED:  12/12/2012 :) CAUSE: Add insert into VoiceInformer feature in case of ABANDON and tail
-#     MODIFIED:  15/07/2013 Added e-mail notification 
-#     MODIFIED:  05/12/2014 Added TRANSFER exit code 
+#     MODIFIED:  15/07/2013 Added e-mail notification
+#     MODIFIED:  05/12/2014 Added TRANSFER exit code
 #===============================================================================
 
 =item queue_log
@@ -86,7 +86,7 @@ use Data::Dumper;
 use DBI;
 use File::Tail;
 use Getopt::Long qw(:config auto_version auto_help pass_through);
-use MIME::Base64; 
+use MIME::Base64;
 use NetSDS::Util::DateTime;
 
 sub start {
@@ -102,39 +102,39 @@ sub start {
     $this->mk_accessors('dbh');
     $this->_db_connect();
 
-	  my $tail = undef; 
+	  my $tail = undef;
    	GetOptions ('tail!' => \$tail);
-    
-		unless ( defined ( $tail ) ) { 
-        $this->{'tail'} = 1; 
-        $this->log('info','Tail mode enabled.'); 
+
+		unless ( defined ( $tail ) ) {
+        $this->{'tail'} = 1;
+        $this->log('info','Tail mode enabled.');
     } else {
-        $this->{'tail'} = $tail; 
-        if ( $tail > 0 ) { 
-            $this->log('info','Tail mode enabled.'); 
-        } else { 
-            $this->log('info','Tail mode disabled.'); 
+        $this->{'tail'} = $tail;
+        if ( $tail > 0 ) {
+            $this->log('info','Tail mode enabled.');
+        } else {
+            $this->log('info','Tail mode disabled.');
         }
     }
 
-    my $callback = undef; 
-    GetOptions ('callback' => \$callback); 
-    unless ( defined ( $callback) ) { 
-        $this->{'callback'} = 0; 
-        $this->log('info','Callback mode disabled.'); 
-    } else { 
-        $this->{'callback'} = 1; 
-        $this->log('info','Callback mode enabled.'); 
+    my $callback = undef;
+    GetOptions ('callback' => \$callback);
+    unless ( defined ( $callback) ) {
+        $this->{'callback'} = 0;
+        $this->log('info','Callback mode disabled.');
+    } else {
+        $this->{'callback'} = 1;
+        $this->log('info','Callback mode enabled.');
     }
 
-    my $mailnotif = undef; 
-    GetOptions ('mailnotif' => \$mailnotif); 
-    unless ( defined ( $mailnotif) ) { 
-        $this->{'mailnotif'} = 0; 
-        $this->log('info','Mail notifications disabled.'); 
-    } else { 
-        $this->{'mailnotif'} = 1; 
-        $this->log('info','Mail notifications enabled.'); 
+    my $mailnotif = undef;
+    GetOptions ('mailnotif' => \$mailnotif);
+    unless ( defined ( $mailnotif) ) {
+        $this->{'mailnotif'} = 0;
+        $this->log('info','Mail notifications disabled.');
+    } else {
+        $this->{'mailnotif'} = 1;
+        $this->log('info','Mail notifications enabled.');
     }
 
 }
@@ -177,21 +177,21 @@ sub _db_connect {
 "insert into queue_log (time,callid,queuename,agent,event,data) values (to_timestamp(?),?,?,?,?,?)"
     );
     $this->{'st_enterqueue'} = $this->dbh->prepare(
-"insert into queue_parsed(time,callid,queue,callerid,agentid,status,success,holdtime,calltime,position) values (to_timestamp(?),?,?,?,?,?,0,0,0,0)"
+"insert into queue_parsed(time,callid,queue,callerid,agentid,status,success,holdtime,calltime,position) values (to_timestamp(?),?,?,?,?,?,0,0,0,0) returning id"
     );
     $this->{'st_abandon'} = $this->dbh->prepare(
-"update queue_parsed set position=?,holdtime=?,status=?,success=0 where callid=?"
+"update queue_parsed set position=?,holdtime=?,status=?,success=0 where callid=? and id=?"
     );
     $this->{'st_complete'} = $this->dbh->prepare(
-"update queue_parsed set holdtime=?,calltime=?,position=?,status=?,agentid=?,success=1 where callid=?"
+"update queue_parsed set holdtime=?,calltime=?,position=?,status=?,agentid=?,success=1 where callid=? and id=?"
     );
     $this->{'st_connect'} = $this->dbh->prepare(
-"update queue_parsed set holdtime=?,agentid=?,success=1,status='CONNECT' where callid=?"
+"update queue_parsed set holdtime=?,agentid=?,success=1,status='CONNECT' where callid=? and id=?"
     );
     $this->{'st_callback'} = $this->dbh->prepare(
-        "insert into public.voiceinformer ( destination, userfield, till ) values ( ?, ?, ?)" ); 
+        "insert into public.voiceinformer ( destination, userfield, till ) values ( ?, ?, ?)" );
 
-    $this->{'st_callback_getinfo'} = $this->dbh->prepare ( 
+    $this->{'st_callback_getinfo'} = $this->dbh->prepare (
         "select * from public.queue_parsed where callid=?"
         );
 
@@ -209,74 +209,74 @@ sub _exit {
     exit(-1);
 }
 
-sub _callback { 
-    my $this = shift; 
-    my $callid = shift; 
+sub _callback {
+    my $this = shift;
+    my $callid = shift;
 
-    $this->{'st_callback_getinfo'}->execute($callid); 
-    my $row = $this->{'st_callback_getinfo'}->fetchrow_hashref; 
-    unless ( defined ( $row->{'callid'})) { 
-        $this->log("warning","Can't find queue_parsed:callid=".$callid); 
-        return undef; 
+    $this->{'st_callback_getinfo'}->execute($callid);
+    my $row = $this->{'st_callback_getinfo'}->fetchrow_hashref;
+    unless ( defined ( $row->{'callid'})) {
+        $this->log("warning","Can't find queue_parsed:callid=".$callid);
+        return undef;
     }
-    my $destination = $row->{'callerid'}; 
-    my $queue = "QUEUE=".$row->{'queue'}; 
-    my $interval = "now()+'10 minutes'::interval"; # FIXME  - it's a hardcode. 
+    my $destination = $row->{'callerid'};
+    my $queue = "QUEUE=".$row->{'queue'};
+    my $interval = "now()+'10 minutes'::interval"; # FIXME  - it's a hardcode.
 
-    $this->{'st_callback'}->execute($destination,$queue,$interval); 
+    $this->{'st_callback'}->execute($destination,$queue,$interval);
 }
 
-sub _russian_date { 
-    my $this = shift; 
+sub _russian_date {
+    my $this = shift;
 
-    my ($year,$mon,$mdy,$hour,$min,$sec) = date_now_array(); 
+    my ($year,$mon,$mdy,$hour,$min,$sec) = date_now_array();
 
     my @months = ('0','Января','Февраля','Марта','Апреля','Мая','Июня','Июля',
-        'Августа','Сентября','Октября','Ноября','Декабря'); 
+        'Августа','Сентября','Октября','Ноября','Декабря');
 
-    return sprintf('%s %s %s %d:%d',$mdy,$months[$mon],$year, $hour,$min); 
+    return sprintf('%s %s %s %d:%d',$mdy,$months[$mon],$year, $hour,$min);
 
 }
-sub _mailnotif { 
-    my ($this, $callid, $pos, $waittime) = @_; 
+sub _mailnotif {
+    my ($this, $callid, $pos, $waittime) = @_;
 
-    $this->{'st_callback_getinfo'}->execute($callid); 
-    my $row = $this->{'st_callback_getinfo'}->fetchrow_hashref; 
-    unless ( defined ( $row->{'callid'})) { 
-        $this->log("warning","Can't find queue_parsed:callid=".$callid); 
-        return undef; 
+    $this->{'st_callback_getinfo'}->execute($callid);
+    my $row = $this->{'st_callback_getinfo'}->fetchrow_hashref;
+    unless ( defined ( $row->{'callid'})) {
+        $this->log("warning","Can't find queue_parsed:callid=".$callid);
+        return undef;
     }
-    my $callerid = $row->{'callerid'}; 
-    my $queuename = $row->{'queue'}; 
-    # We have a CALLERID, POSITION, WAITTIME. All we need to send mesage. 
+    my $callerid = $row->{'callerid'};
+    my $queuename = $row->{'queue'};
+    # We have a CALLERID, POSITION, WAITTIME. All we need to send mesage.
 
-    my $to = $this->{conf}->{'email'}; 
-    unless ( defined ( $this->{conf}->{'email'} ) ) { 
-        $this->log('warning','E-mail for notification does not configured.'); 
-        $to = 'rad@rad.kiev.ua'; 
+    my $to = $this->{conf}->{'email'};
+    unless ( defined ( $this->{conf}->{'email'} ) ) {
+        $this->log('warning','E-mail for notification does not configured.');
+        $to = 'rad@rad.kiev.ua';
     }
 
     my $sendmail   = '/usr/sbin/sendmail';
     my $from       = $this->{conf}->{'email_from'};
-    unless ( defined ( $this->{conf}->{'email_from'} )) { 
-        $from = 'pearlpbx@pearlpbx.com'; 
+    unless ( defined ( $this->{conf}->{'email_from'} )) {
+        $from = 'pearlpbx@pearlpbx.com';
     }
 
-    if (length($callerid) == 9 ) { 
-        $callerid = '0'.$callerid; # CityCom patch 
-    } 
-    
-    my $subject = 'Пропущенный звонок с номера: '.$callerid; 
-    my $russian_date = $this->_russian_date();  
-    my $body = $russian_date. '<br>'. 
-        'Номер: '. $callerid . '<br>' . 
+    if (length($callerid) == 9 ) {
+        $callerid = '0'.$callerid; # CityCom patch
+    }
+
+    my $subject = 'Пропущенный звонок с номера: '.$callerid;
+    my $russian_date = $this->_russian_date();
+    my $body = $russian_date. '<br>'.
+        'Номер: '. $callerid . '<br>' .
         'Длительность: '.$waittime. ' сек. <br><br>';
- 
-    $body .= 'Группа: '. $queuename . '<br>';  
+
+    $body .= 'Группа: '. $queuename . '<br>';
     $body .= "С уважением, PearlPBX-parsequeuelogd<br>";
 
-    $subject = encode_base64($subject,''); 
-    $body = encode_base64($body); 
+    $subject = encode_base64($subject,'');
+    $body = encode_base64($body);
 
     open( MAIL, "| $sendmail -t -oi" ) or die("$!");
 
@@ -322,11 +322,13 @@ sub process {
           or $this->_exit("Can't open file [$filename]: $!");
     }
 
+    my $enterqueue_ids;
+
     while (<LOG>) {
         chomp;
         my ( $unixtime, $callid, $queue, $agent, $event, @par ) = split /\|/;
-        if ($this->{verbose}) { 
-            print join ( ',', $unixtime,$callid, $queue, $agent, $event, @par) ."\n"; 
+        if ($this->{verbose}) {
+            print join ( ',', $unixtime,$callid, $queue, $agent, $event, @par) ."\n";
         }
 
         # Logging
@@ -340,6 +342,9 @@ sub process {
             $par[1] .= '';    # avoid NULL inserts
             $this->{'st_enterqueue'}
               ->execute( $unixtime, $callid, $queue, $par[1], $agent, $event );
+            my $enterqueue = $this->{'st_enterqueue'}->fetchrow_hashref;
+            $enterqueue_ids->{ $callid } = $enterqueue->{'id'};
+            $this->speak(sprintf("%s %s %s CallerID: %s Agent: %s", $event, $callid, $queue, $par[1], $agent ));
         }
         elsif ( ( $event eq 'ABANDON' ) or ( $event eq 'EXITEMPTY' ) ) {
 
@@ -351,13 +356,15 @@ sub process {
             my ( $pos, $origpos, $waittime ) = @par;
             $pos      += 0;
             $waittime += 0;
-            $this->{'st_abandon'}->execute( $pos, $waittime, $event, $callid );
+            $this->speak(sprintf("%s Position: %s Wait: %s CallID: %s->%s", $event, $pos, $waittime, $callid, $enterqueue_ids->{ $callid }));
+            $this->{'st_abandon'}->execute( $pos, $waittime, $event, $callid, $enterqueue_ids->{ $callid } );
+            delete $enterqueue_ids->{ $callid };
 
-            if ( ( $this->{'tail'} > 0 ) and ( $this->{'callback'} > 0) ) { 
+            if ( ( $this->{'tail'} > 0 ) and ( $this->{'callback'} > 0) ) {
                 $this->_callback($callid); # Там уже из базы вытащим все необходимые параметры
             }
-            if ( ( $this->{'tail'} > 0 ) and ( $this->{'mailnotif'} > 0) ) { 
-                $this->_mailnotif ($callid, $pos, $waittime ); 
+            if ( ( $this->{'tail'} > 0 ) and ( $this->{'mailnotif'} > 0) ) {
+                $this->_mailnotif ($callid, $pos, $waittime );
             }
 
         }
@@ -370,28 +377,35 @@ sub process {
             $holdtime += 0;
             $calltime += 0;
             $pos      += 0;
+            $this->speak(sprintf("%s Hold: %s Time: %s Pos: %s Agent: %s CallId: %s->%s ",
+                    $event, $holdtime, $calltime, $pos, $agent, $callid, $enterqueue_ids->{ $callid } ));
             $this->{'st_complete'}
-              ->execute( $holdtime, $calltime, $pos, $event, $agent, $callid );
+              ->execute( $holdtime, $calltime, $pos, $event, $agent, $callid, delete $enterqueue_ids->{ $callid } );
         }
-        elsif ( $event eq 'TRANSFER') { 
-            # The call was transferred to another extension.  
-            my ( $exten, $context, $holdtime, $calltime, $position ) = @par; 
-            $holdtime += 0; $calltime +=0; $position +=0;  
-            my $status = 'TRANSFER->'.$exten.'@'.$context; 
-            $this->{'st_complete'} -> execute ($holdtime, $calltime, $position, $status, $agent, $callid); 
+        elsif ( $event eq 'TRANSFER') {
+            # The call was transferred to another extension.
+            my ( $exten, $context, $holdtime, $calltime, $position ) = @par;
+            $holdtime += 0; $calltime +=0; $position +=0;
+            my $status = 'TRANSFER->'.$exten.'@'.$context;
+            $this->speak(sprintf("%s Hold: %s Time: %s Pos: %s Status: %s Agent: %s CallId: %s->%s ",
+                   $event, $holdtime, $calltime, $position, $status, $agent, $callid, $enterqueue_ids->{ $callid } ));
+            $this->{'st_complete'} -> execute ($holdtime, $calltime, $position, $status, $agent, $callid, $enterqueue_ids->{ $callid });
         }
         elsif ( $event eq 'CONNECT' ) {
             # The caller was connected to an agent.
             my $holdtime = $par[0] + 0;
-            $this->{'st_connect'}->execute( $holdtime, $agent, $callid );
+            $this->speak(sprintf("%s Hold: %s Agent %s CallId: %s->%s", $event, $holdtime, $agent, $callid, $enterqueue_ids->{ $callid }));
+            $this->{'st_connect'}->execute( $holdtime, $agent, $callid, $enterqueue_ids->{ $callid } );
         }
         elsif ( $event eq 'EXITWITHKEY' ) {
             my $pos = $par[1] + 0;
-            $this->{'st_abandon'}->execute( $pos, 0, $event, $callid );
+            $this->speak(sprintf("%s Pos: %s CallId: %s->%s", $event, $pos, $callid, $enterqueue_ids->{ $callid }));
+            $this->{'st_abandon'}->execute( $pos, 0, $event, $callid, delete $enterqueue_ids->{ $callid } );
         }
         elsif ( $event eq 'EXITWITHTIMEOUT' ) {
             my $pos = $par[0] + 0;
-            $this->{'st_abandon'}->execute( $pos, 0, $event, $callid );
+            $this->speak(sprintf("%s Pos: %s CallId: %s->%s", $event, $pos, $callid, $enterqueue_ids->{ $callid }));
+            $this->{'st_abandon'}->execute( $pos, 0, $event, $callid, delete $enterqueue_ids->{ $callid } );
         }
     }    #end while(1)...
 }

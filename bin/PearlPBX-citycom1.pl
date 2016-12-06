@@ -1,11 +1,11 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 #===============================================================================
 #
 #         FILE:  PearlPBX-citycom1.pl
 #
-#        USAGE:  ./PearlPBX-citycom1.pl 
+#        USAGE:  ./PearlPBX-citycom1.pl
 #
-#  DESCRIPTION: Раз в N дней отсылает на <email> случайный разговор операторов длительностью более чем 30 секунд из выбранных за последние N дней.  
+#  DESCRIPTION: Раз в N дней отсылает на <email> случайный разговор операторов длительностью более чем 30 секунд из выбранных за последние N дней.
 #
 #      OPTIONS:  ---
 # REQUIREMENTS:  ---
@@ -14,7 +14,7 @@
 #       AUTHOR:  Alex Radetsky (Rad), <rad@rad.kiev.ua>
 #      COMPANY:  PearlPBX
 #      VERSION:  1.0
-#      CREATED:  30.12.2013 
+#      CREATED:  30.12.2013
 #     REVISION:  ---
 #===============================================================================
 
@@ -23,29 +23,29 @@ use strict;
 use warnings;
 
 CityCom1->run(
-	daemon => undef, 
-	verbose => 1, 
-	use_pidfile => undef, 
+	daemon => undef,
+	verbose => 1,
+	use_pidfile => undef,
 	has_conf => 1,
-  conf_file  => "/etc/PearlPBX/asterisk-router.conf",
+    conf_file  => "/etc/PearlPBX/asterisk-router.conf",
 	infinite => undef
-); 
+);
 
 1;
 
-package CityCom1; 
+package CityCom1;
 
-use 5.8.0; 
-use warnings; 
-use strict; 
+use 5.8.0;
+use warnings;
+use strict;
 
-use base qw(NetSDS::App); 
-use Data::Dumper; 
-use DBI; 
+use base qw(NetSDS::App);
+use Data::Dumper;
+use DBI;
 use Getopt::Long qw(:config auto_version auto_help pass_through);
 use MIME::Base64;
 use NetSDS::Util::DateTime;
-use MIME::Lite; 
+use MIME::Lite;
 
 sub start {
     my $this = shift;
@@ -56,22 +56,22 @@ sub start {
     $this->mk_accessors('dbh');
     $this->_db_connect();
 
-	  my $dayz = undef; 
-		GetOptions('dayz=i' => \$dayz); 
-		unless ( defined ( $dayz ) ) { 
-			die "Не указан обязательный параметр --dayz.\n"; 
+	  my $dayz = undef;
+		GetOptions('dayz=i' => \$dayz);
+		unless ( defined ( $dayz ) ) {
+			die "Не указан обязательный параметр --dayz.\n";
 	 	}
-		$this->{'dayz'} = $dayz; 	
-	
-		my $email = undef; 
-		GetOptions ('email=s' => \$email); 
-		unless ( defined ( $email ) ) { 
-			die "Не указан обязательный параметр --email.\n"; 
+		$this->{'dayz'} = $dayz;
+
+		my $email = undef;
+		GetOptions ('email=s' => \$email);
+		unless ( defined ( $email ) ) {
+			die "Не указан обязательный параметр --email.\n";
 	 	}
-		$this->{'email'} = $email; 
+		$this->{'email'} = $email;
 }
 
-sub _db_connect { 
+sub _db_connect {
 	  my $this = shift;
     unless ( defined( $this->{conf}->{'db'}->{'main'}->{'dsn'} ) ) {
         $this->speak("Can't find \"db main->dsn\" in configuration.");
@@ -109,41 +109,41 @@ sub _exit {
     exit(-1);
 }
 
-sub _generate_sql { 
-	my ($this, $i) = @_; 
+sub _generate_sql {
+	my ($this, $i) = @_;
 
-	my $sql = sprintf("select * from cdr where billsec >30 and calldate between now()-'%d days'::interval and now() and (channel like 'SIP/%d%%' or dstchannel like 'SIP/%d%%');", $this->{'dayz'},$i, $i); 
-	return $sql;  
-} 
+	my $sql = sprintf("select * from cdr where billsec >30 and calldate between now()-'%d days'::interval and now() and (channel like 'SIP/%d%%' or dstchannel like 'SIP/%d%%');", $this->{'dayz'},$i, $i);
+	return $sql;
+}
 
-sub _fetch { 
-	my $this = shift; 
-	my $sql = shift; 
+sub _fetch {
+	my $this = shift;
+	my $sql = shift;
 
-	my $sth = $this->dbh->prepare($sql); 
-	$sth->execute; 
-	my $arrayref = $sth->fetchall_arrayref; 
-	my @rows = @{$arrayref}; 
-	my $rcount = @rows; 
-	if ($rcount == 0) { 
+	my $sth = $this->dbh->prepare($sql);
+	$sth->execute;
+	my $arrayref = $sth->fetchall_arrayref;
+	my @rows = @{$arrayref};
+	my $rcount = @rows;
+	if ($rcount == 0) {
 		return (0, undef, undef);
 	}
-	my $rand = int(rand($rcount)); 
-	my $row = $rows[$rand]; 
-	my ($filename,$realfilename) = $this->_get_filename($row); 
+	my $rand = int(rand($rcount));
+	my $row = $rows[$rand];
+	my ($filename,$realfilename) = $this->_get_filename($row);
 	my $file = $this->_readfile($realfilename);
-	unless ( defined ( $file ) ) { 
-		return (undef,undef,undef); 
-	} 
+	unless ( defined ( $file ) ) {
+		return (undef,undef,undef);
+	}
 	return ($row, $filename, $realfilename);
 
 }
 
-sub process { 
-		my $this = shift; 
-		my $text = '<body><table style="border-collapse: collapse; border: 1px solid black;"><tr><th>Оператор</th><th>Кто звонил</th><th>Куда звонил</th><th>Когда</th><th>Время разговора</th><th>Приложенный файл</th></tr>'; 
+sub process {
+		my $this = shift;
+		my $text = '<body><table style="border-collapse: collapse; border: 1px solid black;"><tr><th>Оператор</th><th>Кто звонил</th><th>Куда звонил</th><th>Когда</th><th>Время разговора</th><th>Приложенный файл</th></tr>';
 
-		my $subject = sprintf("Случайный разговор за последние %s сутки длительностью более 30 секунд",$this->{'dayz'}); 
+		my $subject = sprintf("Случайный разговор за последние %s сутки длительностью более 30 секунд",$this->{'dayz'});
 	   my $from       = $this->{conf}->{'email_from'};
   	unless ( defined ( $this->{conf}->{'email_from'} )) { $from = 'pearlpbx@pearlpbx.com'; }
 
@@ -155,22 +155,22 @@ sub process {
         Type    =>'multipart/mixed'
   	);
 
-		for (my $i = 201; $i <= 218; $i++ ) { 
-			my $sql = $this->_generate_sql($i); 
+		for (my $i = 201; $i <= 218; $i++ ) {
+			my $sql = $this->_generate_sql($i);
 			my ($row,$filename,$realfilename);
-			while ( 1 ) { 
-				($row,$filename,$realfilename) = $this->_fetch($sql); 
-				warn Dumper ($row,$filename,$realfilename); 	
+			while ( 1 ) {
+				($row,$filename,$realfilename) = $this->_fetch($sql);
+				warn Dumper ($row,$filename,$realfilename);
 				unless ( defined ( $row ) ) { next; }
-				last; 
+				last;
 			}
-			next if $row == 0; 
-			my $newtext = $this->_make_text ($i, $row); 
+			next if $row == 0;
+			my $newtext = $this->_make_text ($i, $row);
 			$text .= $newtext;
 			$msg->attach(
         			Type        =>'audio/mpeg',
         			Path        =>$realfilename,
-				Id => $filename,
+		      		Id => $filename,
         			Filename    =>$filename,
         			Disposition => 'attachment'
   			);
@@ -180,45 +180,45 @@ sub process {
     ### (Note that "attach" has same arguments as "new"):
     $msg->attach (
         Type     =>'text/html; charset=utf-8',
-        Data     => $text."</table> </body>" 
+        Data     => $text."</table> </body>"
     );
 
-    $msg->send; 
+    $msg->send;
 
 }
 
-sub _make_text { 
+sub _make_text {
 	my $this = shift;
-	my $operator = shift;  
-	my $ar = shift; 
-	my @row = @{$ar}; 
-	
-	my $src = $row[2]; if ( length ($src) == 9 ) { $src = '0'.$src; } 
-	my $dst = $row[3]; if ( length ($dst) == 9 ) { $dst = '0'.$dst; } 
-	my ($fname, $ffname ) = $this->_get_filename($ar); 
-	my $url = "<a href='cid:$fname'>$fname</a>"; 
+	my $operator = shift;
+	my $ar = shift;
+	my @row = @{$ar};
+
+	my $src = $row[2]; if ( length ($src) == 9 ) { $src = '0'.$src; }
+	my $dst = $row[3]; if ( length ($dst) == 9 ) { $dst = '0'.$dst; }
+	my ($fname, $ffname ) = $this->_get_filename($ar);
+	my $url = "<a href='cid:$fname'>$fname</a>";
 
 	my $body = '<tr style="border-collapse: collapse; border: 1px solid grey;">
 		   <td style="border-collapse: collapse; border: 1px solid grey;">'.$operator.'</td>' .
 		   '<td style="border-collapse: collapse; border: 1px solid grey;">'. $src . '</td>' .
-		   '<td style="border-collapse: collapse; border: 1px solid grey;">'. $dst . '</td>' . 
-		   '<td style="border-collapse: collapse; border: 1px solid grey;">'. $row[0] . '</td>'. 
-		   '<td style="border-collapse: collapse; border: 1px solid grey;">'. $row[10]. ' сек. </td>' . 
+		   '<td style="border-collapse: collapse; border: 1px solid grey;">'. $dst . '</td>' .
+		   '<td style="border-collapse: collapse; border: 1px solid grey;">'. $row[0] . '</td>'.
+		   '<td style="border-collapse: collapse; border: 1px solid grey;">'. $row[10]. ' сек. </td>' .
 		   '<td style="border-collapse: collapse; border: 1px solid grey;">'.$url.' </td></tr>' ;
-	return $body; 
+	return $body;
 }
-	
 
-sub _get_filename { 
+
+sub _get_filename {
 	my $this = shift;
-	my $row = shift; 
-	my @cdr = @{$row}; 
+	my $row = shift;
+	my @cdr = @{$row};
 
-	my $cdr_start = $cdr[0]; 
-	my $calleridnum = $cdr[2]; 
-	
+	my $cdr_start = $cdr[0];
+	my $calleridnum = $cdr[2];
+
 	my ($dir,$fname) = $this->_mixmonitor_filename($cdr_start,$calleridnum);
-	my $ffname = $dir.'/'.$fname; 
+	my $ffname = $dir.'/'.$fname;
 
 	return ($fname, $ffname);
 }
@@ -237,7 +237,7 @@ sub _mixmonitor_filename {
     my $min  = $5;
     my $sec  = $6;
 
-    my $directory = "/var/spool/asterisk/monitor"; 
+    my $directory = "/var/spool/asterisk/monitor";
 #      sprintf( "/var/spool/asterisk/monitor/%s/%s/%s", $year, $mon, $day );
 
     my $filename = sprintf( "%s/%s/%s/%s%s%s-%s.mp3",
@@ -245,20 +245,20 @@ sub _mixmonitor_filename {
 
     return ( $directory, $filename );
 
-}	
+}
 
-sub _readfile { 
-	my $this = shift; 
-	my $fname = shift; 
+sub _readfile {
+	my $this = shift;
+	my $fname = shift;
 
-	open (my $fh, '<', $fname) or return undef; 
-	binmode $fh; 
+	open (my $fh, '<', $fname) or return undef;
+	binmode $fh;
 	my $fbody = <$fh>;
-	close $fh; 
+	close $fh;
 	return $fbody;
 }
 
-			
+
 
 
 #===============================================================================
