@@ -52,9 +52,9 @@ sub process {
 	$this->agi->verbose("Usage: ".$this->{name}." <queuename> ", 3); 
 	   exit(-1);
   }
-  $this->agi->set_variable ('READYTORECEIVE','0'); 
+  $this->agi->set_variable ('READYTORECEIVE','0');
   $this->_manager_connect(); 
-
+  $this->agi->verbose("Manager connected",3); 
   $this->_queue_status($ARGV[0]); 
   $this->_logoff(); 
 
@@ -106,7 +106,7 @@ sub _queue_status {
 
   my $ready = 0; 
 
-  foreach my $r (@replies) { 
+  foreach my $r (@replies) {
     if ($r->{'Event'} eq 'QueueMember') { 
       if ($r->{'Queue'} eq $qname ) { # Наша очередь 
         if ($r->{'Status'} eq '1') { 
