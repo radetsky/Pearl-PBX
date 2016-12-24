@@ -116,60 +116,13 @@ sub _exit {
     exit(-1);
 }
 
-sub _get_next_record {
-    my $this       = shift;
-    my $current_id = shift;
 
-    # remember - transaction already began;
-    my $sth = $this->dbh->prepare(
-        "select * from integration.recordings where id=?");
-    eval { $sth->execute($current_id); };
-    if ($@) {
-        $this->_exit( $this->dbh->errstr );
-    }
-    my $result = $sth->fetchrow_hashref;
-    return $result;
-}
-
-sub _get_record_by_previous_id {
-
-    my $this       = shift;
-    my $current_id = shift;
-
-    # remember - transaction already began;
-    my $sth = $this->dbh->prepare(
-        "select * from integration.recordings where previous_record=? and next_record is null and cdr_start < now() - '1 day'::interval order by id limit 1");
-    eval { $sth->execute($current_id); };
-    if ($@) {
-        $this->_exit( $this->dbh->errstr );
-    }
-    my $result = $sth->fetchrow_hashref;
-    return $result;
-}
-
-sub _fix_pseudo_active_talk { 
-		my $this = shift;
-		my $fail_record = shift; 
-
-		my $id = $fail_record->{'id'}; 
-		$this->log("info","Fix ID=$id set next_record=0");
-		$this->speak("Fix ID=$id set next_record=0");
-
-	  my $sth = $this->dbh->prepare(
-			"update integration.recordings set next_record=0 where id=?" ); 
-		eval { $sth->execute ( $id ); }; 
-		if ($@) { 
-				$this->_exit ( $this->dbh->errstr ); 
-		}
-
-		return 1; 
-}
 sub _set_result_file { 
 	my $this = shift; 
 	my $record_id = shift; 
 	my $result_file = shift; 
 
-	my $sth = $this->dbh->prepare ("update integration.recordings set result_file=? , concatenated=true where id=?");
+	my $sth = $this->dbh->prepare ("update integration.recordings set result_file=? , concatenated=true, mp3=true where id=?");
 	eval { $sth->execute($result_file,$record_id); }; 
 	if ($@) { 
 		$this->dbh->rollback;
@@ -182,7 +135,7 @@ sub _convert_fault {
 	my $this = shift; 
 	my $id = shift; 
 
-	my $sth = $this->dbh->prepare ("update integration.recordings set concatenated=true,result_file='FAULT' where id=?"); 
+	my $sth = $this->dbh->prepare ("update integration.recordings set concatenated=true, mp3=true, result_file='FAULT' where id=?"); 
     eval { $sth->execute($id); };
     if ($@) {
         $this->dbh->rollback;
@@ -272,14 +225,11 @@ sub _find_first_unconverted {
 
     # Prepare the query for finding 1st unconverted record in the database. 
     my $sth = $this->dbh->prepare(
-        "select * from integration.recordings where concatenated=false and result_file is null
-            and next_record is not null and previous_record=0 and id > ? 
-                order by id asc limit 1 for update"
+        "select * from integration.recordings where mp3=false and finished=true order by id asc limit 1 for update"
     );
 
-
     # Execute it. 
-    eval { $sth->execute($this->{'bad_id'}); };
+    eval { $sth->execute(); };
     if ( $@ ) {
         $this->_exit( $this->dbh->errstr );
     }
@@ -306,133 +256,38 @@ sub _update_record_set_next_to_zero {
     return 1; 
 }
 
-sub _get_next_record_recursive { 
-    my ($this, $next_id, $nexts)  = @_; 
-    # warn "_get_next_record_recursive: $next_id,".@{$nexts}; 
-    #warn "_get_next_record_recursive ". Dumper ($nexts);
-
-    if ($next_id == 0) { 
-        return 0; 
-    }
-
-    # remember - transaction already began;
-    my $sth = $this->dbh->prepare(
-        "select * from integration.recordings where id=?");
-    eval { $sth->execute($next_id); };
-    if ($@) {
-        $this->_exit( $this->dbh->errstr );
-    }
-    my $result = $sth->fetchrow_hashref;
-    unless ( defined ( $result ) ) { 
-        # Ничего не нашли, хотя ИД записи указан как следующий 
-        # Очень странно, тогда заканчиваем. 
-        # Надо поставить на предыдущей записи признак финальной. 
-        $this->speak("Can't find next record. ");
-        return 1; 
-    } 
-    #warn "result=" . Dumper ($result); 
-    my $id            = $result->{'id'};
-    my $uline_id      = $result->{'uline_id'};
-    my $original_file = $result->{'original_file'};
-    my $next_record   = $result->{'next_record'};
-    $this->speak("Got ID=$id ULINE=$uline_id FILE=$original_file NEXT=$next_record");
-
-    unless ( defined ( $result->{'next_record'} ) ) {
-        my $is_talk_finished = $this->_more_than_hour_from_now ( $result->{'cdr_start'} ); 
-        if ( $is_talk_finished ) { 
-            $result = $this->_update_record_set_next_to_zero ($result); 
-            push @{$nexts}, $result;  
-        } else { 
-            return undef; 
-        }
-
-    }
-    if ( $result->{'next_record'} == 0 ) {
-        push @{$nexts}, $result;  
-        return 0; 
-    }
-
-    my $previous_record = pop @{$nexts}; 
-    my $is_long_talk = $this->_compare_two_timestamps_for_hour ($result->{'cdr_start'},
-                                                            $previous_record->{'cdr_start'} ); 
-    if ($is_long_talk) { 
-        $this->_fix_very_old_talks($result, $previous_record);
-    }
-    push @{$nexts}, $previous_record; 
-
-    push @{$nexts}, $result; 
-    
-    $this->_get_next_record_recursive($result->{'next_record'},$nexts); 
-}
-
 sub process {
     my $this = shift;
 
-    my @nexts = ();
-
-    # Find first non-converted record
-    # find all files in chain
-    # prepare sox string and print it
-
-	# Begin transaction
     $this->_begin;
 	
     my $result = $this->_find_first_unconverted; 
-    $this->{'bad_id'} = $result->{'id'}; 
 	
     # Analyze fetched row 
 	my $id            = $result->{'id'};
-    my $uline_id      = $result->{'uline_id'};
     my $original_file = $result->{'original_file'};
-    my $next_record   = $result->{'next_record'};
-    $this->speak("Got ID=$id ULINE=$uline_id FILE=$original_file NEXT=$next_record");
+    $this->speak("Got ID=$id FILE=$original_file");
 
-    push @nexts,$result; 
-
-    my $rstatus  = $this->_get_next_record_recursive($next_record, \@nexts); 
-    unless ( defined ( $rstatus ) ) { 
-        $this->speak("Active talk. Skip it."); 
-        return; 
-    }   
-#    warn "Final status=$rstatus: " . Dumper (\@nexts); 
-
-	my @infiles = ();
-	my @nexts_copy = @nexts; 	
-
-	my $result_file = undef; 
-    while ( my $record = shift ( @nexts )  ) {
-		my $original_file = $record->{'original_file'}; 
-		unless ( defined ( $result_file ) ) { 
-			$result_file = $original_file; 
-			$result_file =~ s{\.[^.]+$}{};    # removes extension
-	        $result_file = $result_file . ".mp3";
-		}
-		push @infiles, "/var/spool/asterisk/monitor/".$original_file; 
-    }
-
+	my $result_file = $original_file; 
+	$result_file =~ s{\.[^.]+$}{};    # removes extension
+	$result_file = $result_file . ".mp3";
+	my $infile  = "/var/spool/asterisk/monitor/" . $original_file; 
     my $outfile = "/var/spool/asterisk/monitor/" . $result_file;
-    my $strlog = "/usr/bin/sox ".join (" ",@infiles)." to $outfile"; 
+
+    my $strlog = "/usr/bin/sox $infile to $outfile"; 
     $this->log("info",$strlog);
-    #	$this->speak($strlog); 
-	my $rc = exec_external ('/usr/bin/sox',@infiles,'-t','mp3','-c','2','-r','8000',$outfile); 
+	my $rc = exec_external ('/usr/bin/sox',$infile,'-t','mp3','-c','2','-r','8000',$outfile); 
 
 	unless ( defined ( $rc ) ) { 
-		 while ( my $record = shift ( @nexts_copy ) ) {
-			my $id = $record->{'id'};
-	        $this->_convert_fault($id);
-		}
+	    $this->_convert_fault($id);
 		$this->dbh->commit;
-		$this->log("info","Can't convert ".join (" ",@infiles)." to $outfile"); 
-		$this->speak("Can't convert ".join (" ",@infiles)." to $outfile"); 
+		$this->log("info","Can't convert $infile to $outfile"); 
+		$this->speak("Can't convert $infile to $outfile"); 
 		return 1; 
-		$this->_exit ("Can't convert ".join (" ",@infiles)." to $outfile"); 
-	} 
-	while ( my $record = shift ( @nexts_copy ) ) { 
-		my $id = $record->{'id'}; 
-		$this->_set_result_file ( $id, $result_file ); 	
-		$this->speak("ID $id joined to $result_file"); 
-	}	
-    $this->dbh->commit;
+	}
+
+	$this->_set_result_file ( $id, $result_file ); 	
+	$this->dbh->commit;
 
 }
 

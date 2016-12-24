@@ -292,6 +292,8 @@ sub _cut_local_callerid {
             $callerid = substr( $callerid, $calleridlen - $local_number_length,
                 $local_number_length );
         }
+    } elsif ( $calleridlen == $local_number_length-1 ) {
+        $callerid = "0".$callerid;
     }
     return $callerid;
 }
@@ -482,8 +484,8 @@ sub save_mixmonitor_params {
     $this->_begin;
     my $sth = $this->dbh->prepare (
         "insert into integration.recordings \
-        (original_file,cdr_start,cdr_src,cdr_dst,cdr_uniqueid,next_record) \
-        values (?,?,?,?,?,0)" );
+        (original_file,cdr_start,cdr_src,cdr_dst,cdr_uniqueid,mp3,finished) \
+        values (?,?,?,?,?,false,false)" );
 
     eval {
         my $rv = $sth->execute( $original_file, $cdr_start, $cdr_src,
