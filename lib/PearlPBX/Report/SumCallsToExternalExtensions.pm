@@ -9,6 +9,7 @@
 #      COMPANY:  Net.Style
 #      VERSION:  1.0
 #      CREATED:  01.06.2012 05:30:27 EEST
+#     MODIFIED:  24.12.2016 11:10 GMT+2 Merry Christmas !  
 #===============================================================================
 
 =head1 NAME
@@ -81,7 +82,7 @@ sub report {
     my $tilldatetime  = $this->filldatetime( $params->{'dateTo'},  $params->{'timeTo'} );
 
     my $sql =
-"select count(a.dst) as s,a.dst from public.cdr a, routing.directions b where a.calldate between ? and ? and a.dst ~ b.dr_prefix and length(b.dr_prefix) > 4 and b.dr_prefix !~ E'\\d' and b.dr_prefix !~ E'\\\\[' group by a.dst order by count(dst) desc;"; 
+"select count(a.dst) as s,a.dst from public.cdr a, routing.directions b where a.calldate between ? and ? and a.disposition = 'ANSWERED' and a.dst ~ b.dr_prefix and length(b.dr_prefix) > 4 and b.dr_prefix !~ E'\\d' and b.dr_prefix !~ E'\\\\[' group by a.dst order by count(dst) desc;"; 
 
     my $sth = $this->{dbh}->prepare($sql);
     eval { $sth->execute( $sincedatetime, $tilldatetime ); };
