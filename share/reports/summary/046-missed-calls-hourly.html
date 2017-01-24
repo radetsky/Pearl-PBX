@@ -1,0 +1,45 @@
+<!-- Пропущенные группой почасово -->
+<center><h2>Количество звонков, пропущенные группой почасово</h2></center>
+<form class="well" onSubmit="return missed_calls_hourly_submit()">
+    <fieldset>
+        <input id='dateFrom_sum046' data-datepicker="datepicker" class="input-date" type="text" value="" />
+                to
+        <input id='dateTo_sum046' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <select name="queues_sum046" id="queues_sum046" class="pearlpbx-list-queues"></select>
+
+        <input type="submit" class="btn btn-primary" value="Поиск">
+    </fieldset>
+    </form>
+    <div id="missed_calls_hourly_result">
+    </div>
+<script type="text/javascript">
+function missed_calls_hourly_submit() {
+  var dateFrom;
+  var dateTo;
+  var parsed;
+  var queue;
+
+  dateFrom = $('#dateFrom_sum046').val();
+  dateTo   = $('#dateTo_sum046').val();
+  queue    = $('select#queues_sum046 option:selected').val();
+
+  parsed = pearlpbx_parse_period (dateFrom, dateTo, "00:00", "23:59");
+  if (parsed == false ) {
+    return false;
+  }
+
+  $('#missed_calls_hourly_result').html("Request sent...");
+
+  $.get("/reports.pl",
+    { "exec-report": "MissedCallsHourly",
+       dateFrom: dateFrom,
+       dateTill: dateTo,
+       queue: queue
+    },function(data)
+    {
+      $('#missed_calls_hourly_result').html(data);
+    }, "html");
+	return false;
+}
+</script>
+

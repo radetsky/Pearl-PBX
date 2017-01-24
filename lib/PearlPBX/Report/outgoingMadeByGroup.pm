@@ -33,7 +33,7 @@ use warnings;
 
 use base qw(PearlPBX::Report);
 use Data::Dumper;
-use Template; 
+use Template;
 
 use version; our $VERSION = "1.0";
 our @EXPORT_OK = ();
@@ -81,7 +81,7 @@ sub report {
 		my $queuename = $params->{'queue'};
 
     my $sql =
-		"select calldate,src,dst,split_part(channel,'-',1) as channel, split_part(dstchannel,'-',1) as dstchannel,disposition,billsec from public.cdr where calldate between ? and ? and src in (select membername from public.queue_members where queue_name = ?) order by calldate";
+		"select calldate,src,dst,split_part(channel,'-',1) as channel, split_part(dstchannel,'-',1) as dstchannel,disposition,billsec,uniqueid from public.cdr where calldate between ? and ? and src in (select membername from public.queue_members where queue_name = ?) order by calldate";
 
     my $sth = $this->{dbh}->prepare($sql);
     eval { $sth->execute( $sincedatetime, $tilldatetime, $queuename ); };
@@ -95,18 +95,18 @@ sub report {
         return 0;
     }
 
-		my $template = Template->new( { 
+		my $template = Template->new( {
 			INCLUDE_PATH => '/usr/share/pearlpbx/reports/templates',
-			INTERPOLATE  => 1, 
-			} ) || die "$Template::ERROR\n"; 
+			INTERPOLATE  => 1,
+			} ) || die "$Template::ERROR\n";
 
 		my @cdr_keys = $this->hashref2arrayofhashref($hash_ref);
-		my $template_vars = { 
+		my $template_vars = {
 			cdr_keys => \@cdr_keys,
-			pearlpbx_player => sub { return $this->pearlpbx_player(@_); }, 
-		};  
-		$template->process ('outgoingMadeByGroup.html', $template_vars) || die $template->error(); 
-		
+			pearlpbx_player => sub { return $this->pearlpbx_player(@_); },
+		};
+		$template->process ('outgoingMadeByGroup.html', $template_vars) || die $template->error();
+
 }
 
 1;
