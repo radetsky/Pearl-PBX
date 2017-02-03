@@ -39,9 +39,12 @@ use strict;
 use base qw(PearlPBX::App); # Already connected to Database, Manager and EventListener
 use Getopt::Long qw(:config auto_version auto_help pass_through);
 use Data::Dumper; 
+use PearlPBX::NotifyHTTP qw(notify_http); 
+use PearlPBX::Logger; 
 
 use constant MAX_TRIES    => 5; 
 use constant CALL_TIMEOUT => 60*1000;
+use constant PEARLPBX_TIMEOUT => 120; 
 use constant BUSY_TIMEOUT => 30;  
 use constant REASON => { 
         '0' => 'CONGESTION',
@@ -74,12 +77,15 @@ sub start {
     unless ( defined ( $taskName ) ) {
        $this->_exit("No task name given. ;( "); 
     } 
+
+    my $notifyURL = undef; GetOptions ('notifyURL=s' => \$notifyURL); $this->{notifyURL} = $notifyURL; 
+
 }
 
 sub process {
 	my $this = shift; 
 
-	$this->speak("Telephone: ".$this->{dst}. " Task: ". $this->{taskName}); 
+	Debug("Telephone: ".$this->{dst}. " Task: ". $this->{taskName}); 
 
 	my $parked = $this->find_parked_call($this->{dst}); 
 	if ( defined ( $parked ) ) {
@@ -87,7 +93,7 @@ sub process {
         $this->notifyURL('OK_PARKED'); 
         return 1; 
     } 
-	$this->speak("Not found in ParkedCalls. Search for dial route.");
+	Debug("Not found in ParkedCalls. Search for dial route.");
     $this->set_callerid(); # Setting CallerID in this->{callerid}
     my $try = 1;
     my $prio = 1; 
@@ -95,9 +101,7 @@ sub process {
     while ( $try <= MAX_TRIES ) {
         last unless $this->route_call( $prio, $try );
         $status = $this->originate();
-        my $log = "Try: $try, Step: $prio, Status: $status"; 
-        $this->log('info', $log); 
-        $this->speak($log); 
+        Info("Try: $try, Step: $prio, Status: $status"); 
         if ( ( $status =~ /CONGESTION/ ) || ( $status =~ /HANGUP/ ) ) {
             if ( $this->{dst_type} eq 'trunk') {
                 $prio += 1; 
@@ -120,7 +124,17 @@ sub process {
 
 sub notifyURL {
     my ($this, $status) = @_;
-    $this->speak('NotifyURL: XXX -> Status = ' . $status); 
+    unless ( defined ( $this->{notifyURL} ) ) { 
+        return undef;
+    }
+
+    Info('NotifyURL: '. $this->{notifyURL} . ' -> Status = ' . $status); 
+
+    notify_http ( 
+        cont_type => "text/html",
+        post_data => $status,
+        uri       => $this->{notifyURL},
+    ); 
     
 }
 
@@ -147,17 +161,23 @@ sub originate {
     #warn Dumper $reply; 
     my $response = $reply->{Response}; 
     my $message  = $reply->{Message}; 
-    $this->speak($response . " : " . $message ); 
+    Debug($response . " : " . $message ); 
     if ($response =~ /ERROR/i) {
         return 'ERROR';
     }
 
-    while (1) {
+    my $timeIn = time; 
+
+    $response = 'PEARLPBX_TIMEOUT';
+
+    while ( PEARLPBX_TIMEOUT > ( time - $timeIn ) ) {
         my $event = $this->el->_getEvent();
+        # Infof("%s",$event); 
         if ( (! defined ($event)) || $event eq '0' ) { sleep 1; next; }
 
         if ( defined ( $event->{'Event'} ) ) {
             if ( $event->{'Event'} =~ /OriginateResponse/i ) {
+                Debugf("Response: %s", $event); 
                 if ($event->{'ActionID'} eq $this->{dst} ) {
                     #warn Dumper $event; 
                     if ( defined ($event->{'Response'} ) ) {
@@ -182,9 +202,13 @@ sub originate {
 
 sub sleep {
     my ($this, $timeout) = @_; 
-    $this->speak("Sleeping for $timeout seconds..."); 
-    $this->log('info', 'Sleeping for ' . $timeout . ' seconds.'); 
-    sleep($timeout); 
+    Debug("Sleeping for $timeout seconds..."); 
+    my $timeIn = time; 
+    while ($timeout >= ( time - $timeIn ) ) {
+        my $event = $this->el->_getEvent();
+        # Infof("%s",$event);    
+    }
+    # Just read AMI with $timeout seconds
 }
 
 sub unpark2context {
@@ -268,7 +292,7 @@ sub find_parked_call {
 
     my $parkedcalls = $this->get_parked_calls();
     unless ( defined ( $parkedcalls ) ) { 
-        $this->speak($this->mgr->geterror()); 
+        Err($this->mgr->geterror()); 
         return undef; 
     }
 
@@ -308,7 +332,7 @@ sub route_call {
     my $result = $sth->fetchrow_hashref;
     $this->{dst_str}  = $result->{'dst_str'};
     $this->{dst_type} = $result->{'dst_type'};
-    $this->speak("dst_str=".$this->{dst_str}.",dst_type=".$this->{dst_type}.",step=$step, try=$try");
+    Debug("dst_str=".$this->{dst_str}.",dst_type=".$this->{dst_type}.",step=$step, try=$try");
     $this->{channel} = "SIP/" . $this->{dst_str} . "/" . $this->{dst}; 
     return 1; 
 
