@@ -1,0 +1,82 @@
+[% WRAPPER _page_.tmpl
+    title = translate("Routes")
+%]
+
+[% INCLUDE menu.tmpl %]
+
+<div class="container-fluid">
+    <div class="row">
+    <p> <tt>
+
+    Чем-то схоже на IPTABLES, IP ROUTE, etc. Правило по-умолчанию: application Hangup (17).
+
+    Здесь должна быть таблица, которая управляет маршрутизацией и соответственные поля в ней:
+
+    Направление - Название (внутренние звонки, звонки на мобилу, звонки на офис)
+
+    0) Необязательный комментарий
+    1) Источник звонка ( anybody, localusers, trunk, workgroup, whitelist, blacklist, номер (маска, regexp) etc.)
+    2) Номер (номер, маска, regexp)
+    3) Совпадение с календарем (имя календаря или в любое время)
+    4) Выбор цели (юзер, workgroup, localmask, голосовой файл, application (parameters)), транк, транкгруппа)
+    5) Время вызова. По истечению таймаута - переход на следующий пункт.
+    6) Необходимость подставить номер А (указать номер или NAME для GSM-шлюзов)
+    7) Необходимость записать разговор (да/нет)
+
+    Параметры маршрутизации разбиваются на две части:
+    1) Кто виноват ? - это совпадение условий source && destination && calendar
+    2) Что делать ? - это target + parameters (timeout, subst A, record true/false )
+    3) Если не совпало условие #1, то происходит переход на следующее условие
+
+    Аналог "Черный список"
+    Задача: звонки из России сразу кидать на Application Hangup.
+
+
+    <b>Примеры</b>
+    Internal calls,
+    	1, anybody, ^2\d\d, any date/time, localmask, no subst A,
+    	2, anybody, ^2\d\d, any date/time, user 200, no subst A
+
+    Local Tech Support,
+    	1, anybody, 2052504, calendar "Workdays", workgroup TSupport, no subst A
+    	2, localusers, 8900, any date/time, workgroup VIPSupport, no subst A
+
+    Эфир "РадиоРокс",
+    	1, blacklist, any, any date/time, dialplan "BlackHole", no subst A, no record.
+    	2, anybody, 5442323, calendar "КрашТест", user Sonya Sotnik, no subst A, record.
+
+    Такси "Экспресс",
+    	1, blacklist, any, any date/time, voicefile "ТакВамИНадо", no subst A, record (чисто посмеяться)
+    	2, whitelist, 2391515, calendar "Workdays", workgroup "VIP", no subst A, record (whitelist автоматически поднимает QUEUE_PRIO до небес )
+    	3, anybody, 2391515, any date/time, workgroup Express, no subst A, record,
+
+    Автосалон "Ланос",
+    	1, whitelist, 2022022, calendar "Workdays", workgroup "Lanos VIP", timeout 30 sec, no subst A, record
+    	2, whitelist, 2022022, calendar "Workdays", trunk "Areafix", timeout 30 sec, no subst A, record
+    	3, whitelist, 2022022, calendar "Workdays", user "Director", timeout 30 sec, no subst A, record
+    	4, whitelist, 2022022, calendar "Workdays", voicefile "Намоченьжаль", no timeout, no subst A, no record
+    	5, anybody, 2022022, any date/time, workgroup "Lanos", timeout 60 sec, no subst A, record
+
+    Звонки на мобильные
+    	1, localusers, ^0[50,66,95,99], any date/time, trunkgroup GSM, no timeout, no subst A, no record
+
+    Звонки международные
+    	1, user 202 Ваня-Грузчик, ^00, any date/time, application Hangup, no timeout, no subst A, no record
+    	2, user 201 director, ^00, any date/time, trunk Skype, timeout 60 sec, subst 99123123122, record
+    	3, localusers, ^00, any date/time, trunk Mixnet, timeout 30 sec, subst 067123231, record
+    	4, anybody, ^99, any date/time, trunk Mixnet, timeout 60 sec, subst 0504139380, record (это еще пойдет на number manipulations) до роутинга, потому что совпадает по маске.
+
+    Звонки по Украине
+    	1, director, ^0[3-9], any date/time, trunk EuroTel, timeout 20 sec, no subst A, record
+    	2, director, ^0[3-9], any date/time, trunk BeeLine, timeout 20 sec, subst 0504139380, record
+    	3, localusers, ^0[3-9], any date/time, trunk KyivStar, timeout 60 sec, subst 0672206770, record
+
+
+    </tt>
+    </p>
+    </div>
+</div> <!-- /container -->
+
+[% END %]
+
+
