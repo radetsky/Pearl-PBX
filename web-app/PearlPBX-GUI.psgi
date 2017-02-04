@@ -22,10 +22,6 @@ use Plack::Middleware::Session;
 use Plack::Session::State::Cookie;
 use Plack::Session::Store::Cache;
 
-use CHI;
-use Cache::Memcached::Fast;
-use CHI::Driver::Memcached::Fast;
-
 use POSIX::AtFork;
 
 POSIX::AtFork->add_to_child( sub { PearlPBX::DB->new("pearlpbx.conf"); } );
@@ -41,15 +37,7 @@ my $app = builder {
         enable 'PearlPBX::Page500';
     }
 
-    enable 'Session',
-      store => Plack::Session::Store::Cache->new(
-        cache => CHI->new(
-            driver             => 'Memcached::Fast',
-            namespace          => 'sessions',
-            servers            => ["127.0.0.1:11211"],
-            compress_threshold => 10_000,
-        )
-      );
+    enable 'Session'; 
 
     mount "/" => builder {
         mount "/login"        => builder { \&page_login };
