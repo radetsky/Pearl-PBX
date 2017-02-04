@@ -7,7 +7,7 @@ use parent qw/Plack::Middleware/;
 use Try::Tiny;
 use Devel::StackTrace;
 
-use Pearl::Logger;
+use PearlPBX::Logger;
 use PearlPBX::Pages;
 
 sub call {

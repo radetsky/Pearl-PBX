@@ -10,8 +10,8 @@ use Plack;
 use Plack::Response;
 use Plack::Request;
 
-use Pearl::HttpUtils qw/http_accept_lang/;
-use Pearl::Logger;
+use PearlPBX::HttpUtils qw/http_accept_lang/;
+use PearlPBX::Logger;
 
 
 sub call {

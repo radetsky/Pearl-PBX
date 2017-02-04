@@ -5,7 +5,7 @@ use strict;
 
 use Plack::Request;
 use PearlPBX::Localization;
-use Pearl::HttpUtils qw/http_accept_lang/;
+use PearlPBX::HttpUtils qw/http_accept_lang/;
 
 use Exporter;
 use parent qw(Exporter);

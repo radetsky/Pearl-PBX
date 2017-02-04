@@ -10,11 +10,9 @@ use Plack::Request;
 use PearlPBX::ScalarUtils qw/trim/;
 use PearlPBX::Notifications;
 use PearlPBX::DB qw/pearlpbx_db/;
-
 use PearlPBX::Pages; 
-
-use Pearl::Const;
-use Pearl::Logger;
+use PearlPBX::Const;
+use PearlPBX::Logger;
 
 use Exporter;
 use parent qw(Exporter);

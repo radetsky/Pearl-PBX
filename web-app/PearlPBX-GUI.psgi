@@ -13,7 +13,7 @@ use PearlPBX::Pages;
 use PearlPBX::Actions;
 use PearlPBX::DB;
 
-use Pearl::Const;
+use PearlPBX::Const;
 
 use Plack::Middleware::PearlPBX::Authenticate;
 use Plack::Middleware::PearlPBX::Page500;
