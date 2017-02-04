@@ -24,7 +24,7 @@ use Plack::Session::Store::Cache;
 
 use POSIX::AtFork;
 
-POSIX::AtFork->add_to_child( sub { PearlPBX::DB->new("pearlpbx.conf"); } );
+POSIX::AtFork->add_to_child( sub { PearlPBX::DB->new("/etc/pearlpbx.conf"); } );
 
 # -------------- Plack application ------------
 
