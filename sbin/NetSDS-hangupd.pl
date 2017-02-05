@@ -60,7 +60,7 @@ sub _clear_ulines {
     Info("Start clear ulines procedure.");
     Info("Getting status from AMI.");
     # get status
-    my @liststatus = $this->_get_status($manager);
+    my @liststatus = $this->_get_status;
     Info("Got status. Getting busy ulines.");
     my $busyulines = $this->_get_busy_ulines;
 
@@ -315,8 +315,10 @@ sub process {
 
     while (1) {
         $event = $this->el->_getEvent();
-        unless ($event) {
-            # $this->log("info","No event from AMI. Sleeping.");
+	unless ( defined ( $event ) ) { 
+	    $this->_exit("EOF from manager. Exiting to restart by system methods (systemctl, monit)");
+	}
+        if ($event == 0) {
             $this->{'count'} = $this->{'count'} + 1;
             if ( $this->{'count'} >= 300 ) {
                 $this->_clear_ulines();

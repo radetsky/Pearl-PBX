@@ -1,11 +1,11 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 #===============================================================================
 #         FILE:  PearlPBX-rocket-dialer.pl
 #
-#        USAGE:  ./PearlPBX-rocket-dialer.pl --src <Telephone> --dst <Telephone> --taskName AsteriskContext 
-#                --parameters VAR1=VAL1&VAR2=VAL2&VAR3=VAL3 [ --notifyURL http://google.com/notify?status=%status% ] 
+#        USAGE:  ./PearlPBX-rocket-dialer.pl --src <Telephone> --dst <Telephone> --taskName AsteriskContext
+#                --parameters VAR1=VAL1&VAR2=VAL2&VAR3=VAL3 [ --notifyURL http://google.com/notify?status=%status% ]
 #
-#  DESCRIPTION:  Automatically dials to <Telephone> using PearlPBX routing information. 
+#  DESCRIPTION:  Automatically dials to <Telephone> using PearlPBX routing information.
 #                Using N tries (see config). Sends notifyURL when status is OK, FAILED, BUSY.
 #
 #       AUTHOR:  Alex Radetsky (Rad), <rad@rad.kiev.ua>
@@ -31,22 +31,22 @@ RocketDialer->run(
 
 1;
 
-package RocketDialer; 
+package RocketDialer;
 
 use warnings;
 use strict;
 
 use base qw(PearlPBX::App); # Already connected to Database, Manager and EventListener
 use Getopt::Long qw(:config auto_version auto_help pass_through);
-use Data::Dumper; 
-use PearlPBX::NotifyHTTP qw(notify_http); 
-use PearlPBX::Logger; 
+use Data::Dumper;
+use PearlPBX::NotifyHTTP qw(notify_http);
+use PearlPBX::Logger;
 
-use constant MAX_TRIES    => 5; 
+use constant MAX_TRIES    => 5;
 use constant CALL_TIMEOUT => 60*1000;
-use constant PEARLPBX_TIMEOUT => 120; 
-use constant BUSY_TIMEOUT => 30;  
-use constant REASON => { 
+use constant PEARLPBX_TIMEOUT => 120;
+use constant BUSY_TIMEOUT => 30;
+use constant REASON => {
         '0' => 'CONGESTION',
         '1' => 'HANGUP',
         '2' => 'LRINGING',
@@ -59,7 +59,7 @@ use constant REASON => {
     };
 
 sub start {
-    my $this = shift; 
+    my $this = shift;
 
     $this->SUPER::start();
 
@@ -68,43 +68,43 @@ sub start {
         $this->_exit("Use --src to set source user to dial. For example, --src=200 ");
     }
 
-    my $dst = undef; GetOptions ('dst=s' => \$dst ); $this->{dst} = $dst; 
-    unless ( defined ( $dst ) ) { 
+    my $dst = undef; GetOptions ('dst=s' => \$dst ); $this->{dst} = $dst;
+    unless ( defined ( $dst ) ) {
         $this->_exit("Use --dst parameter to give the target to dial.");
     }
-   
+
     my $taskName = undef; GetOptions ('taskName=s' => \$taskName); $this->{taskName} = $taskName;
     unless ( defined ( $taskName ) ) {
-       $this->_exit("No task name given. ;( "); 
-    } 
+       $this->_exit("No task name given. ;( ");
+    }
 
-    my $notifyURL = undef; GetOptions ('notifyURL=s' => \$notifyURL); $this->{notifyURL} = $notifyURL; 
+    my $notifyURL = undef; GetOptions ('notifyURL=s' => \$notifyURL); $this->{notifyURL} = $notifyURL;
 
 }
 
 sub process {
-	my $this = shift; 
+	my $this = shift;
 
-	Debug("Telephone: ".$this->{dst}. " Task: ". $this->{taskName}); 
+	Debug("Telephone: ".$this->{dst}. " Task: ". $this->{taskName});
 
-	my $parked = $this->find_parked_call($this->{dst}); 
+	my $parked = $this->find_parked_call($this->{dst});
 	if ( defined ( $parked ) ) {
 		$this->unpark2context( $parked->{ParkeeChannel} );
-        $this->notifyURL('OK_PARKED'); 
-        return 1; 
-    } 
+        $this->notifyURL('OK_PARKED');
+        return 1;
+    }
 	Debug("Not found in ParkedCalls. Search for dial route.");
     $this->set_callerid(); # Setting CallerID in this->{callerid}
     my $try = 1;
-    my $prio = 1; 
-    my $status = 'INIT'; 
+    my $prio = 1;
+    my $status = 'INIT';
     while ( $try <= MAX_TRIES ) {
         last unless $this->route_call( $prio, $try );
         $status = $this->originate();
-        Info("Try: $try, Step: $prio, Status: $status"); 
+        Info("Try: $try, Step: $prio, Status: $status");
         if ( ( $status =~ /CONGESTION/ ) || ( $status =~ /HANGUP/ ) ) {
             if ( $this->{dst_type} eq 'trunk') {
-                $prio += 1; 
+                $prio += 1;
             }
         }
 
@@ -115,33 +115,33 @@ sub process {
             $this->sleep(BUSY_TIMEOUT);
         }
 
-        $try += 1; 
+        $try += 1;
 
     }
     $this->notifyURL($status);
-    return 1; 
+    return 1;
 }
 
 sub notifyURL {
     my ($this, $status) = @_;
-    unless ( defined ( $this->{notifyURL} ) ) { 
+    unless ( defined ( $this->{notifyURL} ) ) {
         return undef;
     }
 
-    Info('NotifyURL: '. $this->{notifyURL} . ' -> Status = ' . $status); 
+    Info('NotifyURL: '. $this->{notifyURL} . ' -> Status = ' . $status);
 
-    notify_http ( 
+    notify_http (
         cont_type => "text/html",
         post_data => $status,
         uri       => $this->{notifyURL},
-    ); 
-    
+    );
+
 }
 
 sub originate {
-    my $this = shift; 
+    my $this = shift;
 
-    $this->mgr->sendcommand ( 
+    $this->mgr->sendcommand (
         Action   => 'Originate',
         ActionID => $this->{dst},
         Channel  => $this->{channel},
@@ -152,34 +152,39 @@ sub originate {
         CallerID => $this->{callerid},
         Account  => $this->{taskName},
         Async    => 'true',
-    ); 
+    );
 
-    my $reply = 0; 
+    my $reply = 0;
     while ( !$reply ) {
         $reply = $this->mgr->receive_answer();
     }
-    #warn Dumper $reply; 
-    my $response = $reply->{Response}; 
-    my $message  = $reply->{Message}; 
-    Debug($response . " : " . $message ); 
+    #warn Dumper $reply;
+    my $response = $reply->{Response};
+    my $message  = $reply->{Message};
+    Debug($response . " : " . $message );
     if ($response =~ /ERROR/i) {
         return 'ERROR';
     }
 
-    my $timeIn = time; 
+    my $timeIn = time;
 
     $response = 'PEARLPBX_TIMEOUT';
 
     while ( PEARLPBX_TIMEOUT > ( time - $timeIn ) ) {
         my $event = $this->el->_getEvent();
-        # Infof("%s",$event); 
-        if ( (! defined ($event)) || $event eq '0' ) { sleep 1; next; }
+        unless ( defined ( $event ) ) {
+            $this->_exit("EOF from manager.");
+        }
+        if ( $event eq '0' ) {
+            sleep 1;
+            next;
+        }
 
         if ( defined ( $event->{'Event'} ) ) {
             if ( $event->{'Event'} =~ /OriginateResponse/i ) {
-                Debugf("Response: %s", $event); 
+                Debugf("Response: %s", $event);
                 if ($event->{'ActionID'} eq $this->{dst} ) {
-                    #warn Dumper $event; 
+                    #warn Dumper $event;
                     if ( defined ($event->{'Response'} ) ) {
                         if ( $event->{'Response'} =~ /Success/i ) {
                             return 'ANSWERED';
@@ -188,10 +193,10 @@ sub originate {
                         }
                     }
                 } else {
-                    #warn Dumper $event->{'Event'}, $event->{'ActionID'}; 
+                    #warn Dumper $event->{'Event'}, $event->{'ActionID'};
                 }
             } else {
-                #warn Dumper $event->{'Event'}; 
+                #warn Dumper $event->{'Event'};
             }
         }
         # TODO: засечь время и по достижению (CALL_TIMEOUT + CALL_TIMEOUT) вернуть ошибку TIMEOUT_PERL
@@ -201,27 +206,27 @@ sub originate {
 }
 
 sub sleep {
-    my ($this, $timeout) = @_; 
-    Debug("Sleeping for $timeout seconds..."); 
-    my $timeIn = time; 
+    my ($this, $timeout) = @_;
+    Debug("Sleeping for $timeout seconds...");
+    my $timeIn = time;
     while ($timeout >= ( time - $timeIn ) ) {
         my $event = $this->el->_getEvent();
-        # Infof("%s",$event);    
+        # Infof("%s",$event);
     }
     # Just read AMI with $timeout seconds
 }
 
 sub unpark2context {
 	my $this = shift;
-	my $channel = shift; 
-	my $context = $this->{taskName}; 
+	my $channel = shift;
+	my $context = $this->{taskName};
 
-    # Try to connect with context taskName 
+    # Try to connect with context taskName
 
 	$this->mgr->sendcommand (
 		Action   => 'Redirect',
-		Channel  => $channel, 
-		Context  => $context, 
+		Channel  => $channel,
+		Context  => $context,
 		Exten    => '0',
 		Priority => '1',
 	);
@@ -291,16 +296,16 @@ sub find_parked_call {
     my $parkeeCallerIDNum = shift;
 
     my $parkedcalls = $this->get_parked_calls();
-    unless ( defined ( $parkedcalls ) ) { 
-        Err($this->mgr->geterror()); 
-        return undef; 
+    unless ( defined ( $parkedcalls ) ) {
+        Err($this->mgr->geterror());
+        return undef;
     }
 
     my $i = 0;
     while ( $i <= @{$parkedcalls} ) {
         my $parkedcall = $parkedcalls->[ $i++ ];
 
-        next unless defined $parkedcall->{'ParkeeCallerIDNum'}; 
+        next unless defined $parkedcall->{'ParkeeCallerIDNum'};
         if ( $parkedcall->{'ParkeeCallerIDNum'} eq $parkeeCallerIDNum ) {
             return $parkedcall;
         }
@@ -317,24 +322,24 @@ sub set_callerid {
         $this->_exit("Can't get caller_id information: " . $this->dbh->errstr)
     }
     my $result = $sth->fetchrow_hashref;
-    $this->{callerid} = $result->{'get_callerid'} // ''; 
+    $this->{callerid} = $result->{'get_callerid'} // '';
 }
 
 sub route_call {
-    my ( $this, $step, $try ) = @_; 
+    my ( $this, $step, $try ) = @_;
 
     my $sth = $this->dbh->prepare(  "select * from routing.get_dial_route4 (?,?,?)" );
     eval { my $rv = $sth->execute( $this->{src}, $this->{dst}, $step ); };
     if ($@) {
-        # ERROR: NO ROUTE 
-        return undef; 
+        # ERROR: NO ROUTE
+        return undef;
     }
     my $result = $sth->fetchrow_hashref;
     $this->{dst_str}  = $result->{'dst_str'};
     $this->{dst_type} = $result->{'dst_type'};
     Debug("dst_str=".$this->{dst_str}.",dst_type=".$this->{dst_type}.",step=$step, try=$try");
-    $this->{channel} = "SIP/" . $this->{dst_str} . "/" . $this->{dst}; 
-    return 1; 
+    $this->{channel} = "SIP/" . $this->{dst_str} . "/" . $this->{dst};
+    return 1;
 
 }
 
