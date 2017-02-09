@@ -47,7 +47,7 @@ Requires: perl-Date-Simple
 Requires: fail2ban-all
 Requires: perl-Starman
 Requires: perl-Clone
-
+Requires: perl-Plack-Middleware-Session
 
 %description
 WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>
