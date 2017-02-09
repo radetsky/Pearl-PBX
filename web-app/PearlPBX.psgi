@@ -11,6 +11,7 @@ use Plack::App::Directory;
 # Own modules to present Pages and Actions
 use PearlPBX::Pages;
 use PearlPBX::Actions;
+use PearlPBX::API;
 use PearlPBX::DB;
 
 use PearlPBX::Const;
@@ -37,12 +38,15 @@ my $app = builder {
         enable 'PearlPBX::Page500';
     }
 
-    enable 'Session'; 
+    enable 'Session';
 
     mount "/" => builder {
+        mount "/api" => builder {
+            mount "/dialer" => builder { \&api_dialer };
+        };
         mount "/login"        => builder { \&page_login };
         mount "/action/login" => builder { \&action_login };
-	mount "/action/logout" => builder { \&action_logout }; 
+	    mount "/action/logout" => builder { \&action_logout };
         mount "/img" =>
           Plack::App::Directory->new( root => WWW_ROOT . '/img' )->to_app;
         mount "/css" =>

@@ -18,11 +18,12 @@ use 5.8.0;
 use strict;
 use warnings;
 
-use lib './perl-NetSDS-Asterisk/NetSDS-Asterisk/lib';
+#use lib './perl-NetSDS-Asterisk/NetSDS-Asterisk/lib';
+#use lib "./lib";
 
 RocketDialer->run(
-    daemon      => undef,
-    verbose     => 1,
+    daemon      => 1,
+    verbose     => undef,
     use_pidfile => undef,
     has_conf    => 1,
     conf_file   => "/etc/NetSDS/asterisk-router.conf",
@@ -85,7 +86,7 @@ sub start {
 sub process {
 	my $this = shift;
 
-	Debug("Telephone: ".$this->{dst}. " Task: ". $this->{taskName});
+	Info("Telephone: ".$this->{dst}. " Task: ". $this->{taskName});
 
 	my $parked = $this->find_parked_call($this->{dst});
 	if ( defined ( $parked ) ) {
