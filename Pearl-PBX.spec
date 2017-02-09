@@ -2,7 +2,7 @@ Name: Pearl-PBX
 Version: 1.4
 Release: centos7
 
-Summary: WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>  
+Summary: WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>
 
 License: GPL
 
@@ -20,32 +20,35 @@ Source0: %name-%version.tar
 
 Requires: asterisk > 13
 Requires: asterisk-pgsql
-Requires: asterisk-voicemail 
+Requires: asterisk-voicemail
 Requires: postgresql-server
 Requires: postgresql
 Requires: perl-NetSDS
-Requires: perl-Class-Accessor-Class 
-Requires: perl-Class-Accessor 
-Requires: perl-Template-Toolkit 
-Requires: perl-NetSDS-Asterisk 
-Requires: perl-asterisk-perl 
-Requires: httpd 
+Requires: perl-Class-Accessor-Class
+Requires: perl-Class-Accessor
+Requires: perl-Template-Toolkit
+Requires: perl-NetSDS-Asterisk
+Requires: perl-asterisk-perl
+Requires: httpd
 Requires: asterisk-sounds-ru-wav
 Requires: asterisk-sounds-ru-gsm
 Requires: asterisk-sounds-ru-alaw
 Requires: perl-CGI-Session
 Requires: perl-CGI-Session-Auth
-Requires: NetworkManager-tui 
-Requires: monit 
-Requires: pwgen 
-Requires: perl-File-Tail 
+Requires: NetworkManager-tui
+Requires: monit
+Requires: pwgen
+Requires: perl-File-Tail
 Requires: rpmforge-release
 Requires: epel-release
 Requires: tftp-server
 Requires: sox
 Requires: perl-Date-Simple
-Requires: fail2ban-all 
- 
+Requires: fail2ban-all
+Requires: perl-Starman
+Requires: perl-Clone
+
+
 %description
 WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>
 
@@ -61,29 +64,29 @@ rm -rf %{buildroot}
 mkdir -p %buildroot/var/run/NetSDS
 chmod 777 %buildroot/var/run/NetSDS
 
-mkdir -p %buildroot/usr/share/asterisk/moh 
+mkdir -p %buildroot/usr/share/asterisk/moh
 
 mkdir -p %buildroot/var/lib/asterisk/agi-bin
 install -m 755  agi-bin/NetSDS-AGI-integration.pl %buildroot/var/lib/asterisk/agi-bin
 install -m 755  agi-bin/NetSDS-route.pl %buildroot/var/lib/asterisk/agi-bin
-install -m 755  agi-bin/PearlPBX* %buildroot/var/lib/asterisk/agi-bin 
+install -m 755  agi-bin/PearlPBX* %buildroot/var/lib/asterisk/agi-bin
 
 mkdir -p %buildroot/usr/bin
 mkdir -p %buildroot/usr/sbin
-install -D -m 755  bin/* %buildroot/usr/bin/ 
+install -D -m 755  bin/* %buildroot/usr/bin/
 install -D -m 755  sbin/* %buildroot/usr/sbin/
 
 install -d -m 755  %buildroot/etc/NetSDS
 install -m 644  etc/NetSDS/asterisk-router.conf %buildroot/etc/NetSDS
 
-install -D -m 644  etc/apache2/sites-available/pearlpbx %buildroot/etc/httpd/conf.d/pearlpbx.conf 
+install -D -m 644  etc/apache2/sites-available/pearlpbx %buildroot/etc/httpd/conf.d/pearlpbx.conf
 
 install -d -m 755 %buildroot/etc/systemd/system
 install -D -m 755 etc/systemd/system/*.service %buildroot/etc/systemd/system
 
 install -d -m 755 %buildroot/etc/monit.d
-install -d -m 755 %{buildroot}%{_initrddir} 
-install -D -m 755  etc/init.d/pearlpbx-parsequeuelogd %{buildroot}%{_initrddir}/ 
+install -d -m 755 %{buildroot}%{_initrddir}
+install -D -m 755  etc/init.d/pearlpbx-parsequeuelogd %{buildroot}%{_initrddir}/
 install -D -m 644  etc/monit.d/* %buildroot/etc/monit.d/
 
 install -D -m 755  etc/init.d/PearlPBX %{buildroot}%{_initrddir}/
@@ -94,10 +97,10 @@ install -D -m 755  etc/monit.d/pearlpbx-hangupd %buildroot/etc/monit.d/
 install -D -m 755  etc/monit.d/asterisk %buildroot/etc/monit.d/
 
 install -d -m 755  %buildroot/etc/cron.d
-install -D -m 644  etc/cron.d/* %buildroot/etc/cron.d/ 
+install -D -m 644  etc/cron.d/* %buildroot/etc/cron.d/
 
 install -d -m 755  %buildroot/etc/NetSDS/asterisk
-install -d -m 700  %buildroot/etc/NetSDS/asterisk/keys 
+install -d -m 700  %buildroot/etc/NetSDS/asterisk/keys
 install -D -m 400  etc/asterisk13/keys/* %buildroot/etc/NetSDS/asterisk/keys/
 install -D -m 755  etc/asterisk13/*.conf %buildroot/etc/NetSDS/asterisk/
 install -D -m 755  etc/asterisk13/*.ael  %buildroot/etc/NetSDS/asterisk/
@@ -113,19 +116,19 @@ cp -a lib/NetSDS %buildroot/usr/share/perl5
 
 mkdir -p %buildroot/usr/share/pearlpbx
 cp -av share/reports %buildroot/usr/share/pearlpbx/
-cp -av share/provision %buildroot/usr/share/pearlpbx/ 
+cp -av share/provision %buildroot/usr/share/pearlpbx/
 cp -av share/modules %buildroot/usr/share/pearlpbx/
 
 
 install -d -m 755  %buildroot/usr/share/asterisk/sounds
-cp -av sounds/* %buildroot/usr/share/asterisk/sounds/ 
+cp -av sounds/* %buildroot/usr/share/asterisk/sounds/
 
 mkdir -p %buildroot/var/lib/tftpboot
 chmod 777 %buildroot/var/lib/tftpboot
-cp -a var/lib/tftpboot/* %buildroot/var/lib/tftpboot 
+cp -a var/lib/tftpboot/* %buildroot/var/lib/tftpboot
 
-install -D -d -m 755  %buildroot/var/www/pearlpbx 
-cp -a web/* %buildroot/var/www/pearlpbx/ 
+install -D -d -m 755  %buildroot/var/www/pearlpbx
+cp -a web/* %buildroot/var/www/pearlpbx/
 install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 
 
@@ -135,12 +138,12 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 
 %files
 %defattr(-,root,root,-)
-%doc README* *.txt LICENSE  
+%doc README* *.txt LICENSE
 
 %{_initrddir}/pearlpbx-parsequeuelogd
 %{_initrddir}/pearlpbx-hangupd
 %{_initrddir}/PearlPBX
-%config /etc/NetSDS/asterisk/* 
+%config /etc/NetSDS/asterisk/*
 %config /etc/NetSDS/sql/*
 %config(noreplace) /etc/NetSDS/asterisk-router.conf
 %config /etc/cron.d/pearlpbx
@@ -466,8 +469,8 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/share/pearlpbx/reports/templates/Shifts.html
 /usr/share/perl5/PearlPBX/Report/Shifts.pm
 /var/www/pearlpbx/reportview.html
-/usr/bin/PearlPBX-initall.sh 
-/var/www/pearlpbx/index.english.html 
+/usr/bin/PearlPBX-initall.sh
+/var/www/pearlpbx/index.english.html
 /usr/sbin/ast_tls_cert.sh
 /etc/systemd/system/PearlPBX.service
 /etc/systemd/system/asterisk.service
@@ -477,27 +480,27 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 
 %changelog
 * Tue Jul 07 2015 Alex Radetsky <rad@pearlpbx.com> 1.4-centos7
-- Patches to 1.4 
+- Patches to 1.4
 
 * Wed Jun 10 2015 Alex Radetsky <rad@pearlpbx.com> 1.4-centos7
-- Upgrade to 1.4 
-- Moved to Centos7 
-- Many new features 
+- Upgrade to 1.4
+- Moved to Centos7
+- Many new features
 
 * Mon Jan 19 2015 Alex Radetsky <rad@rad.kiev.ua> 1.3.3-centos6
-- Upgrade to PearPBX 1.3.3 
-- Many new features, agis, sbin, web and bugs 
+- Upgrade to PearPBX 1.3.3
+- Many new features, agis, sbin, web and bugs
 
 * Fri Dec 13 2013 Alex Radetsky <rad@rad.kiev.ua> 1.2-centos6
-- Upgrade to PearlPBX 1.2 
-- Many new features, fixes and bugs 
+- Upgrade to PearlPBX 1.2
+- Many new features, fixes and bugs
 
 * Thu Apr 25 2013 Alex Radetsky <rad@rad.kiev.ua> 1.1-centos6
-- Many patches, many fixes. 
-- Upgrade to PearlPBX 1.1 
+- Many patches, many fixes.
+- Upgrade to PearlPBX 1.1
 
 * Wed Feb 27 2013 Alex Radetsky <rad@rad.kiev.ua> 1.0-centos6
-- Initial build of Pearl-PBX 1.0 
+- Initial build of Pearl-PBX 1.0
 
 
 
