@@ -9,6 +9,7 @@ use Encode;
 use PearlPBX::Logger;
 use PearlPBX::Const;
 use PearlPBX::ScalarUtils qw/trim/;
+use PearlPBX::Dialer; 
 
 use Exporter;
 use parent qw(Exporter);
@@ -54,14 +55,23 @@ sub api_dialer {
         return _error ($env, 400, "Parameter 'taskName' is required.");
     }
     my $notifyURL = trim ( $params->{notifyURL} // '' ); # Optional parameter
-    my @cmdparams = ( "/usr/sbin/PearlPBX-rocket-dialer.pl","--src", $src,"--dst", $dst,
-        "--taskName", $taskName );
+    my $async = $params->{async}; 
+
+    my $cmdparams = { src => $src,
+                      dst => $dst,
+                 taskName => $taskName 
+    }; 
 
     if ( $notifyURL ne '' ) {
-       push @cmdparams, "--notifyURL", $notifyURL;
+       $cmdparams->{_notifyURL} = $notifyURL;
     }
 
-    system(@cmdparams);
+    if ( defined ( $async ) ) {
+        $cmdparams->{_fork} = 1; 
+    }
+
+    my $dialer = PearlPBX::Dialer->new($cmdparams); 
+
     return _ok($env);
 }
 
