@@ -48,6 +48,7 @@ Requires: fail2ban-all
 Requires: perl-Starman
 Requires: perl-Clone
 Requires: perl-Plack-Middleware-Session
+Requires: perl-POSIX-AtFork
 
 %description
 WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>
