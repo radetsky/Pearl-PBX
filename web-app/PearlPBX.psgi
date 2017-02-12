@@ -9,6 +9,7 @@ use Plack::Builder;
 use Plack::App::Directory;
 
 # Own modules to present Pages and Actions
+use PearlPBX::Config -load;
 use PearlPBX::Pages;
 use PearlPBX::Actions;
 use PearlPBX::API;

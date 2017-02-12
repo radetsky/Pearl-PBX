@@ -9,7 +9,7 @@ use feature 'state';
 
 use Sys::Syslog qw(:standard :macros);
 use constant {
-    FACILITY => LOG_USER,
+    FACILITY => LOG_LOCAL0,
     PROGNAME => "PearlPBX",
     LOGOPTS  => 'pid',
 };
@@ -27,6 +27,7 @@ our @EXPORT = qw(
     Errf
     _subst_errmsg
     _log_timestamp
+    CloseLog
 );
 
 use Carp;
@@ -59,13 +60,13 @@ sub _Logf
     my $prio = shift;
     my $format = shift;
     defined($format) or confess "Log format undefined";
-
     if (!$LOG_OPENED) {
         closelog();
         openlog(PROGNAME, LOGOPTS, FACILITY);
         $LOG_OPENED = 1;
     }
     syslog($prio, "[$prio]".$format, @_);
+    #warn "Logf: $!" . Dumper $LOG_OPENED, $format, \@_;
 }
 
 sub Logf
@@ -160,6 +161,10 @@ sub Errf
     Logf('err', @_);
 }
 
+sub CloseLog {
+    closelog();
+    $LOG_OPENED = undef;
+}
 
 1;
 

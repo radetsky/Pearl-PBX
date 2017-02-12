@@ -5,43 +5,47 @@ use strict;
 
 use parent qw(NetSDS::Asterisk::Manager);
 
-use PearlPBX::Logger; 
+use PearlPBX::Logger;
 use PearlPBX::Config qw(conf);
+use Data::Dumper;
 
 sub new {
 	my $class = shift;
-	my $this; 
-	$this->{conf} = conf();
-	$this->_check_manager_configuration();
+	my $conf = conf();
 
-	my $this = bless {}, $class; 
+    _check_manager_configuration($conf);
 
-	$this->SUPER::new ( 
-		host => $this->{conf}->{el}->{host}, 
-		port => $this->{conf}->{el}->{port},
-		username => $this->{conf}->{el}->{username},
-		secret => $this->{conf}->{el}->{secret},
-	); 
-	$this->connect; 
+	my $this = $class->SUPER::new (
+		host => $conf->{el}->{host},
+		port => $conf->{el}->{port},
+		username => $conf->{el}->{username},
+		secret => $conf->{el}->{secret},
+    );
 
-	return $this; 
+	my $connected = $this->connect;
+    unless ( defined ( $connected ) ) {
+        die $this->geterror;
+    }
 
+    return bless $this, $class;
 }
 
 sub _check_manager_configuration {
-    my $this = shift;
+    my $conf = shift;
 
-    unless ( defined( $this->{conf}->{'el'}->{'host'} ) ) {
-        die ("Can't file el->host in configuration.\n");
+    unless ( defined( $conf->{'el'}->{'host'} ) ) {
+        die ("Can't find el->host in configuration.\n");
     }
-    unless ( defined( $this->{conf}->{'el'}->{'port'} ) ) {
-        die ("Can't file el->port in configuration.\n");
+    unless ( defined( $conf->{'el'}->{'port'} ) ) {
+        die ("Can't fnd el->port in configuration.\n");
     }
-    unless ( defined( $this->{conf}->{'el'}->{'username'} ) ) {
-        die ("Can't file el->username in configuration.\n");
+    unless ( defined( $conf->{'el'}->{'username'} ) ) {
+        die ("Can't fnd el->username in configuration.\n");
     }
-    unless ( defined( $this->{conf}->{'el'}->{'secret'} ) ) {
-        die ("Can't file el->secret in configuration.\n");
+    unless ( defined( $conf->{'el'}->{'secret'} ) ) {
+        die ("Can't find el->secret in configuration.\n");
     }
 
 }
+1;
+

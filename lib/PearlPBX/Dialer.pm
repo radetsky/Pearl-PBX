@@ -1,20 +1,19 @@
-package PearlPBX::Dialer; 
+package PearlPBX::Dialer;
 
-use warnings; 
-use strict; 
+use warnings;
+use strict;
+
+use parent qw (Class::Accessor::Class);
 
 use Data::Dumper;
-use Proc::Daemon; 
+use Proc::Daemon;
 
 use PearlPBX::NotifyHTTP qw(notify_http);
 use PearlPBX::Logger;
 use PearlPBX::DB;
 
-use NetSDS::Asterisk::Manager;
-use NetSDS::Asterisk::EventListener; 
-
-use Class::Accessor::Class; 
-
+use PearlPBX::Manager;
+use PearlPBX::EventListener;
 
 use constant MAX_TRIES    => 5;
 use constant CALL_TIMEOUT => 60*1000;
@@ -32,41 +31,53 @@ use constant REASON => {
         '8' => 'NO ANSWER',
     };
 
-use constant PARAMS => qw (src dst taskName _notifyURL _fork); 
+use constant PARAMS => qw (src dst taskName _notifyURL _fork);
 
 sub new {
-	my ($class, $params) = @_; 
-	my $this; 
+	my ($class, $params) = @_;
+	my $this;
 
-	# Validate reqired parameters 
+	# Validate reqired parameters
 	foreach my $key ( PARAMS ) {
 		if ( $key =~ /^_/ ) {
 			$this->{$key} = $params->{$key};
-			next; # Optional parameter 
+			next; # Optional parameter
 		}
 		if ( ! defined ( $params->{$key} ) ) {
 			die "Required parameter $key not found!\n";
 		}
 		$this->{$key} = $params->{$key};
-	} 
+	}
 	# Fork
+    my $pid;
 	if ( $this->{_fork} ) {
-		Proc::Daemon::Init; 
+        CloseLog();
+        $SIG{'CHLD'} = 'IGNORE';
+        $pid = fork();
+        Debugf("PID: %s",$pid);
+        if ($pid > 0) {
+            return 1;
+        }
 	}
 
+
+	$this = bless $this, $class;
 
     $this->mk_accessors('el');
     $this->mk_accessors('mgr');
     $this->mk_accessors('dbh');
 
-	$this->{db} = PearlPBX::DB->new(); 
-	$this->dbh( $this->{db}->{dbh}); 
+	$this->{db} = PearlPBX::DB->new();
+	$this->dbh( $this->{db}->{dbh});
 	$this->mgr( PearlPBX::Manager->new());
 	$this->el ( PearlPBX::EventListener->new());
 
-	$this = bless $this, $class;  
+	$this->process();
+    if ( defined ( $pid ) ) {
+        Debugf("My PID is %s", $pid);
+        exit 0;
+    }
 
-	return $this->process(); 
 }
 
 sub process {
@@ -94,16 +105,13 @@ sub process {
                 $prio += 1;
             }
         }
-
         if ( $status =~ /^ANSWER/ ) {
             last; #OK
         }
         if ( ( $status =~ /^BUSY/ ) || ( $status =~ /^NO ANSWER/ ) ) {
             $this->sleep(BUSY_TIMEOUT);
         }
-
         $try += 1;
-
     }
     $this->notifyURL($status);
     return 1;
@@ -111,16 +119,14 @@ sub process {
 
 sub notifyURL {
     my ($this, $status) = @_;
-    unless ( defined ( $this->{notifyURL} ) ) {
+    unless ( defined ( $this->{_notifyURL} ) ) {
         return undef;
     }
-
-    Info('NotifyURL: '. $this->{notifyURL} . ' -> Status = ' . $status);
-
+    Info('NotifyURL: '. $this->{_notifyURL} . ' -> Status = ' . $status);
     notify_http (
         cont_type => "text/html",
         post_data => $status,
-        uri       => $this->{notifyURL},
+        uri       => $this->{_notifyURL},
     );
 
 }
@@ -236,16 +242,14 @@ sub get_parked_calls {
 
     my $sent = $this->mgr->sendcommand( 'Action' => 'ParkedCalls' );
 
-    unless ( defined($sent) ) {
-        $this->seterror("Can't send command ParkedCalls");
-        return undef;
+    unless ( defined ( $sent ) ) {
+        die ("Can't send command ParkedCalls.\n");
     }
 
     my $reply = $this->mgr->receive_answer();
 
     unless ( defined ( $reply ) ) {
-        $this->seterror("Can't receive answer");
-        return undef;
+        die ("Can't receive answer\n");
     }
 
     my $status = $reply->{'Response'};
@@ -319,6 +323,7 @@ sub route_call {
     eval { my $rv = $sth->execute( $this->{src}, $this->{dst}, $step ); };
     if ($@) {
         # ERROR: NO ROUTE
+        Errf("Error: %s", $this->dbh->errstr);
         return undef;
     }
     my $result = $sth->fetchrow_hashref;
