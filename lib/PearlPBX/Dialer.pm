@@ -29,6 +29,7 @@ use constant REASON => {
         '6' => 'OFFHOOK1',
         '7' => 'OFFHOOK2',
         '8' => 'NO ANSWER',
+        '9' => 'TALKINGHERE',
     };
 
 use constant PARAMS => qw (src dst taskName _notifyURL _fork);
