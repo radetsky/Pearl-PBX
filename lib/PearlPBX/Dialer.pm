@@ -44,6 +44,7 @@ ANSWERED   - OK, с той стороны подняли трубку
 BUSY       - Он и в Африке BUSY
 NOANSWER   - Не отвечает.
 TALKINGHERE - Уже в локальной станции, в состоянии разговора
+OK_PARKED  - перехватили припаркованный звонок
 
 =cut
 
@@ -107,7 +108,14 @@ sub process {
         $this->notifyURL('OK_PARKED');
         return 1;
     }
-	Debug("Not found in ParkedCalls. Search for dial route.");
+    my $talked = $this->find_active_call($this->{$dst});
+    if ( defined ( $talked ) ) {
+        $this->notifyURL('TALKINGHERE');
+        return 1;
+    }
+
+	Debug("Not found in PearlPBX. Search for dial route.");
+
     $this->set_callerid(); # Setting CallerID in this->{callerid}
     my $try = 1;
     my $prio = 1;
@@ -319,6 +327,26 @@ sub find_parked_call {
     }
     return undef;
 } ## end sub find_parked_call
+
+sub find_active_call {
+    my $this = shift;
+    my $dst  = shift;
+
+    my $activechannels = $this->mgr->get_status();
+    unless ( defined ( $activechannels ) ) {
+        Err($this->mgr->geterror());
+        return undef;
+    }
+    my $i = 0; 
+    while ( $i <= @{$activechannels}) {
+    	my $call = $activechannels->[ $i++ ]; 
+    	next unless defined $call->{'CallerIDNum'};
+    	if ( $call->{'CallerIDNum'} eq $dst ) {
+    		return $call;
+    	}
+    }
+    return undef; 
+}
 
 sub set_callerid {
     my $this = shift;
