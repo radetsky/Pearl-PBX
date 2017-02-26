@@ -20,17 +20,32 @@ use constant CALL_TIMEOUT => 60*1000;
 use constant PEARLPBX_TIMEOUT => 120;
 use constant BUSY_TIMEOUT => 30;
 use constant REASON => {
-        '0' => 'CONGESTION',
+        '0' => 'NOANSWER',
         '1' => 'HANGUP',
-        '2' => 'LRINGING',
+        '2' => 'LRING',
         '3' => 'RINGING',
         '4' => 'ANSWERED',
         '5' => 'BUSY',
         '6' => 'OFFHOOK1',
         '7' => 'OFFHOOK2',
-        '8' => 'NO ANSWER',
+        '8' => 'CONGESTION',
         '9' => 'TALKINGHERE',
+        '10' => 'INIT',
     };
+
+=item
+
+INIT       - невозможно дозвониться из-за проблем в настройке PearlPBX
+CONGESTION - невозможно дозвониться по причине занятости или отказа оборудования/провайдера.
+HANGUP     - удаленная сторона сбрасывает соедиение
+LRING      - локальный КПВ
+RINGING    - удаленный КПВ
+ANSWERED   - OK, с той стороны подняли трубку
+BUSY       - Он и в Африке BUSY
+NOANSWER   - Не отвечает.
+TALKINGHERE - Уже в локальной станции, в состоянии разговора
+
+=cut
 
 use constant PARAMS => qw (src dst taskName _notifyURL _fork);
 
