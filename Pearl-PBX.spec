@@ -1,5 +1,5 @@
 Name: Pearl-PBX
-Version: 1.4
+Version: 1.6
 Release: centos7
 
 Summary: WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>
@@ -478,8 +478,45 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /etc/systemd/system/parsequeuelogd.service
 /etc/systemd/system/pearlpbx-first.service
 /etc/systemd/system/pearlpbxd.service
+/usr/bin/clear_records.sh
+/usr/bin/deluser.pl
+/usr/sbin/PearlPBX-hangupd.pl
+/usr/sbin/PearlPBX-rocket-dialer.pl
+/usr/share/pearlpbx/reports/summary/046-missed-calls-hourly.html
+/usr/share/pearlpbx/reports/templates/MissedCallsHourly.html
+/usr/share/perl5/PearlPBX/API.pm
+/usr/share/perl5/PearlPBX/Actions.pm
+/usr/share/perl5/PearlPBX/App.pm
+/usr/share/perl5/PearlPBX/Config.pm
+/usr/share/perl5/PearlPBX/Const.pm
+/usr/share/perl5/PearlPBX/DB.pm
+/usr/share/perl5/PearlPBX/Dialer.pm
+/usr/share/perl5/PearlPBX/EventListener.pm
+/usr/share/perl5/PearlPBX/HttpUtils.pm
+/usr/share/perl5/PearlPBX/Localization.pm
+/usr/share/perl5/PearlPBX/Logger.pm
+/usr/share/perl5/PearlPBX/Manager.pm
+/usr/share/perl5/PearlPBX/Notifications.pm
+/usr/share/perl5/PearlPBX/NotifyHTTP.pm
+/usr/share/perl5/PearlPBX/Pages.pm
+/usr/share/perl5/PearlPBX/Report/MissedCallsHourly.pm
+/usr/share/perl5/PearlPBX/ScalarUtils.pm
+/var/lib/asterisk/agi-bin/PearlPBX-bulksms.pl
+/var/lib/asterisk/agi-bin/PearlPBX-makecallfile.pl
+/var/lib/asterisk/agi-bin/PearlPBX-route.pl
+/var/www/pearlpbx/index.radiogroup.html
 
 %changelog
+* Wed Mar 01 2017 Alex Radetsky <rad@pearlpbx.com> 1.6-centos7
+- Upgrade to 1.6
+
+* Mon Feb 27 2017 Alex Radetsky <rad@pearlpbx.com> 1.5-centos7
+- Patches to 1.5
+- New web server based on starman
+- Simple API to Dialer in beta stage
+- Rocket Dialer command line tool
+- Missed Call by hours new report
+
 * Tue Jul 07 2015 Alex Radetsky <rad@pearlpbx.com> 1.4-centos7
 - Patches to 1.4
 
