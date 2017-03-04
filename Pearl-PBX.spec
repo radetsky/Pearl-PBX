@@ -27,7 +27,7 @@ Requires: perl-NetSDS
 Requires: perl-Class-Accessor-Class
 Requires: perl-Class-Accessor
 Requires: perl-Template-Toolkit
-Requires: perl-NetSDS-Asterisk
+Requires: perl-NetSDS-Asterisk > 0.01
 Requires: perl-asterisk-perl
 Requires: httpd
 Requires: asterisk-sounds-ru-wav
