@@ -17,8 +17,8 @@ sub import {
     goto &Exporter::import;
 }
 
-my $this;
-
+my $handler;
+my $this; 
 
 sub new {
     my $class = shift;
@@ -28,6 +28,10 @@ sub new {
     $this = bless $this, $class;
     $this->_connect(); 
     return $this; 
+}
+
+sub pearlpbx_db {
+    return $handler;
 }
 
 sub dbh {
@@ -47,6 +51,8 @@ sub _connect {
   if ( !$this->{dbh} ) {
     die "Can't connect to database: " . $dsn . "\n";
   }
+
+  $handler = $this->{dbh};
 
 }
 
