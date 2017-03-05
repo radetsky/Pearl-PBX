@@ -20,7 +20,7 @@ use constant CALL_TIMEOUT => 60*1000;
 use constant PEARLPBX_TIMEOUT => 120;
 use constant BUSY_TIMEOUT => 30;
 use constant REASON => {
-        '0' => 'NOANSWER',
+        '0' => 'CONGESTION',
         '1' => 'HANGUP',
         '2' => 'LRING',
         '3' => 'RINGING',
@@ -28,7 +28,7 @@ use constant REASON => {
         '5' => 'BUSY',
         '6' => 'OFFHOOK1',
         '7' => 'OFFHOOK2',
-        '8' => 'CONGESTION',
+        '8' => 'NOANSWER',
         '9' => 'TALKINGHERE',
         '10' => 'INIT',
     };
@@ -108,7 +108,7 @@ sub process {
         $this->notifyURL('OK_PARKED');
         return 1;
     }
-    my $talked = $this->find_active_call($this->{$dst});
+    my $talked = $this->find_active_call($this->{dst});
     if ( defined ( $talked ) ) {
         $this->notifyURL('TALKINGHERE');
         return 1;
@@ -178,7 +178,7 @@ sub originate {
     #warn Dumper $reply;
     my $response = $reply->{Response};
     my $message  = $reply->{Message};
-    Debug($response . " : " . $message );
+    Debug("Response: " . $response . " : " . $message );
     if ($response =~ /ERROR/i) {
         return 'ERROR';
     }
@@ -189,6 +189,7 @@ sub originate {
 
     while ( PEARLPBX_TIMEOUT > ( time - $timeIn ) ) {
         my $event = $this->el->_getEvent();
+        #Debugf("Event: %s",$event); 
         unless ( defined ( $event ) ) {
             $this->_exit("EOF from manager.");
         }
@@ -196,7 +197,6 @@ sub originate {
             sleep 1;
             next;
         }
-
         if ( defined ( $event->{'Event'} ) ) {
             if ( $event->{'Event'} =~ /OriginateResponse/i ) {
                 Debugf("Response: %s", $event);
@@ -216,7 +216,6 @@ sub originate {
                 #warn Dumper $event->{'Event'};
             }
         }
-        # TODO: засечь время и по достижению (CALL_TIMEOUT + CALL_TIMEOUT) вернуть ошибку TIMEOUT_PERL
     }
 
     return $response;
@@ -332,14 +331,14 @@ sub find_active_call {
     my $this = shift;
     my $dst  = shift;
 
-    my $activechannels = $this->mgr->get_status();
-    unless ( defined ( $activechannels ) ) {
+    my @activechannels = $this->mgr->get_status();
+    unless ( @activechannels ) {
         Err($this->mgr->geterror());
         return undef;
     }
     my $i = 0; 
-    while ( $i <= @{$activechannels}) {
-    	my $call = $activechannels->[ $i++ ]; 
+    while ( $i <= @activechannels) {
+    	my $call = $activechannels[ $i++ ]; 
     	next unless defined $call->{'CallerIDNum'};
     	if ( $call->{'CallerIDNum'} eq $dst ) {
     		return $call;

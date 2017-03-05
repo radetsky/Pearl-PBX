@@ -11,6 +11,7 @@ use Data::Dumper;
 
 sub new {
 	my $class = shift;
+    my $events = shift; 
 	my $conf = conf();
 
     _check_manager_configuration($conf);
@@ -22,7 +23,9 @@ sub new {
 		secret => $conf->{el}->{secret},
     );
 
-	my $connected = $this->connect;
+	$this->{events} = $events // 'Off'; 
+
+    my $connected = $this->connect;
     unless ( defined ( $connected ) ) {
         die $this->geterror;
     }
