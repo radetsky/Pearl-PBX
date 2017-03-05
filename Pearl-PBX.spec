@@ -114,6 +114,7 @@ install -D -m 644  lib/*.pm %buildroot/usr/share/perl5/
 cp -a lib/PearlPBX %buildroot/usr/share/perl5
 cp -a lib/Pearl %buildroot/usr/share/perl5
 cp -a lib/NetSDS %buildroot/usr/share/perl5
+cp -a lib/Plack %buildroot/usr/share/perl5
 
 mkdir -p %buildroot/usr/share/pearlpbx
 cp -av share/reports %buildroot/usr/share/pearlpbx/
@@ -478,6 +479,7 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /etc/systemd/system/parsequeuelogd.service
 /etc/systemd/system/pearlpbx-first.service
 /etc/systemd/system/pearlpbxd.service
+/etc/systemd/system/pearlpbx-webapp.service
 /usr/bin/clear_records.sh
 /usr/bin/deluser.pl
 /usr/sbin/PearlPBX-hangupd.pl
@@ -501,6 +503,7 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/share/perl5/PearlPBX/Pages.pm
 /usr/share/perl5/PearlPBX/Report/MissedCallsHourly.pm
 /usr/share/perl5/PearlPBX/ScalarUtils.pm
+/usr/share/perl5/Plack/Middleware/PearlPBX/Authenticate.pm
 /var/lib/asterisk/agi-bin/PearlPBX-bulksms.pl
 /var/lib/asterisk/agi-bin/PearlPBX-makecallfile.pl
 /var/lib/asterisk/agi-bin/PearlPBX-route.pl
