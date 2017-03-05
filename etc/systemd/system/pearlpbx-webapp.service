@@ -1,0 +1,14 @@
+[Unit]
+Description=PearlPBX2 Web application backend based on Plack 
+Requires=postgresql.service asterisk.service
+After=postgresql.service asterisk.service 
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/starman --listen 0.0.0.0:8000 --workers 3 --preload-app /var/www/pearlpbx2/PearlPBX.psgi | logger -p local0.notice
+
+[Install]
+WantedBy=multi-user.target
+
