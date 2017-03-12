@@ -366,6 +366,14 @@ sub _cut_local_callerid {
             $this->log( "info", "_cut_local_callerid: $callerid" );
         }
     }
+    if ( $calleridlen < $local_number_length ) {
+       $callerid = "0".$callerid;
+    }
+    if ( $calleridlen == $local_number_length ) {
+       if ( $callerid =~ /^8/ ) {
+         $callerid = "0" . substr ($callerid, 1) ;
+       }
+    }
 
     return $callerid;
 }
