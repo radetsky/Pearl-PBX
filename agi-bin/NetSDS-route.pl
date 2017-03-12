@@ -367,7 +367,9 @@ sub _cut_local_callerid {
         }
     }
     if ( $calleridlen < $local_number_length ) {
-       $callerid = "0".$callerid;
+        if ( $calleridlen > 8 ) {
+           $callerid = "0".$callerid;
+        }
     }
     if ( $calleridlen == $local_number_length ) {
        if ( $callerid =~ /^8/ ) {
