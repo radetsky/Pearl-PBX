@@ -158,12 +158,14 @@ sub notifyURL {
 sub originate {
     my $this = shift;
 
+    #Debugf("Originate CALLERID: %s",$this->{callerid}); 
+
     $this->mgr->sendcommand (
         Action   => 'Originate',
         ActionID => $this->{dst},
         Channel  => $this->{channel},
         Context  => $this->{taskName},
-        Exten    => '0',
+        Exten    => $this->{dst},
         Priority => '1',
         Timeout  => CALL_TIMEOUT,
         CallerID => $this->{callerid},
@@ -333,7 +335,6 @@ sub find_active_call {
 
     my @activechannels = $this->mgr->get_status();
     unless ( @activechannels ) {
-        Err($this->mgr->geterror());
         return undef;
     }
     my $i = 0; 
@@ -356,7 +357,11 @@ sub set_callerid {
         $this->_exit("Can't get caller_id information: " . $this->dbh->errstr)
     }
     my $result = $sth->fetchrow_hashref;
-    $this->{callerid} = $result->{'get_callerid'} // '';
+    if ( $result->{'get_callerid'} eq '' ) { 
+	$this->{callerid} = $this->{src}; 
+    } else {
+	$this->{callerid} = $result->{'get_callerid'} // $this->{src};
+    }
 }
 
 sub route_call {
