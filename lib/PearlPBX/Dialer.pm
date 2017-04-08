@@ -229,7 +229,7 @@ sub originate {
                         if ( $event->{'Response'} =~ /Success/i ) {
                             return 'ANSWERED';
                         } else {
-                            return REASON->{$event->{'Reason'} };
+                            return HUMAN_REASON->{$event->{'Reason'} };
                         }
                     }
                 } else {
