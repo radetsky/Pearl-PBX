@@ -140,7 +140,7 @@ sub process {
     $this->set_callerid(); # Setting CallerID in this->{callerid}
     my $try = 1;
     my $prio = 1;
-    my $status = 'INIT';
+    my $status = 'FAILED';
     while ( $try <= MAX_TRIES ) {
         last unless $this->route_call( $prio, $try );
         $status = $this->originate();
@@ -151,8 +151,11 @@ sub process {
             }
         }
         if ( $status =~ /^ANSWER/ ) {
-            last; #OK
+            last if $this->wait_until_listening_finish();
+            # Did not finish if user did not finish listen message 
+            # But ok if him done. 
         }
+
         if ( ( $status =~ /^BUSY/ ) || ( $status =~ /^NO ANSWER/ ) ) {
             $this->sleep(BUSY_TIMEOUT);
         }
@@ -176,6 +179,54 @@ sub notifyURL {
 
 }
 
+sub wait_until_listening_finish {
+    my $this = shift; 
+
+    Debug("Start waiting for finish listening");
+
+    while ( 1 ) {
+        my $event = $this->el->_getEvent();
+        #Debugf("Event: %s",$event); 
+        unless ( defined ( $event ) ) {
+            $this->_exit("EOF from manager.");
+        }
+        if ( $event eq '0' ) {
+            sleep 1;
+            next;
+        }
+        my $listen_time = time; 
+        if ( defined ( $this->{listen_done} ) ) {
+            if ($listen_time > ( $this->{listen_start} + $this->{listen_done} ) ) {
+                warn Dumper $listen_time, $this->{listen_start}, $this->{listen_done};
+                Info("Listen message done by timeout");
+                return 1; 
+            }
+        }
+        if ( defined ( $event->{'Event'} ) ) {
+            if ( defined ( $event->{'Channel'} ) ) { 
+                if ( $event->{'Channel'} eq $this->{Channel} ) { 
+                    #warn Dumper $event;
+                    if ( ( $event->{'Event'} eq 'VarSet' ) && 
+                        ( $event->{'Variable'} eq 'LISTENDONE' ) ) {
+                        $this->{listen_done} = $event->{'Value'}+0; # Set timeout in seconds to listen done before end of file
+                        $this->{listen_start} = time; 
+                        next;
+                    }
+                    if ( ( $event->{'Event'} eq 'VarSet' ) && 
+                        ( $event->{'Variable'} eq 'PLAYBACKSTATUS' ) && 
+                        ( $event->{'Value'} eq 'SUCCESS' ) ) {
+                        Info("Playback success");
+                        return 1; # First playback on the channel successfully done 
+                    }
+                    if ( $event->{'Event'} eq 'Hangup' ) {
+                        Info("User did not finish the message"); 
+                        return 0; # Hangup нам встретился раньше, чем все остальное. 
+                    }
+                }
+            }
+        }
+    }
+}
 sub originate {
     my $this = shift;
 
@@ -227,6 +278,7 @@ sub originate {
                     #warn Dumper $event;
                     if ( defined ($event->{'Response'} ) ) {
                         if ( $event->{'Response'} =~ /Success/i ) {
+                            $this->{Channel} = $event->{Channel}; 
                             return 'ANSWERED';
                         } else {
                             return HUMAN_REASON->{$event->{'Reason'} };
