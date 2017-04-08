@@ -33,6 +33,27 @@ use constant REASON => {
         '10' => 'INIT',
     };
 
+use constant HUMAN_REASON_LIST => qw (
+    ANSWERED
+    NOANSWER
+    FAILED
+    BUSY
+    TALKINGHERE
+);
+
+use constant HUMAN_REASON => { 
+    '0' => 'FAILED',
+    '1' => 'BUSY',
+    '2' => 'NOANSWER',
+    '3' => 'NOANSWER',
+    '4' => 'ANSWERED',
+    '5' => 'BUSY',
+    '6' => 'FAILED',
+    '7' => 'FAILED',
+    '8' => 'NOANSWER',
+    '9' => 'TALKINGHERE',
+    '10' => 'FAILED',
+};
 =item
 
 INIT       - невозможно дозвониться из-за проблем в настройке PearlPBX
