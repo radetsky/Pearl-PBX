@@ -1,7 +1,7 @@
-package PearlPBX::Logger; 
+package PearlPBX::Logger;
 
-use warnings; 
-use strict; 
+use warnings;
+use strict;
 use utf8;
 use open qw(:std :utf8);
 
@@ -9,9 +9,9 @@ use feature 'state';
 
 use Sys::Syslog qw(:standard :macros);
 use constant {
-    FACILITY => LOG_INFO,
-    PROGNAME => 'pearlpbx',
-    LOGOPTS  => 'nofatal,pid',
+    FACILITY => LOG_LOCAL0,
+    PROGNAME => "PearlPBX",
+    LOGOPTS  => 'pid',
 };
 
 use Exporter;
@@ -27,13 +27,14 @@ our @EXPORT = qw(
     Errf
     _subst_errmsg
     _log_timestamp
+    CloseLog
 );
 
 use Carp;
 use Time::HiRes qw(time);
 use POSIX qw(strftime);
 use Data::Dumper;
-use Scalar::Util qw(reftype); 
+use Scalar::Util qw(reftype);
 use Clone qw(clone);
 
 my %PRIO = map { $_ => 1 } qw(debug info err);
@@ -59,12 +60,13 @@ sub _Logf
     my $prio = shift;
     my $format = shift;
     defined($format) or confess "Log format undefined";
-
     if (!$LOG_OPENED) {
+        closelog();
         openlog(PROGNAME, LOGOPTS, FACILITY);
         $LOG_OPENED = 1;
     }
-    syslog($prio, $format, @_);
+    syslog($prio, "[$prio]".$format, @_);
+    #warn "Logf: $!" . Dumper $LOG_OPENED, $format, \@_;
 }
 
 sub Logf
@@ -159,6 +161,10 @@ sub Errf
     Logf('err', @_);
 }
 
+sub CloseLog {
+    closelog();
+    $LOG_OPENED = undef;
+}
 
 1;
 

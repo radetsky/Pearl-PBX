@@ -1124,6 +1124,10 @@ sub process {
 
     # Convert extension
     $extension = $this->_convert_extension( $this->{'extension'} );
+    $this->agi->verbose($ARGV[2] // 'argv[2] not found', 3);
+    if ( (defined ( $ARGV[2] )) && ($ARGV[2] eq 'init_uline_no_route') ) { 
+	return 1; 
+    }
 
     my $tgrp_first;
 

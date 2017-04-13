@@ -1,10 +1,10 @@
 [Unit]
-Description=PearlPBX daemon 
+Description=PearlPBX daemon
 Requires=postgresql.service asterisk.service
-After=postgresql.service asterisk.service 
+After=postgresql.service asterisk.service
 
 [Service]
-Type=simple
+Type=forking
 User=root
 Group=root
 ExecStart=/usr/sbin/NetSDS-hangupd.pl

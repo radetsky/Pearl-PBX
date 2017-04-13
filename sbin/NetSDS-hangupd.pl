@@ -40,162 +40,28 @@ use strict;
 use warnings;
 use DBI;
 
-use base qw(NetSDS::App);
-use NetSDS::Asterisk::EventListener;
-use NetSDS::Asterisk::Manager;
+use base qw(PearlPBX::App); # Already connected to Database, Manager and EventListener
 use Data::Dumper;
 use LWP::UserAgent;
+use PearlPBX::Logger; 
 
 our @expire_list = ();
 
 sub start {
     my $this = shift;
-
-    $SIG{TERM} = sub {
-        exit(-1);
-    };
-    $SIG{INT} = sub {
-        exit(-1);
-    };
-
-    $this->mk_accessors('el');
-    $this->mk_accessors('dbh');
-
-    $this->_db_connect();
+    $this->SUPER::start();
     $this->_clear_ulines();
-
     $this->{'count'} = 0;
-
-    $this->_el_connect();
-
-}
-
-sub _db_connect {
-    my $this = shift;
-
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'dsn'} ) ) {
-        $this->speak("Can't find \"db main->dsn\" in configuration.");
-        exit(-1);
-    }
-
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'login'} ) ) {
-        $this->speak("Can't find \"db main->login\" in configuraion.");
-        exit(-1);
-    }
-
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'password'} ) ) {
-        $this->speak("Can't find \"db main->password\" in configuraion.");
-        exit(-1);
-    }
-
-    my $dsn    = $this->conf->{'db'}->{'main'}->{'dsn'};
-    my $user   = $this->conf->{'db'}->{'main'}->{'login'};
-    my $passwd = $this->conf->{'db'}->{'main'}->{'password'};
-
-    # If DBMS isn' t accessible - try reconnect
-    if ( !$this->dbh or !$this->dbh->ping ) {
-        $this->dbh(
-            DBI->connect_cached( $dsn, $user, $passwd, { RaiseError => 1 } ) );
-    }
-
-    if ( !$this->dbh ) {
-        $this->speak("Cant connect to DBMS!");
-        $this->log( "error", "Cant connect to DBMS!" );
-        exit(-1);
-    }
-
-    return 1;
-}
-
-sub _el_connect {
-    my $this = shift;
-
-    unless ( defined( $this->conf->{'el'}->{'host'} ) ) {
-        $this->speak("Can't file el->host in configuration.");
-        exit(-1);
-    }
-    unless ( defined( $this->conf->{'el'}->{'port'} ) ) {
-        $this->speak("Can't file el->port in configuration.");
-        exit(-1);
-    }
-    unless ( defined( $this->conf->{'el'}->{'username'} ) ) {
-        $this->speak("Can't file el->username in configuration.");
-        exit(-1);
-    }
-    unless ( defined( $this->conf->{'el'}->{'secret'} ) ) {
-        $this->speak("Can't file el->secret in configuration.");
-        exit(-1);
-    }
-
-    my $el_host     = $this->conf->{'el'}->{'host'};
-    my $el_port     = $this->conf->{'el'}->{'port'};
-    my $el_username = $this->conf->{'el'}->{'username'};
-    my $el_secret   = $this->conf->{'el'}->{'secret'};
-
-    my $event_listener = NetSDS::Asterisk::EventListener->new(
-        host     => $el_host,
-        port     => $el_port,
-        username => $el_username,
-        secret   => $el_secret
-    );
-
-    $event_listener->_connect();
-
-    $this->el($event_listener);
 }
 
 sub _clear_ulines {
     my $this = shift;
 
-    $this->log( "warning", "Start clear ulines procedure." );
-
-    # connect
-    unless ( defined( $this->conf->{'el'}->{'host'} ) ) {
-        $this->speak("Can't file el->host in configuration.");
-        exit(-1);
-    }
-    unless ( defined( $this->conf->{'el'}->{'port'} ) ) {
-        $this->speak("Can't file el->port in configuration.");
-        exit(-1);
-    }
-    unless ( defined( $this->conf->{'el'}->{'username'} ) ) {
-        $this->speak("Can't file el->username in configuration.");
-        exit(-1);
-    }
-    unless ( defined( $this->conf->{'el'}->{'secret'} ) ) {
-        $this->speak("Can't file el->secret in configuration.");
-        exit(-1);
-    }
-
-    my $el_host     = $this->conf->{'el'}->{'host'};
-    my $el_port     = $this->conf->{'el'}->{'port'};
-    my $el_username = $this->conf->{'el'}->{'username'};
-    my $el_secret   = $this->conf->{'el'}->{'secret'};
-
-    my $manager = NetSDS::Asterisk::Manager->new(
-        host     => $el_host,
-        port     => $el_port,
-        username => $el_username,
-        secret   => $el_secret,
-        events   => 'Off',
-    );
-
-    my $connected = $manager->connect;
-    unless ( defined($connected) ) {
-
-        $this->speak( "Can't connect to the asterisk manager interface: "
-                . $manager->geterror() );
-        $this->log( "warning",
-            "Can't connect to the asterisk manager interface: "
-                . $manager->geterror() );
-        exit(-1);
-    }
-
-    $this->speak("Manager connected. Getting status.");
-
+    Info("Start clear ulines procedure.");
+    Info("Getting status from AMI.");
     # get status
-    my @liststatus = $this->_get_status($manager);
-    $this->speak("Got status. Getting busy ulines.");
+    my @liststatus = $this->_get_status;
+    Info("Got status. Getting busy ulines.");
     my $busyulines = $this->_get_busy_ulines;
 
     # compare channels with ulines
@@ -217,16 +83,14 @@ sub _clear_ulines {
             $this->_free_uline($channel);
         }
     }
-    $manager->sendcommand( 'Action' => "Logoff" );
-    $manager->receive_answer();
 
     # clear offline channels
-    $this->speak("Ulines cleared. Going to process().");
+    Info("Ulines cleared. Going to process().");
 }
 
 sub _get_status {
     my $this    = shift;
-    my $manager = shift;
+    my $manager = $this->mgr; 
 
     my $sent = $manager->sendcommand( 'Action' => 'Status' );
 
@@ -251,7 +115,7 @@ sub _get_status {
         return undef;
     }
 
-    # reading from spcket while did not receive Event: StatusComplete
+    # reading from socket while did not receive Event: StatusComplete
 
     my @replies;
     while (1) {
@@ -269,8 +133,6 @@ sub _get_status {
 sub _get_busy_ulines {
     my $this = shift;
 
-    $this->_begin;
-
     my $sth = $this->dbh->prepare(
         "select id,channel_name from integration.ulines where status='busy' order by id asc"
     );
@@ -279,8 +141,6 @@ sub _get_busy_ulines {
         $this->_exit( $this->dbh->errstr );
     }
     my $busylines = $sth->fetchall_arrayref;
-    $this->dbh->commit;
-
     return $busylines;
 }
 
@@ -288,7 +148,6 @@ sub _get_uline_by_channel {
     my $this    = shift;
     my $channel = shift;
 
-    $this->_begin;
     my $sth = $this->dbh->prepare(
         "select id from integration.ulines where channel_name=? and status='busy' order by id asc limit 1"
     );
@@ -297,9 +156,8 @@ sub _get_uline_by_channel {
         $this->_exit( $this->dbh->errstr );
     }
     my $result = $sth->fetchrow_hashref;
-    $this->dbh->rollback;
 
-    unless ( defined($result) ) {
+    unless ( defined( $result ) ) {
         return undef;
     }
     return $result->{'id'};
@@ -313,19 +171,19 @@ sub _integration_free {
         $ua->timeout(1);
         $ua->env_proxy;
 
-        my $your_taxi_server_ip = '192.168.0.210:8000';
+        my $your_taxi_server_ip = $this->{conf}->{ytaxi_api_host_port} // '192.168.0.210:8000';
         my $url =
             sprintf( "http://%s/YTaxi/ru/ManagePBX/HangUp?provider=%s&line=%s",
             $your_taxi_server_ip, $userfield, $uline );
 
-        $this->log( "info", $url );
+        Info($url);
         my $response = $ua->get($url);
 
         if ( $response->is_success ) {
-            $this->log( "info", $response->decoded_content );
+            Info($response->decoded_content);
         }
         else {
-            $this->log( "error", $response->status_line );
+            Err( $response->status_line );
         }
     }
 }
@@ -335,9 +193,9 @@ sub _free_uline {
     my $channel = shift;
 
     $this->_begin;
-
     my $sth = $this->dbh->prepare(
-        "select id,integration_type,userfield from integration.ulines where channel_name=? and status='busy' order by id asc limit 1 for update"
+        "select id,integration_type,userfield from integration.ulines 
+            where channel_name=? and status='busy' order by id asc limit 1 for update"
     );
 
     eval { my $rv = $sth->execute($channel); };
@@ -346,10 +204,8 @@ sub _free_uline {
     }
 
     my $result = $sth->fetchrow_hashref;
-
-    unless ( defined($result) ) {
-        $this->log( "warning",
-            "Hangup $channel, but integration.ulines does not has it." );
+    unless ( defined ( $result ) ) {
+        Infof( "Hangup %s, but integration.ulines does not has it.", $channel );
         $this->dbh->rollback;
         return undef;
     }
@@ -358,14 +214,7 @@ sub _free_uline {
     my $itype     = $result->{'integration_type'};
     my $userfield = $result->{'userfield'};
 
-    $this->log(
-        "info",
-        sprintf(
-            "_free_uline: id=%s,itype=%s,userfield=%s",
-            $id, $itype, $userfield
-        )
-    );
-
+    Infof ( "free_uline: id=%s,itype=%s,userfield=%s", $id, $itype, $userfield );
     $this->_integration_free( $id, $itype, $userfield );
 
     $sth = $this->dbh->prepare(
@@ -375,9 +224,8 @@ sub _free_uline {
         $this->_exit( $this->dbh->errstr );
     }
     $this->dbh->commit;
-    $this->log( "info", "uline $id with $channel cleared" );
-    $this->speak("uline $id with $channel cleared");
 
+    Infof("uline %s with %s cleared", $id, $channel );
     $this->_recording_set_final($id);
 
     return 1;
@@ -403,6 +251,7 @@ sub _recording_set_final {
     while ( my $result = $sth->fetchrow_hashref ) {
         push @ids, $result->{'id'};
     }
+
     $sth = $this->dbh->prepare(
         "update integration.recordings set next_record=0 where id=?");
 
@@ -411,31 +260,12 @@ sub _recording_set_final {
         if ($@) {
             $this->_exit( $this->dbh->errstr );
         }
-        $this->log( "info",
-            "Record # $rec_id for line # $uline_id set as final." );
+        Infof("Record # %s for line # %s set as final.", $rec_id, $uline_id );
     }
 
     $this->dbh->commit;
     return 1;
 
-}
-
-sub _begin {
-    my $this = shift;
-
-    eval { $this->dbh->begin_work; };
-
-    if ($@) {
-        $this->_exit( $this->dbh->errstr );
-    }
-}
-
-sub _exit {
-    my $this   = shift;
-    my $errstr = shift;
-
-    $this->log( "error", $errstr );
-    exit(-1);
 }
 
 sub _add_2_expire {
@@ -444,7 +274,7 @@ sub _add_2_expire {
     my $uline       = shift;
     my $expire_time = shift;
 
-    $this->log( "info", "added to expire list $uline $channel $expire_time" );
+    Info ("added to expire list $uline $channel $expire_time" );
     push @expire_list,
         { channel => $channel, uline => $uline, expire_time => $expire_time };
 
@@ -459,18 +289,14 @@ sub _expire_ulines {
         $t    = time();
         $item = shift @expire_list;
         unless ($item) {
-
-            # $this->log("info","Empty expire list");
             last;
         }
+
         if ( $item->{'expire_time'} <= $t ) {
-            $this->log( "info",
-                "Time: $t to free uline $item->{'uline'} with $item->{'channel'}"
-            );
+            Infof("Time: %s to free uline %s with %s ", $t, $item->{'uline'}, $item->{'channel'} );
             $this->_free_uline( $item->{'channel'} );
         }
         else {
-            # $this->log("info","First item in the expire_list has time in future. ");
             unshift @expire_list, $item;
             last;
         }
@@ -489,8 +315,10 @@ sub process {
 
     while (1) {
         $event = $this->el->_getEvent();
-        unless ($event) {
-            # $this->log("info","No event from AMI. Sleeping.");
+	unless ( defined ( $event ) ) { 
+	    $this->_exit("EOF from manager. Exiting to restart by system methods (systemctl, monit)");
+	}
+        if ($event == 0) {
             $this->{'count'} = $this->{'count'} + 1;
             if ( $this->{'count'} >= 300 ) {
                 $this->_clear_ulines();
@@ -502,12 +330,13 @@ sub process {
         }
 
         unless ( defined( $event->{'Event'} ) ) {
-            warn Dumper($event);
+            Debugf("STRANGE EVENT: %s ", $event ); 
             next;
         }
+
         if ( $event->{'Event'} =~ /Hangup/i ) {
             $channel = $event->{'Channel'};
-            $this->log( "info", "Got hangup for $channel" );
+            Info("HangUp for $channel" );
             $uline = $this->_get_uline_by_channel($channel);
             unless ( defined($uline) ) {
                 next;
@@ -516,36 +345,13 @@ sub process {
         }
         $this->_expire_ulines();
     }
-
 }
+
+1;
 
 #===============================================================================
 
 __END__
-
-=head1 NAME
-
-NetSDS-hangupd.pl
-
-=head1 SYNOPSIS
-
-NetSDS-hangupd.pl
-
-=head1 DESCRIPTION
-
-FIXME
-
-=head1 EXAMPLES
-
-FIXME
-
-=head1 BUGS
-
-Unknown.
-
-=head1 TODO
-
-Empty.
 
 =head1 AUTHOR
 

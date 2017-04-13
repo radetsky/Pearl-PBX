@@ -1,0 +1,18 @@
+[% WRAPPER _page_.tmpl
+    title = translate("Log In")
+%]
+
+<div class="container">
+  <form class="form-signin" method="post" action="/action/login" id="loginForm" onSubmit="btn_disable('btnLogin');">
+  <h1 class="form-signin-heading text-light"><img src='/img/PearlPBX-logo-mid.PNG' style="width: 50px; margin-right: 20px;"> PearlPBX</h1>
+  <label for="inputEmail" class="sr-only">Email address</label>
+    <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus name="log_username" placeholder="[% translate("Email") %]" value="[% params.log_username %]">
+  <label for="inputPassword" class="sr-only">Password</label>
+    <input type="password" id="inputPassword" class="form-control" placeholder="Password" required name="log_password" placeholder="[% translate("Password") %]">
+  <button class="btn btn-lg btn-primary btn-block" type="submit">Log in</button>
+  </form>
+</div> <!-- /container -->
+
+[% END %]
+
+
