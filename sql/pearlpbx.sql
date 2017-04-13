@@ -698,10 +698,12 @@ CREATE TABLE recordings (
     result_file character varying,
     previous_record bigint DEFAULT 0,
     next_record bigint,
-		cdr_start timestamp with time zone,
-		cdr_src character varying,
-		cdr_dst character varying,
-		cdr_uniqueid character varying (150)
+	cdr_start timestamp with time zone,
+	cdr_src character varying,
+	cdr_dst character varying,
+	cdr_uniqueid character varying (150),
+    mp3 boolean default false,
+    finished boolean default false
 );
 
 
