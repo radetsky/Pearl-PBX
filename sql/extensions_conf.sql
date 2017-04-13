@@ -23,8 +23,8 @@ SELECT pg_catalog.setval('extensions_conf_id_seq', 15, true);
 COPY extensions_conf (id, context, exten, priority, app, appdata) FROM stdin;
 3	default	_X!	3	Hangup	17
 6	parkingslot	_X!	1	NoOp	see extensions.conf
-2	default	_X!	2	AGI	NetSDS-route.pl,${CHANNEL},${EXTEN}
-1	default	_X!	1	NoOp	
+2	default	_X!	2	AGI	PearlPBX-route.pl,${CHANNEL},${EXTEN}
+1	default	_X!	1	NoOp
 7	LocalOffice	_X!	1	NoOp	see extensions.conf
 8	PearlPBX_Queue	_X!	1	Queue	PearlPBX,rtT,,,,NetSDS-AGI-integration.pl
 \.
