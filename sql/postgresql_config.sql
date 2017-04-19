@@ -45,7 +45,7 @@ CREATE TABLE sip_peers (
     md5secret VARCHAR(40),
     remotesecret VARCHAR(40),
     transport sip_transport_values default 'udp',
-    dtmfmode sip_dtmfmode_values,
+    dtmfmode sip_dtmfmode_values default 'rfc2833',
     directmedia sip_directmedia_values_v2 default 'no',
     nat VARCHAR(29) default 'no',
     callgroup VARCHAR(40) not null default '1',
