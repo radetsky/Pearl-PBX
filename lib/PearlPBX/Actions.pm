@@ -10,7 +10,7 @@ use Plack::Request;
 use PearlPBX::ScalarUtils qw/trim/;
 use PearlPBX::Notifications;
 use PearlPBX::DB qw/pearlpbx_db/;
-use PearlPBX::Pages; 
+use PearlPBX::Pages;
 use PearlPBX::Const;
 use PearlPBX::Logger;
 
@@ -21,11 +21,43 @@ our @EXPORT = qw (
     action_logout
 );
 
+sub _webuser_authenticate_pearlpbx_1x {
+    my ($username,$password) = @_;
+    my $crypted = undef;
+
+    eval {
+        ($crypted) = pearlpbx_db()->selectrow_array (
+            "select passwd_hash from auth.sysusers where login=" .
+            pearlpbx_db()->quote($username));
+    };
+
+    if ( $@ ) {
+        Errf("%s , %s", $@, pearlpbx_db()->errstr );
+        return { result => FAIL, reason => "Invalid password" };
+    }
+
+    if ( $crypted ) {
+        $crypted =~ s/\s+//gs;
+        if ( crypt( $password,$crypted ) eq $crypted) {
+            my $user_params = {
+                username => $username,
+                role     => "admin",
+            };
+            return { result => OK, params => $user_params };
+        } else {
+            Err("Passwords does not match");
+            return { result => FAIL, reason => 'Invalid password'};
+        }
+    }
+    Err("User does not exists");
+    return { result => FAIL, reason => 'Invalid password'};
+}
+
 sub _webuser_authenticate {
   my ($username, $password) = @_;
   my $crypted = undef;
-  my $sip_name = undef; 
-  my $role = undef; 
+  my $sip_name = undef;
+  my $role = undef;
 
   eval {
       ($sip_name, $role, $crypted) = pearlpbx_db()->selectrow_array (
@@ -66,7 +98,7 @@ sub action_login {
     my $email    = trim( $params->{log_username} // '' );
     my $password = trim( $params->{log_password} // '' );
 
-    my $user = _webuser_authenticate( $email, $password );
+    my $user = _webuser_authenticate_pearlpbx_1x ( $email, $password );
 
     # we waiting for { result = OK | FAIL, [ reason, user_params e.g. role, sip_name, etc. ]}
     if ( !defined($user) || !defined( $user->{result} ) ) {
