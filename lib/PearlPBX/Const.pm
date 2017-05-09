@@ -17,7 +17,7 @@ our @EXPORT = qw(
 );
 
 use constant DEVEL_MODE     => $ENV{STARMAN_DEBUG} ? 1 : 0;
-use constant WWW_ROOT       => $ENV{WWW_ROOT} // '/var/www/pearlpbx2';
+use constant WWW_ROOT       => $ENV{FRONTEND_ROOT} // '/var/www/pearlpbx2';
 use constant TEMPLATES_PATH => WWW_ROOT . '/templates';
 
 use constant MSG_SERVER_ERROR => 'Server error. Try later, please.';
