@@ -45,9 +45,9 @@ my $app = builder {
         mount "/api" => builder {
             mount "/dialer" => builder { \&api_dialer };
         };
-        mount "/login"        => builder { \&page_login };
-        mount "/action/login" => builder { \&action_login };
-	    mount "/action/logout" => builder { \&action_logout };
+        mount "/login"         => builder { \&page_login    };
+        mount "/action/login"  => builder { \&action_login  };
+    	mount "/action/logout" => builder { \&action_logout };
         mount "/img" =>
           Plack::App::Directory->new( root => WWW_ROOT . '/img' )->to_app;
         mount "/css" =>
