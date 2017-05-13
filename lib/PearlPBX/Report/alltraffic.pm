@@ -82,7 +82,7 @@ sub report {
     my $sql_dir = $this->fill_direction_sql_condition( $params->{'direction'} );
 
     my $sql =
-"select calldate,src,dst,split_part(channel,'-',1) as channel, split_part(dstchannel,'-',1) as dstchannel,disposition,billsec from public.cdr where calldate between ? and ? and disposition='ANSWERED' and $sql_dir order by calldate desc";
+"select calldate,src,dst,split_part(channel,'-',1) as channel, split_part(dstchannel,'-',1) as dstchannel,disposition,billsec,uniqueid from public.cdr where calldate between ? and ? and disposition='ANSWERED' and $sql_dir order by calldate desc";
 
     my $sth = $this->{dbh}->prepare($sql);
     eval { $sth->execute( $sincedatetime, $tilldatetime ); };
@@ -96,11 +96,11 @@ sub report {
         return 0;
     }
 
-    $this->loadsippeers(); 
+    $this->loadsippeers();
 
-    my $substed_report = $this->subst_report($hash_ref); 
-    if ( defined ( $substed_report ) ) { 
-        $hash_ref = $substed_report; 
+    my $substed_report = $this->subst_report($hash_ref);
+    if ( defined ( $substed_report ) ) {
+        $hash_ref = $substed_report;
     }
 
 
