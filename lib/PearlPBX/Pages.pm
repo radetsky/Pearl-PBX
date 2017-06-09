@@ -6,7 +6,7 @@ use strict;
 use Encode;
 use JSON::XS;
 use PearlPBX::Const;
-use PearlPBX::HttpUtils qw(http_accept_lang);  
+use PearlPBX::HttpUtils qw(http_accept_lang);
 use PearlPBX::Notifications;
 use PearlPBX::Localization;
 
@@ -86,7 +86,7 @@ sub page_index {
     $template_vars = tmpl_finalize( $env, $template_vars );
 
     my $processed = '';
-    $template->process( 'index.tmpl', $template_vars, \$processed )
+    $template->process( 'index_v1.tmpl', $template_vars, \$processed )
       or die $template->error();
     $res->body($processed);
 

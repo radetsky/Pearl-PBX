@@ -1,0 +1,56 @@
+
+.pearlpbx-main-container-header {
+  padding: 30px;
+  margin-bottom: 15px;
+  background-color: #f5f5f5;
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
+}
+.pearlpbx-main-container-header h1 {
+  margin-bottom: 0;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.pearlpbx-main-container-header p {
+  font-size: 18px;
+  font-weight: 200;
+  line-height: 27px;
+}
+.input-date { 
+	width: 90px; 
+}
+.form-horizontal .control-group { 
+  margin-bottom: 1px; 
+}
+.fileinput-button {
+  position: relative;
+  overflow: hidden;
+  float: left;
+  margin-right: 4px;
+}
+.fileinput-button input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  opacity: 0;
+  filter: alpha(opacity=0);
+  transform: translate(-300px, 0) scale(4);
+  font-size: 23px;
+  direction: ltr;
+  cursor: pointer;
+}
+/* Fix for IE 6: */
+* html .fileinput-button {
+  line-height: 24px;
+  margin: 1px -3px 0 0;
+}
+
+/* Fix for IE 7: */
+* + html .fileinput-button {
+  padding: 2px 15px;
+  margin: 1px 0 0 0;
+}
+
