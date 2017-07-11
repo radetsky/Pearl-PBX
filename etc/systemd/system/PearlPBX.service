@@ -1,5 +1,5 @@
 [Unit]
-Description=PearlPBX service  
+Description=PearlPBX service
 Requires=pearlpbx-first.service postgresql.service asterisk.service pearlpbxd.service parsequeuelogd.service httpd.service
 After=   pearlpbx-first.service postgresql.service asterisk.service pearlpbxd.service parsequeuelogd.service httpd.service
 
@@ -7,7 +7,7 @@ After=   pearlpbx-first.service postgresql.service asterisk.service pearlpbxd.se
 Type=simple
 User=root
 Group=root
-ExecStart=/bin/echo PearlPBX
+ExecStart=/bin/mkdir -p /var/run/NetSDS
 
 [Install]
 WantedBy=multi-user.target
