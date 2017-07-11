@@ -59,6 +59,7 @@ dump_directions();
 dump_callerid();
 dump_permissions();
 dump_route(); 
+dump_calendar();
 
 exit 1; 
 
@@ -93,14 +94,14 @@ sub dump_integration_workplaces {
     my $templt = "%d, %d, '%s','%s','%s','%s','%s','%s','%s'";
     my $hash_ref = $dbh->selectall_hashref("select $fields from integration.workplaces order by id",'id'); 
     foreach my $id ( keys %{$hash_ref } ) {
-        printf("insert into integration.workplaces ($fields) values ($templt)\n", 
+        printf("insert into integration.workplaces ($fields) values ($templt);\n", 
             $hash_ref->{$id}->{id},
             $hash_ref->{$id}->{sip_id},
             $hash_ref->{$id}->{ip_addr_pc},
             $hash_ref->{$id}->{ip_addr_tel},
             $hash_ref->{$id}->{teletype},
             $hash_ref->{$id}->{autoprovision},
-            $hash_ref->{$id}->{tcp_port},
+            $hash_ref->{$id}->{tcp_port} // 335,
             $hash_ref->{$id}->{integration_type},
             $hash_ref->{$id}->{mac_addr_tel},
         );
@@ -116,7 +117,7 @@ sub dump_blacklist {
 
     my $selected = $dbh->selectall_hashref("select $fields from $table order by id",'id');
     foreach my $id ( keys % { $selected } ) {
-        printf("insert into $table ( $fields ) values ($templt)\n", 
+        printf("insert into $table ( $fields ) values ($templt);\n", 
             $selected->{$id}->{id},
             $selected->{$id}->{number},
             $selected->{$id}->{reason},
@@ -137,7 +138,7 @@ sub dump_extensions {
     my $selected = $dbh->selectall_hashref("select $fields from $table order by id",'id');
     foreach my $id ( keys %{ $selected }) {
         my @fmt_data = format_data (\@names, $selected->{$id} );
-        printf("insert into $table ( $fields ) values ($templt)\n", @fmt_data )
+        printf("insert into $table ( $fields ) values ($templt);\n", @fmt_data )
     }
     dump_seq('public.extensions_conf_id_seq');
 
@@ -145,14 +146,14 @@ sub dump_extensions {
 
 sub dump_queues { 
     my $table = "public.queues";
-    my @names = qw/name musiconhold timeout monitor_format retry wrapuptime maxlen servicelevel strategy joinempty leavewhenempty eventmemberstatus eventwhencalled memberdelay weight timeoutrestart ringinuse setinterfacevar autofill autopause/;
+    my @names = qw/name musiconhold timeout monitor_format retry wrapuptime maxlen servicelevel strategy joinempty leavewhenempty memberdelay weight timeoutrestart ringinuse setinterfacevar autofill autopause/;
     my $fields = join(',', @names); 
-    my $templt = join(',', qw/'%s' '%s' %d '%s' %d %d %d %d '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s'/);
+    my $templt = join(',', qw/'%s' '%s' %d '%s' %d %d %d %d '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s' '%s'/);
 
     my $selected = $dbh->selectall_hashref("select $fields from $table order by name",'name'); 
     foreach my $id ( keys %{ $selected }) {
         my @fmt_data = format_data (\@names, $selected->{$id} );
-        printf("insert into $table ( $fields ) values ($templt)\n", @fmt_data )
+        printf("insert into $table ( $fields ) values ($templt);\n", @fmt_data )
     }
 }
 
@@ -165,7 +166,7 @@ sub dump_queue_members {
     my $selected = $dbh->selectall_hashref("select $fields from $table order by uniqueid",'uniqueid'); 
     foreach my $id ( keys %{ $selected }) {
         my @fmt_data = format_data (\@names, $selected->{$id} );
-        printf("insert into $table ( $fields ) values ($templt)\n", @fmt_data )
+        printf("insert into $table ( $fields ) values ($templt);\n", @fmt_data )
     }
 
     dump_seq('public.queue_members_uniqueid_seq');
@@ -180,7 +181,7 @@ sub dump_sip_conf {
     my $selected = $dbh->selectall_hashref("select $fields from $table order by id",'id'); 
     foreach my $id ( keys %{ $selected }) {
         my @fmt_data = format_data (\@names, $selected->{$id} );
-        printf("insert into $table ( $fields ) values ($templt)\n", @fmt_data )
+        printf("insert into $table ( $fields ) values ($templt);\n", @fmt_data )
     }
 
     dump_seq('public.sip_conf_id_seq');
@@ -197,7 +198,7 @@ sub dump_directions_list {
     my $selected = $dbh->selectall_hashref("select $fields from $table order by dlist_id",'dlist_id'); 
     foreach my $id ( keys %{ $selected }) {
         my @fmt_data = format_data (\@names, $selected->{$id} );
-        printf("insert into $table ( $fields ) values ($templt)\n", @fmt_data )
+        printf("insert into $table ( $fields ) values ($templt);\n", @fmt_data )
     }
 
     dump_seq('routing."directions_list_DLIST_ID_seq"');
@@ -214,7 +215,7 @@ sub dump_directions {
     my $selected = $dbh->selectall_hashref("select $fields from $table order by dr_id",'dr_id'); 
     foreach my $id ( keys %{ $selected }) {
         my @fmt_data = format_data (\@names, $selected->{$id} );
-        printf("insert into $table ( $fields ) values ($templt)\n", @fmt_data )
+        printf("insert into $table ( $fields ) values ($templt);\n", @fmt_data )
     }
 
     dump_seq('routing.directions_dr_id_seq');
@@ -230,7 +231,7 @@ sub dump_callerid {
     my $selected = $dbh->selectall_hashref("select $fields from $table order by id",'id'); 
     foreach my $id ( keys %{ $selected }) {
         my @fmt_data = format_data (\@names, $selected->{$id} );
-        printf("insert into $table ( $fields ) values ($templt)\n", @fmt_data )
+        printf("insert into $table ( $fields ) values ($templt);\n", @fmt_data )
     }
 
     dump_seq('routing.callerid_id_seq');
@@ -247,7 +248,7 @@ sub dump_permissions {
     my $selected = $dbh->selectall_hashref("select $fields from $table order by id",'id'); 
     foreach my $id ( keys %{ $selected }) {
         my @fmt_data = format_data (\@names, $selected->{$id} );
-        printf("insert into $table ( $fields ) values ($templt)\n", @fmt_data )
+        printf("insert into $table ( $fields ) values ($templt);\n", @fmt_data )
     }
 
     dump_seq('routing.permissions_id_seq');
@@ -258,15 +259,31 @@ sub dump_route {
     my $table = "routing.route";
     my @names = qw/route_id route_direction_id route_step route_type route_dest_id route_sip_id/; 
     my $fields = join(',', @names); 
-    my $templt = join(',', qw/%d %d %d '%s' %d '%s'/);
+    my $templt = join(',', qw/%d %d %d '%s' %d %s/);
 
     my $selected = $dbh->selectall_hashref("select $fields from $table order by route_id",'route_id'); 
     foreach my $id ( keys %{ $selected }) {
         my @fmt_data = format_data (\@names, $selected->{$id} );
-        printf("insert into $table ( $fields ) values ($templt)\n", @fmt_data )
+        printf("insert into $table ( $fields ) values ($templt);\n", @fmt_data )
     }
 
     dump_seq('routing.route_route_id_seq');
+
+}
+
+sub dump_calendar { 
+    my $table = "cal.timesheet";
+    my @names = qw/id weekday mon_day mon year time_start time_stop group_name is_work prio/; 
+    my $fields = join(',', @names); 
+    my $templt = join(',', qw/%d %s %s %s '%s' '%s' '%s' '%s' '%s' '%s'/);
+
+    my $selected = $dbh->selectall_hashref("select $fields from $table order by id",'id'); 
+    foreach my $id ( keys %{ $selected }) {
+        my @fmt_data = format_data (\@names, $selected->{$id} );
+        printf("insert into $table ( $fields ) values ($templt);\n", @fmt_data )
+    }
+
+    dump_seq('cal.timesheet_id_seq');
 
 }
 
@@ -277,7 +294,7 @@ sub format_data {
     my @result; 
 
     foreach my $name ( @{$names} ) {
-        push @result, $data->{$name} // ''; 
+        push @result, $data->{$name} // 'NULL'; 
     }
 
     return @result; 
@@ -289,7 +306,7 @@ sub dump_seq {
         return undef; 
     }
     my $seq = $dbh->selectrow_hashref("select last_value from $seq_name"); 
-    printf("alter sequence $seq_name restart with %d\n", $seq->{last_value}+1);
+    printf("alter sequence $seq_name restart with %d;\n", $seq->{last_value}+1);
 }
 1;
 

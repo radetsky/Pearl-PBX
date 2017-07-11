@@ -1,0 +1,13 @@
+Checklist to install/update PearlPBX.
+
+- Internal users, connections.
+- External connections.
+- Queues, queue members
+- Directions.
+- Permissions.
+- Source caller ID's
+
+- IVR
+- Voice Data, MOH
+- Calendar
+
