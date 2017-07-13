@@ -1,7 +1,7 @@
 package PearlPBX::CRUD::Queue;
 
-use warnings; 
-use strict; 
+use warnings;
+use strict;
 
 use parent qw(PearlPBX::CRUD);
 
@@ -38,10 +38,10 @@ Return hashref { result => 'ok' }
 Update according queue fields in DB with name=$options->name.
 Return hashref { result => 'ok' } or { error => 'Unknown error of confirmation code' }
 
-=item B<read($options)> 
+=item B<read($options)>
 
-Read queue from DB with options 
-Return hashref { result => 'ok', data => {  name => 'testQueue', 
+Read queue from DB with options
+Return hashref { result => 'ok', data => {  name => 'testQueue',
 										    strategy => 'ringall',
 										    timeout => 15,
 										    maxlen => 5 }};
@@ -53,33 +53,36 @@ Return hashref { result => 'ok', data => {  name => 'testQueue',
 
 use constant QUEUES => 'public.queues';
 
-sub create { 
-	my $self   = shift; 
-	my $params = shift; 
+sub create {
+	my $self   = shift;
+	my $params = shift;
 
 }
 
 sub update {
-	my $self   = shift; 
-	my $params = shift; 
+	my $self   = shift;
+	my $params = shift;
 
 }
 
-sub read { 
-	my $self   = shift; 
-	my $params = shift; 
+sub read {
+	my $self   = shift;
+	my $params = shift;
 
-	my $condition = $self->paramsToConditionWithAnd($param);
-	my $sql = "select * from ".QUEUES." where ".$condition; 
+	my $condition = $self->paramsToConditionWithAnd($params);
+	my $sql = "select * from ".QUEUES." where ".$condition;
 
 	my $sth = $self->dbh->prepare($sql);
 	my $rv = $sth->execute();
 	my $result = $sth->fetchall_hashref('name');
-	return $result; 
+	return $result;
 
 }
 
 sub delete {
-	my $params = shift; 
+	my $params = shift;
 
 }
+
+1;
+
