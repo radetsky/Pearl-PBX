@@ -40,7 +40,7 @@ use constant UPDATE => 'update';
 sub start {
 	my $self = shift;
 	my $cmd; GetOptions  ('cmd=s' => \$cmd ); $self->{'cmd'} = $cmd;
-    my $name; GetOptions ('name=s' => \$name); $self->{'name'} = $name;
+    my $name; GetOptions ('qname=s' => \$name); $self->{'name'} = $name;
 }
 
 sub process {
@@ -66,7 +66,7 @@ sub show {
     my $self = shift;
     my $crud = PearlPBX::CRUD::Queue->new();
     my $result;
-    unless ( defined ( $self->{name} ) ) {
+    unless ( defined ( $self->{'name'} ) ) {
         #show all queues
         $result = $crud->read();
     } else {
