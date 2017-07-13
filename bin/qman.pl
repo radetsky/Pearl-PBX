@@ -32,6 +32,7 @@ use base qw(PearlPBX::App);
 use Getopt::Long qw(:config auto_version auto_help pass_through);
 use PearlPBX::CRUD::Queue;
 use Data::Dumper;
+use PearlPBX::Config -load;
 
 use constant SHOW => 'show';
 use constant UPDATE => 'update';

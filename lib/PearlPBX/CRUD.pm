@@ -1,32 +1,35 @@
 package PearlPBX::CRUD;
 
-use warnings; 
-use strict; 
-use feature 'state'; 
+use warnings;
+use strict;
+use feature 'state';
 use parent qw (Class::Accessor::Class);
 
+use PearlPBX::DB;
+use constant PBXCFG => "pearlpbx.conf";
 
-# Connect to DB and return object 
-sub new { 
-  my $class = shift; 
-  my $self  = undef; 
+# Connect to DB and return object
+sub new {
+  my $class = shift;
+  my $self  = undef;
 
-  $self = bless $self, $class; 
-  $self->mk_accessors('dbh'); 
-  $self->{db} = PearlPBX::DB->new(); 
-  $self->dbh( $self->{db}->{dbh}); 
+  $self->{db} = PearlPBX::DB->new(PBXCFG);
 
-  return $self; 
+  $self = bless $self, $class;
+  $self->mk_accessors('dbh');
+  $self->dbh( $self->{db}->{dbh});
+
+  return $self;
 }
 
-sub paramsToConditionWithAnd { 
-  my ($self, $params) = @_; 
+sub paramsToConditionWithAnd {
+  my ($self, $params) = @_;
   my @pairs;
 
   while ( my ($key, $value) = each %{$params} ) {
-  	push @pairs, "$key=$value"; 
+  	push @pairs, "$key=$value";
   }
-  return join(' AND ', @pairs); 
+  return join(' AND ', @pairs);
 }
 
 1;

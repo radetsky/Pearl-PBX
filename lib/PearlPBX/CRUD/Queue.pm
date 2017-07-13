@@ -5,6 +5,8 @@ use strict;
 
 use parent qw(PearlPBX::CRUD);
 
+=cut
+
 =head1 NAME
 
     PearlPBX::CRUD::Queue - Class for manipulating asterisk queues places in DBI/public.queues;
@@ -70,7 +72,7 @@ sub read {
 	my $params = shift;
 
 	my $sql = "select * from ".QUEUES;
-    if (defined ( params ) ) {
+    if (defined ( $params ) ) {
         my $condition = $self->paramsToConditionWithAnd($params);
         $sql .= " where " . $condition;
     }
