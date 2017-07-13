@@ -69,8 +69,11 @@ sub read {
 	my $self   = shift;
 	my $params = shift;
 
-	my $condition = $self->paramsToConditionWithAnd($params);
-	my $sql = "select * from ".QUEUES." where ".$condition;
+	my $sql = "select * from ".QUEUES;
+    if (defined ( params ) ) {
+        my $condition = $self->paramsToConditionWithAnd($params);
+        $sql .= " where " . $condition;
+    }
 
 	my $sth = $self->dbh->prepare($sql);
 	my $rv = $sth->execute();

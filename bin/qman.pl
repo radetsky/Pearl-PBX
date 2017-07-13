@@ -33,9 +33,12 @@ use Getopt::Long qw(:config auto_version auto_help pass_through);
 use PearlPBX::CRUD::Queue;
 use Data::Dumper;
 
+use constant SHOW => 'show';
+use constant UPDATE => 'update';
+
 sub start {
 	my $self = shift;
-	my $cmd; GetOptions ( 'cmd=s' => \$cmd ); $self->{'cmd'} = $cmd;
+	my $cmd; GetOptions  ('cmd=s' => \$cmd ); $self->{'cmd'} = $cmd;
     my $name; GetOptions ('name=s' => \$name); $self->{'name'} = $name;
 }
 
@@ -46,9 +49,28 @@ sub process {
         print("Use --cmd=<show|update>\n");
         return;
     }
-    if ( ( $cmd ne 'show' ) && ( $cmd ne 'update' ) )  {
+    if ( ( $cmd ne SHOW ) && ( $cmd ne UPDATE ) )  {
         print("Use --cmd=<show|update>\n");
         return;
+    }
+
+    if ( $cmd eq UPDATE ) {
+        $self->update();
+    } else {
+        $self->show();
+    }
+}
+
+sub show {
+    my $self = shift;
+    my $crud = PearlPBX::CRUD::Queue->new();
+    unless ( defined ( $self->{name} ) ) {
+        #show all queues
+        my $result = $crud->read();
+        warn Dumper $result;
+    } else {
+        #show one named queue
+
     }
 
 }
