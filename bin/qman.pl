@@ -79,7 +79,18 @@ sub show {
             printf("Queue: '%s' => %s", $name, Dumper $params);
         }
     }
+}
 
+sub update {
+    my $self = shift;
+    my $crud = PearlPBX::CRUD::Queue->new();
+
+    unless ( defined ( $self->{'name'} ) ) {
+        die "Can't update anything without parameter \"name\"\n";
+    }
+    my $options = $self->filter_params("name","maxlen","timeout","strategy");
+    $crud->update($options);
+    $self->show($options);
 }
 
 sub filter_params {

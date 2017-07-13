@@ -65,6 +65,10 @@ sub update {
 	my $self   = shift;
 	my $params = shift;
 
+    my $setParams = $self->paramsToSetParams($params);
+    my $sql = "update ".QUEUES. " set ". $setParams;
+    $self->dbh->do($sql);
+
 }
 
 sub read {

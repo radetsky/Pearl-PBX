@@ -32,4 +32,14 @@ sub paramsToConditionWithAnd {
   return join(' AND ', @pairs);
 }
 
+sub paramsToSetParams {
+  my ($self, $params) = @_;
+  my @pairs;
+
+  while ( my ( $key, $value) = each %{$params} ) {
+    push @pairs, "$key=\'$value\;";
+  }
+  return join(',', @pairs);
+}
+
 1;
