@@ -65,13 +65,33 @@ sub process {
 sub show {
     my $self = shift;
     my $crud = PearlPBX::CRUD::Queue->new();
+    my $result;
     unless ( defined ( $self->{name} ) ) {
         #show all queues
-        my $result = $crud->read();
-        warn Dumper $result;
+        $result = $crud->read();
     } else {
         #show one named queue
-
+        my $options = $self->filter_params("name","maxlen","timeout","strategy");
+        $result = $crud->read($options)
+    }
+    if ( defined ( $result ) ) {
+        while ( my ( $name, $params) = each $result ) {
+            printf("Queue: '%s' => %s", $name, Dumper $params);
+        }
     }
 
+}
+
+sub filter_params {
+    my $self = shift;
+    my @keys = @_;
+    my $filtered_params;
+
+    foreach my $name (@keys) {
+        unless ( defined ( $self->{$name})) {
+            next;
+        }
+        $filtered_params->{$name} = $self->{$name};
+    }
+    return $filtered_params;
 }
