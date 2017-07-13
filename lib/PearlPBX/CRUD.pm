@@ -28,3 +28,5 @@ sub paramsToConditionWithAnd {
   }
   return join(' AND ', @pairs); 
 }
+
+1;
