@@ -41,6 +41,9 @@ sub start {
 	my $self = shift;
 	my $cmd; GetOptions  ('cmd=s' => \$cmd ); $self->{'cmd'} = $cmd;
     my $name; GetOptions ('qname=s' => \$name); $self->{'name'} = $name;
+    my $maxlen; GetOptions ('maxlen=s' => \$maxlen); $self->{'maxlen'} = $maxlen;
+    my $timeout; GetOptions ('timeout=s' => \$timeout); $self->{'timeout'} = $timeout;
+    my $strategy; GetOptions ('strategy=s' => \$strategy); $self->{'strategy'} = $strategy;
 }
 
 sub process {

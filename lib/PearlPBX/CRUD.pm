@@ -37,7 +37,7 @@ sub paramsToSetParams {
   my @pairs;
 
   while ( my ( $key, $value) = each %{$params} ) {
-    push @pairs, "$key=\'$value\;";
+    push @pairs, "$key=\'$value\'";
   }
   return join(',', @pairs);
 }
