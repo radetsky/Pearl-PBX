@@ -39,7 +39,7 @@
 
   <body>
 
-    <script src="js/jquery-1.9.1.js"></script>
+    <script src="js/jquery-2.2.3.js"></script>
     <script src="js/bootstrap.js"></script>
 		<script src="js/bootstrap-datepicker.js"></script>
     <script src="js/astman-jah.js"></script>
@@ -472,11 +472,10 @@ function cdrfilter_submit () {
 <!-- Скрипт, который заполняет список названий отчетов -->
 <script type="text/javascript">
 		<!--
-		$.get("/reports.pl",
-			{ "list-reports": 1, },
-			function(data) {
+		$.when( $.get("/reports.pl",{ "list-reports": 1, } ) ).then (
+            function(data) {
 				$('#pearlpbx-general-reports-list').html(data);
-			}, "html");
+			} );
 
 		$.get("/reports.pl",
 			{ "list-reports": 2, },

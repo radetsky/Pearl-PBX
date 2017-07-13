@@ -594,10 +594,7 @@ function pearlpbx_monitor_get_sip_db() {
 
 function pearlpbx_start_me_up() {
 
-	var authenticated = pearlpbx_authentication();
-	if ( authenticated == false ) {
-		return false;
-	}
+	var userName = pearlpbx_getUserName();
 	var callerid = pearlpbx_load_callerid();
 	if ( callerid == false ) {
 		alert ("Загрузка таблицы преобразований номеров А закончилось с ошибкой! ");
@@ -952,7 +949,8 @@ function pearlpbx_load_callerid() {
 }
 
 
-function pearlpbx_authentication() {
+function pearlpbx_getUserName() {
+
 	$.get("/login.pl", {
 		authentication: 1,
 	}, function(data) {
