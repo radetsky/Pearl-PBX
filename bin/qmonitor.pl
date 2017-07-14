@@ -54,13 +54,13 @@ sub start {
     # We will handle SIGKILL, SIGTERM to return status quo
 
     my $qname; GetOptions  ('qname=s' => \$qname ); $self->{'qname'} = $qname;
-    unless ( defined ( $name ) ) {
+    unless ( defined ( $qname ) ) {
         die "Use --qname=%s to set queue name to monitor\n";
     }
 
-    $this->SUPER::start();
+    $self->SUPER::start();
 
-    unless $self->queue_status($qname) {
+    unless ( $self->queue_status($qname)) {
         die "Something wrong with communication with Asterisk Manager\n";
     }
 
@@ -72,6 +72,7 @@ sub start {
 }
 
 sub queue_status {
+  my $self  = shift;
   my $qname = shift;
 
   my $sent = $self->mgr->sendcommand('Action' => 'QueueStatus');
@@ -88,7 +89,7 @@ sub queue_status {
       return undef;
   }
   if ( $status ne 'Success' ) {
-      $this->agi->verbose('Status: Response not success',3);
+      die "Response not success\n";
       return undef;
   }
 
@@ -103,7 +104,7 @@ sub queue_status {
       push @replies, $reply;
   }
 
-
+  return 1;
 
 }
 sub process {
@@ -111,9 +112,9 @@ sub process {
     my $event = undef;
 
     while (1) {
-        $event = $this->el->_getEvent();
+        $event = $self->el->_getEvent();
         unless ( defined ( $event ) ) {
-            $this->_exit("EOF from manager");
+            $self->_exit("EOF from manager");
         }
         if ($event == 0 ) {
             sleep(1);
