@@ -232,5 +232,7 @@ sub process {
       Debug("STRANGE EVENT: %s", $event);
       return;
   }
+
+  warn Dumper $event;
 }
 
