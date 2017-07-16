@@ -18,7 +18,7 @@ use strict;
 use warnings;
 
 use lib "./lib";
-
+$ENV{LOG_STDERR} = 1;
 QMonitor->run(
     daemon      => undef,
     verbose     => 1,
@@ -112,7 +112,7 @@ sub queue_status {
   while (1) {
       $reply  = $self->mgr->receive_answer();
       warn Dumper $reply;
-      $event = $reply->{'Event'};
+      my $event = $reply->{'Event'};
       if ( $event =~ /QueueStatusComplete/i ) {
         last;
       }
@@ -133,7 +133,7 @@ sub pause_lean_agents {
 
   Info("Pause lean agents...");
 
-  foreach my $qmember ( @{$self->{queue_members}}) {
+  foreach my $member ( @{$self->{queue_members}}) {
     if ($member->{'LastCall'} > LASTCALL ) {
       Infof("Pause member %s", $member->{'StateInterface'} );
       $self->pause_member($member->{'StateInterface'}, 'true');
@@ -161,11 +161,11 @@ sub pause_member {
       return undef;
   }
 
-  my $status = $reply->{'Response'};
-  unless ( defined($status) ) {
+  my $response = $reply->{'Response'};
+  unless ( defined ( $response ) ) {
       return undef;
   }
-  if ( $status ne 'Success' ) {
+  if ( $response ne 'Success' ) {
       die "Response not success\n";
       return undef;
   }
@@ -180,8 +180,7 @@ sub update_strategy {
   my $sql = "update queues set strategy=? where name=?";
   my $sth = $self->dbh->prepare($sql);
 
-  $sth->execute($self->{qname});
-  $self->dbh->commit;
+  $sth->execute($strategy, $self->{qname});
 
 }
 
