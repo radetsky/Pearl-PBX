@@ -25,7 +25,7 @@ QMonitor->run(
     use_pidfile => 1,
     has_conf    => 1,
     conf_file   => "/etc/PearlPBX/asterisk-router.conf",
-    infinite    => undef
+    infinite    => 1,
 );
 
 1;
@@ -186,25 +186,24 @@ sub update_strategy {
 
 
 sub process {
-    my $self  = shift;
-    my $event = undef;
+  my $self  = shift;
+  my $event = undef;
 
-    while (1) {
-        $event = $self->el->_getEvent();
-        unless ( defined ( $event ) ) {
-            $self->_exit("EOF from manager");
-        }
+  $event = $self->el->_getEvent();
+  unless ( defined ( $event ) ) {
+      Info("EOF from asterisk manager");
+      $self->{to_finalize} = 1;
+  }
 
-        if ($event == 0 ) {
-            sleep(1);
-            next;
-        }
+  unless ( defined ( $event->{'Event'} ) ) {
+      Debug("STRANGE EVENT: %s", $event);
+      next;
+  }
 
-        unless ( defined ( $event->{'Event'} ) ) {
-            Debug("STRANGE EVENT: %s", $event);
-            next;
-        }
+  if ($event == 0 ) {
+      sleep(1);
+  }
 
-    }
+
 }
 
