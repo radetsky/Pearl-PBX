@@ -203,7 +203,7 @@ sub queue_reload_parameters {
   my $self = shift;
   Infof("Reload parameters for %s", $self->{qname});
   my $command = 'queue reload parameters '. $self->{qname};
-
+  warn $command;
   my $sent = $self->mgr->sendcommand (
     'Action'  => "Command",
     'Command' => $command,
@@ -211,11 +211,13 @@ sub queue_reload_parameters {
 
   while (1) {
     my $reply  = $self->mgr->receive_answer();
-    warn Dumper $reply;
-    my $event = $reply->{'Event'};
-    if ( $event =~ /CommandComplete/i ) {
+    unless ( defined ( $reply ) ) {
       last;
     }
+    if ( $reply == 0 ) {
+      last;
+    }
+    Infof("Got response: %s", $reply);
   }
 
 }
