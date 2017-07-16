@@ -209,6 +209,15 @@ sub queue_reload_parameters {
     'Command' => $command,
   );
 
+  while (1) {
+    my $reply  = $self->mgr->receive_answer();
+    warn Dumper $reply;
+    my $event = $reply->{'Event'};
+    if ( $event =~ /CommandComplete/i ) {
+      last;
+    }
+  }
+
 }
 
 sub incrementFailCounter {
