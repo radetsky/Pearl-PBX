@@ -65,9 +65,24 @@ sub start {
     }
 
     $self->pause_lean_agents();
-    $self->remember_strategy();
+    # $self->remember_strategy();
+    # Remember that original params saved in $self->{queue_params};
     $self->update_strategy();
     # Goto to process() to listen AMI
+
+    $SIG{KILL} = sub {
+      $self->{to_finalize} = 1;
+    }
+}
+
+sub stop {
+  my $self = shift;
+
+  Info("Finishing...");
+
+  #restore strategy
+  $self->update_strategy($self->{queue_params}->{'Strategy'});
+
 
 }
 
@@ -97,16 +112,80 @@ sub queue_status {
   while (1) {
       $reply  = $self->mgr->receive_answer();
       warn Dumper $reply;
-      $status = $reply->{'Event'};
-      if ( $status =~ /QueueStatusComplete/i ) {
-          last;
+      $event = $reply->{'Event'};
+      if ( $event =~ /QueueStatusComplete/i ) {
+        last;
       }
-      push @replies, $reply;
+      if ( $reply->{'Queue'} eq $qname ) {
+        if ( $event =~ /QueueParams/i ) {
+          $self->{queue_params} = $reply;
+        } elsif ( $event =~ /QueueMember/i ) {
+          push $self->{queue_members}, $reply;
+        }
+      }
   }
 
   return 1;
+}
+
+sub pause_lean_agents {
+  my $self = shift;
+
+  Info("Pause lean agents...");
+
+  foreach my $qmember ( @{$self->{queue_members}}) {
+    if ($member->{'LastCall'} > LASTCALL ) {
+      Infof("Pause member %s", $member->{'StateInterface'} );
+      $self->pause_member($member->{'StateInterface'}, 'true');
+    }
+  }
+}
+
+sub pause_member {
+  my ($self, $member, $status) = @_;
+
+  Infof("Queue pause member %s to status %s", $member, $status);
+
+  my $sent = $self->mgr->sendcommand (
+    'Action'    => 'QueuePause',
+    'Interface' => $member,
+    'Paused'    => $status,
+    'Queue'     => $self->{qname},
+  );
+
+  unless ( defined($sent) ) {
+      return undef;
+  }
+  my $reply = $self->mgr->receive_answer();
+  unless ( defined($reply) ) {
+      return undef;
+  }
+
+  my $status = $reply->{'Response'};
+  unless ( defined($status) ) {
+      return undef;
+  }
+  if ( $status ne 'Success' ) {
+      die "Response not success\n";
+      return undef;
+  }
+}
+
+sub update_strategy {
+  my $self = shift;
+  my $strategy = shift // 'random';
+
+  Infof("Update strategy to %s", $strategy);
+
+  my $sql = "update queues set strategy=? where name=?";
+  my $sth = $self->dbh->prepare($sql);
+
+  $sth->execute($self->{qname});
+  $self->dbh->commit;
 
 }
+
+
 sub process {
     my $self  = shift;
     my $event = undef;
@@ -116,6 +195,7 @@ sub process {
         unless ( defined ( $event ) ) {
             $self->_exit("EOF from manager");
         }
+
         if ($event == 0 ) {
             sleep(1);
             next;
