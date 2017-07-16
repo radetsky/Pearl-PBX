@@ -181,6 +181,20 @@ sub update_strategy {
   my $sth = $self->dbh->prepare($sql);
 
   $sth->execute($strategy, $self->{qname});
+  $self->queue_reload_parameters();
+
+}
+
+sub queue_reload_parameters {
+  my $self = shift;
+  Infof("Reload parameters for %s", $self->{qname});
+  my $command = 'queue reload parameters '. $self->{qname};
+
+  my $sent = $self->mgr->sendcommand (
+    'Action'  => "Command",
+    'Command' => $command,
+  );
+
 
 }
 

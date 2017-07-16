@@ -64,11 +64,12 @@ sub create {
 sub update {
 	my $self   = shift;
 	my $params = shift;
+    my $qname  = shift;
 
     my $setParams = $self->paramsToSetParams($params);
-    my $sql = "update ".QUEUES. " set ". $setParams;
-    $self->dbh->do($sql);
-
+    my $sql = "update ".QUEUES. " set ". $setParams . "where name=?";
+    my $sth = $self->dbh->prepare($sql);
+    $sth->execute($qname);
 }
 
 sub read {
