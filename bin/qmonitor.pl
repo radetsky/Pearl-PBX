@@ -180,7 +180,7 @@ sub pause_member {
       return undef;
   }
   if ( $response ne 'Success' ) {
-      die "Response not success\n";
+      Errf("Response not success: %s", Dumper $reply);
       return undef;
   }
 }
