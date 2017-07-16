@@ -60,7 +60,7 @@ sub start {
 
     $self->SUPER::start();
 
-    unless ( $self->queue_status($qname)) {
+    unless ( $self->queue_status( $qname ) ) {
         die "Something wrong with communication with Asterisk Manager\n";
     }
 
@@ -70,9 +70,9 @@ sub start {
     $self->update_strategy();
     # Goto to process() to listen AMI
 
-    $SIG{KILL} = sub {
-      $self->{to_finalize} = 1;
-    }
+    $SIG{INT}  = sub { $self->{to_finalize} = 1; };
+    $SIG{TERM} = sub { $self->{to_finalize} = 1; };
+
 }
 
 sub stop {
@@ -89,6 +89,8 @@ sub stop {
 sub queue_status {
   my $self  = shift;
   my $qname = shift;
+
+  my $foundQueue = undef;
 
   my $sent = $self->mgr->sendcommand('Action' => 'QueueStatus');
   unless ( defined($sent) ) {
@@ -108,6 +110,8 @@ sub queue_status {
       return undef;
   }
 
+  my @queue_members;
+
   my @replies;
   while (1) {
       $reply  = $self->mgr->receive_answer();
@@ -119,12 +123,17 @@ sub queue_status {
       if ( $reply->{'Queue'} eq $qname ) {
         if ( $event =~ /QueueParams/i ) {
           $self->{queue_params} = $reply;
+          $foundQueue = 1;
         } elsif ( $event =~ /QueueMember/i ) {
-          push $self->{queue_members}, $reply;
+          push @queue_members, $reply;
         }
       }
   }
+  $self->{queue_members} = \@queue_members;
 
+  unless ( defined ( $foundQueue ) ) {
+      die "Given queue name not found in QueueStatus response\n";
+  }
   return 1;
 }
 
@@ -209,15 +218,14 @@ sub process {
       $self->{to_finalize} = 1;
   }
 
+  if ($event == 0)  {
+      sleep(1);
+      return;
+  }
+
   unless ( defined ( $event->{'Event'} ) ) {
       Debug("STRANGE EVENT: %s", $event);
-      next;
+      return;
   }
-
-  if ($event == 0 ) {
-      sleep(1);
-  }
-
-
 }
 
