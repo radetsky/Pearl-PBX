@@ -47,6 +47,7 @@ use NetSDS::Asterisk::Manager;
 use constant STRATEGY => 'random'; # New strategy
 use constant LASTCALL => 3600;     # Did not answer for 1 hour ? -> Pause
 use constant UNANSWERED => 5;      # Did not answer 5 times ? -> Pause
+use constant UNAVAILABLE => 5;     # Status = 5 in QueueStatus means that agent unavailable
 
 sub start {
     my $self = shift;
@@ -72,6 +73,7 @@ sub start {
 
     $SIG{INT}  = sub { $self->{to_finalize} = 1; };
     $SIG{TERM} = sub { $self->{to_finalize} = 1; };
+
 
 }
 
@@ -144,7 +146,11 @@ sub pause_lean_agents {
 
   foreach my $member ( @{$self->{queue_members}}) {
     if ($member->{'LastCall'} > LASTCALL ) {
-      Infof("Pause member %s", $member->{'StateInterface'} );
+      Infof("Pause lean member %s", $member->{'StateInterface'} );
+      $self->pause_member($member->{'StateInterface'}, 'true');
+    }
+    if ($member->{'Status'} == UNAVAILABLE ) {
+      Infof("Pause unavailable member %s", $member->{'StateInterface'});
       $self->pause_member($member->{'StateInterface'}, 'true');
     }
   }
@@ -182,7 +188,7 @@ sub pause_member {
 
 sub update_strategy {
   my $self = shift;
-  my $strategy = shift // 'random';
+  my $strategy = shift // STRATEGY;
 
   Infof("Update strategy to %s", $strategy);
 
@@ -203,7 +209,6 @@ sub queue_reload_parameters {
     'Action'  => "Command",
     'Command' => $command,
   );
-
 
 }
 
