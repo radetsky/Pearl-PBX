@@ -50,30 +50,29 @@ use constant UNANSWERED => 5;      # Did not answer 5 times ? -> Pause
 use constant UNAVAILABLE => 5;     # Status = 5 in QueueStatus means that agent unavailable
 
 sub start {
-    my $self = shift;
-    # Looking for --qname=queueName
-    # We will handle SIGKILL, SIGTERM to return status quo
+  my $self = shift;
+  # Looking for --qname=queueName
+  # We will handle SIGKILL, SIGTERM to return status quo
 
-    my $qname; GetOptions  ('qname=s' => \$qname ); $self->{'qname'} = $qname;
-    unless ( defined ( $qname ) ) {
-        die "Use --qname=%s to set queue name to monitor\n";
-    }
+  my $qname; GetOptions  ('qname=s' => \$qname ); $self->{'qname'} = $qname;
+  unless ( defined ( $qname ) ) {
+      die "Use --qname=%s to set queue name to monitor\n";
+  }
 
-    $self->SUPER::start();
+  $self->SUPER::start();
 
-    unless ( $self->queue_status( $qname ) ) {
-        die "Something wrong with communication with Asterisk Manager\n";
-    }
+  unless ( $self->queue_status( $qname ) ) {
+      die "Something wrong with communication with Asterisk Manager\n";
+  }
 
-    $self->pause_lean_agents();
-    # $self->remember_strategy();
-    # Remember that original params saved in $self->{queue_params};
-    $self->update_strategy();
-    # Goto to process() to listen AMI
+  $self->pause_lean_agents();
+  # $self->remember_strategy();
+  # Remember that original params saved in $self->{queue_params};
+  $self->update_strategy();
+  # Goto to process() to listen AMI
 
-    $SIG{INT}  = sub { $self->{to_finalize} = 1; };
-    $SIG{TERM} = sub { $self->{to_finalize} = 1; };
-
+  $SIG{INT}  = sub { $self->{to_finalize} = 1; };
+  $SIG{TERM} = sub { $self->{to_finalize} = 1; };
 
 }
 
@@ -212,6 +211,25 @@ sub queue_reload_parameters {
 
 }
 
+sub incrementFailCounter {
+  my $self = shift;
+  my $channel = shift;
+
+  my ($interface,$chanId) = split('-', $channel);
+  if ( defined ( $self->{failcounters}->{$interface})) {
+    $self->{failcounters}->{$interface} = $self->{failcounters}->{$interface} + 1;
+  } else {
+    $self->{failcounters}->{$interface} = 1;
+  }
+
+  Infof("FailCounter for %s set to %d", $interface, $self->{failcounters}->{$interface});
+
+  if ($self->{failcounters}->{$interface} > UNANSWERED ) {
+    $self->pause_member($interface, 'true');
+    $self->{failcounters}->{$interface} = 0;
+  }
+
+}
 
 sub process {
   my $self  = shift;
@@ -233,6 +251,14 @@ sub process {
       return;
   }
 
-  warn Dumper $event;
+  # Checking DialEnd
+  if ( $event->{'Event'} eq 'DialEnd') {
+    if ( $event->{'DialStatus'} eq 'NOANSWER') {
+      my $destchannel = $event->{'DestChannel'};
+      $self->incrementFailCounter($destchannel);
+
+    }
+
+  }
 }
 
