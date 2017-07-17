@@ -146,7 +146,7 @@ sub pause_lean_agents {
 
   my $current_time = time;
   foreach my $member ( @{$self->{queue_members}}) {
-    if ( ( $member->{'LastCall'} > 0 ) && ( $member->{'LastCall'} < ( $current_time - LASTCALL ) ) {
+    if ( ( $member->{'LastCall'} > 0 ) && ( $member->{'LastCall'} < ( $current_time - LASTCALL ) ) ) {
       Infof("Pause lean member %s", $member->{'StateInterface'} );
       $self->pause_member($member->{'StateInterface'}, 'true');
     }
@@ -295,16 +295,23 @@ sub process {
      }
   } elsif ( $event->{'Event'} eq 'QueueCallerLeave') {
     if ( $event->{'Queue'} eq $self->{qname} ) {
-      Infof("We lost caller %s", $event->{'CallerIDNum'});
+        #Infof("We lost caller %s", $event->{'CallerIDNum'});
     }
   } elsif ( $event->{'Event'} eq 'QueueCallerJoin') {
     if ( $event->{'Queue'} eq $self->{qname} ) {
-      Infof("Entering %s", $event->{'CallerIDNum'});
+      Infof("Enter %s", $event->{'CallerIDNum'});
     }
-  }
+  } elsif ( $event->{'Event'} eq 'AgentConnect') {
+    if ( $event->{'Queue'} eq $self->{qname} ) {
+      Infof("Agent %s connected to %s",$event->{'Interface'}, $event->{'CallerIDNum'});
+    }
+  } elsif ( $event->{'Event'} eq 'AgentComplete') {
+    if ( $event->{'Queue'} eq $self->{qname} ) {
+      Infof("Agent %s complete with %s",$event->{'Interface'}, $event->{'CallerIDNum'});
+    }
   } elsif ( defined ( $event->{'Queue'} ) ) {
       if ( $event->{'Queue'} eq $self->{qname} ) {
-          warn Dumper $event;
+          warn Dumper $event->{'Event'};
       }
   }
 }
