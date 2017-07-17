@@ -48,6 +48,7 @@ use constant STRATEGY => 'random'; # New strategy
 use constant LASTCALL => 3600;     # Did not answer for 1 hour ? -> Pause
 use constant UNANSWERED => 5;      # Did not answer 5 times ? -> Pause
 use constant UNAVAILABLE => 5;     # Status = 5 in QueueStatus means that agent unavailable
+use constant REACHABLE => 1;
 
 sub start {
   my $self = shift;
@@ -224,9 +225,8 @@ sub queue_reload_parameters {
 
 sub incrementFailCounter {
   my $self = shift;
-  my $channel = shift;
+  my $interface = shift;
 
-  my ($interface,$chanId) = split('-', $channel);
   if ( defined ( $self->{failcounters}->{$interface})) {
     $self->{failcounters}->{$interface} = $self->{failcounters}->{$interface} + 1;
   } else {
@@ -262,14 +262,40 @@ sub process {
       return;
   }
 
-  # Checking DialEnd
-  if ( $event->{'Event'} eq 'DialEnd') {
-    if ( $event->{'DialStatus'} eq 'NOANSWER') {
-      my $destchannel = $event->{'DestChannel'};
-      $self->incrementFailCounter($destchannel);
-
+  # Checking AgentRingNoAnswer
+  if ( $event->{'Event'} eq 'AgentRingNoAnswer') {
+    if ( $event->{'Queue'} eq $self->{qname} ) {
+      my $interface = $event->{'Interface'};
+      Infof("Agent %s did not answer to %s %s",
+          $interface,
+          $event->{'Channel'},
+          $event->{'CallerIDNum'});
+      $self->incrementFailCounter($interface);
     }
-
+  } elsif ( $event->{'Event'} eq 'AgentCalled') {
+      if ( $event->{'Queue'} eq $self->{qname} ) {
+        Infof("Agent called %s", $event->{'Interface'});
+      }
+  } elsif ( $event->{'Event'} eq 'QueueMemberStatus') {
+      if ( $event->{'Queue'} eq $self->{qname} ) {
+        my $interface = $event->{'Interface'};
+        my $state = $event->{'Status'};
+        if ( $state == UNAVAILABLE ) {
+            Infof("Agent UNREACHABLE %s", $interface);
+        } elsif ( $state == REACHABLE ) {
+            Infof("Agent AVAILABLE %s", $interface);
+        }
+      }
+  } elsif ( $event->{'Event'} eq 'QueueMemberPause') {
+      if ( $event->{'Queue'} eq $self->{qname} ) {
+        my $interface = $event->{'Interface'};
+        my $paused = $event->{'Paused'} == 0 ? 'Unpaused' : 'Paused';
+        Infof("Agent %s %s", $interface, $paused );
+     }
+  } elsif ( defined ( $event->{'Queue'} ) ) {
+      if ( $event->{'Queue'} eq $self->{qname} ) {
+          warn Dumper $event;
+      }
   }
 }
 
