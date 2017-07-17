@@ -144,8 +144,9 @@ sub pause_lean_agents {
 
   Info("Pause lean agents...");
 
+  my $current_time = time;
   foreach my $member ( @{$self->{queue_members}}) {
-    if ($member->{'LastCall'} > LASTCALL ) {
+    if ( ( $member->{'LastCall'} > 0 ) && ( $member->{'LastCall'} < ( $current_time - LASTCALL ) ) {
       Infof("Pause lean member %s", $member->{'StateInterface'} );
       $self->pause_member($member->{'StateInterface'}, 'true');
     }
@@ -292,6 +293,15 @@ sub process {
         my $paused = $event->{'Paused'} == 0 ? 'Unpaused' : 'Paused';
         Infof("Agent %s %s", $interface, $paused );
      }
+  } elsif ( $event->{'Event'} eq 'QueueCallerLeave') {
+    if ( $event->{'Queue'} eq $self->{qname} ) {
+      Infof("We lost caller %s", $event->{'CallerIDNum'});
+    }
+  } elsif ( $event->{'Event'} eq 'QueueCallerJoin') {
+    if ( $event->{'Queue'} eq $self->{qname} ) {
+      Infof("Entering %s", $event->{'CallerIDNum'});
+    }
+  }
   } elsif ( defined ( $event->{'Queue'} ) ) {
       if ( $event->{'Queue'} eq $self->{qname} ) {
           warn Dumper $event;
