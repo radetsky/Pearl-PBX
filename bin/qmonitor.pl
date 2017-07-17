@@ -303,7 +303,9 @@ sub process {
     }
   } elsif ( $event->{'Event'} eq 'AgentConnect') {
     if ( $event->{'Queue'} eq $self->{qname} ) {
-      Infof("Agent %s connected to %s",$event->{'Interface'}, $event->{'CallerIDNum'});
+      my $interface = $event->{'Interface'};
+      Infof("Agent %s connected to %s",$interface, $event->{'CallerIDNum'});
+      $self->{failcounters}->{$interface} = 0;
     }
   } elsif ( $event->{'Event'} eq 'AgentComplete') {
     if ( $event->{'Queue'} eq $self->{qname} ) {
