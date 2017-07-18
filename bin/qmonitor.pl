@@ -44,9 +44,9 @@ use PearlPBX::Logger;
 use NetSDS::Asterisk::EventListener;
 use NetSDS::Asterisk::Manager;
 
-use constant STRATEGY => 'random'; # New strategy
-use constant LASTCALL => 3600;     # Did not answer for 1 hour ? -> Pause
-use constant UNANSWERED => 5;      # Did not answer 5 times ? -> Pause
+use constant STRATEGY => 'rrmemory'; # New strategy
+use constant LASTCALL => 7200;     # Did not answer for 1 hour ? -> Pause
+use constant UNANSWERED => 9;      # Did not answer 5 times ? -> Pause
 use constant UNAVAILABLE => 5;     # Status = 5 in QueueStatus means that agent unavailable
 use constant REACHABLE => 1;
 
@@ -284,7 +284,7 @@ sub process {
         if ( $state == UNAVAILABLE ) {
             Infof("Agent UNREACHABLE %s", $interface);
         } elsif ( $state == REACHABLE ) {
-            Infof("Agent AVAILABLE %s", $interface);
+            # Infof("Agent AVAILABLE %s", $interface);
         }
       }
   } elsif ( $event->{'Event'} eq 'QueueMemberPause') {
@@ -296,6 +296,10 @@ sub process {
   } elsif ( $event->{'Event'} eq 'QueueCallerLeave') {
     if ( $event->{'Queue'} eq $self->{qname} ) {
         #Infof("We lost caller %s", $event->{'CallerIDNum'});
+    }
+  } elsif ( $event->{'Event'} eq 'QueueCallerAbandon' ) { 
+    if ( $event->{'Queue'} eq $self->{qname} ) {
+       Infof("We lost caller %s", $event->{'CallerIDNum'});
     }
   } elsif ( $event->{'Event'} eq 'QueueCallerJoin') {
     if ( $event->{'Queue'} eq $self->{qname} ) {
