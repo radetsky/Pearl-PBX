@@ -39,8 +39,8 @@ sub start {
 
   my $show; GetOptions ('show' => \$show ); $self->{show} = $show;
   my $set;  GetOptions ('set' => \$set );   $self->{set}  = $set;
-  my $group; GetOptions ('group=s' -> \$group ); $self->{group} = $group;
-  my $items; GetOptions ('items=s' -> \$items ); $self->{items} = $items;
+  my $group; GetOptions ('group=s' => \$group ); $self->{group} = $group;
+  my $items; GetOptions ('items=s' => \$items ); $self->{items} = $items;
 
   $self->SUPER::start();
   $self->mk_accessors('dbh');
@@ -102,8 +102,14 @@ sub set_items {
         die "Can't set items without parameter --items=XXX,XXX,XXX\n";
     }
 
+    my @tmp;
+    foreach my $item ( split (',', $self->{items})) {
+        push @tmp, "'".$item."'";
+    }
+    my $items = join(',', @tmp);
+
     my $sql = sprintf("update sip_peers set pickupgroup='%s',callgroup='%s' where name in (%s)",
-        $self->{group}, $self->{group},$self->{items});
+        $self->{group}, $self->{group}, $items);
     $self->dbh->do($sql);
 
 }
@@ -118,7 +124,7 @@ sub process {
   }
 
   if ( defined ( $self->{set} ) ) {
-    $self->set_items()
+    $self->set_items();
     return;
   }
 
