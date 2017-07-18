@@ -38,15 +38,13 @@ sub start {
   my $self = shift;
 
   my $show; GetOptions ('show' => \$show ); $self->{show} = $show;
+  my $set;  GetOptions ('set' => \$set );   $self->{set}  = $set;
+  my $group; GetOptions ('group=s' -> \$group ); $self->{group} = $group;
+  my $items; GetOptions ('items=s' -> \$items ); $self->{items} = $items;
 
   $self->SUPER::start();
-
-}
-sub start {
-    my $this = shift;
-
-    $this->mk_accessors('dbh');
-    $this->_db_connect;
+  $self->mk_accessors('dbh');
+  $self->_db_connect;
 }
 
 sub _db_connect {
@@ -78,11 +76,7 @@ sub _db_connect {
 
     if ( !$this->dbh ) {
         $this->speak("Cant connect to DBMS!");
-        $this->log( "error", "Cant connect to DBMS!" );
         exit(-1);
-    }
-    if ( $this->{verbose} ) {
-        $this->agi->verbose( "Database connected.", 3 );
     }
     return 1;
 }
@@ -93,11 +87,27 @@ sub show_groups {
     my $sql = "select name,pickupgroup from sip_peers where pickupgroup != '' order by pickupgroup,name";
     my $ary_ref = $self->dbh->selectall_arrayref($sql);
 
-    while ( my ($name, $grp ) = each @{$ary_ref} ) {
-        printf("%10s %10s\n", $name, $grp);
+    foreach my $item (@{$ary_ref})  {
+        printf("%10s %10s\n", $item->[0], $item->[1]);
     }
 
 }
+
+sub set_items {
+    my $self = shift;
+    unless ( defined ( $self->{group} ) ) {
+        die "Can't set group without parameter --group=MyGroupId\n";
+    }
+    unless ( defined ( $self->{items} ) ) {
+        die "Can't set items without parameter --items=XXX,XXX,XXX\n";
+    }
+
+    my $sql = sprintf("update sip_peers set pickupgroup='%s',callgroup='%s' where name in (%s)",
+        $self->{group}, $self->{group},$self->{items});
+    $self->dbh->do($sql);
+
+}
+
 
 sub process {
   my $self  = shift;
@@ -106,5 +116,11 @@ sub process {
     $self->show_groups();
     return;
   }
+
+  if ( defined ( $self->{set} ) ) {
+    $self->set_items()
+    return;
+  }
+
 }
 
