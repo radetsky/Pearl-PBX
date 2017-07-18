@@ -44,9 +44,9 @@ use PearlPBX::Logger;
 use NetSDS::Asterisk::EventListener;
 use NetSDS::Asterisk::Manager;
 
-use constant STRATEGY => 'random'; # New strategy
-use constant LASTCALL => 3600;     # Did not answer for 1 hour ? -> Pause
-use constant UNANSWERED => 5;      # Did not answer 5 times ? -> Pause
+use constant STRATEGY => 'rrmemory'; # New strategy
+use constant LASTCALL => 7200;     # Did not answer for 1 hour ? -> Pause
+use constant UNANSWERED => 9;      # Did not answer 5 times ? -> Pause
 use constant UNAVAILABLE => 5;     # Status = 5 in QueueStatus means that agent unavailable
 use constant REACHABLE => 1;
 
@@ -144,8 +144,9 @@ sub pause_lean_agents {
 
   Info("Pause lean agents...");
 
+  my $current_time = time;
   foreach my $member ( @{$self->{queue_members}}) {
-    if ($member->{'LastCall'} > LASTCALL ) {
+    if ( ( $member->{'LastCall'} > 0 ) && ( $member->{'LastCall'} < ( $current_time - LASTCALL ) ) ) {
       Infof("Pause lean member %s", $member->{'StateInterface'} );
       $self->pause_member($member->{'StateInterface'}, 'true');
     }
@@ -283,7 +284,7 @@ sub process {
         if ( $state == UNAVAILABLE ) {
             Infof("Agent UNREACHABLE %s", $interface);
         } elsif ( $state == REACHABLE ) {
-            Infof("Agent AVAILABLE %s", $interface);
+            # Infof("Agent AVAILABLE %s", $interface);
         }
       }
   } elsif ( $event->{'Event'} eq 'QueueMemberPause') {
@@ -292,9 +293,31 @@ sub process {
         my $paused = $event->{'Paused'} == 0 ? 'Unpaused' : 'Paused';
         Infof("Agent %s %s", $interface, $paused );
      }
+  } elsif ( $event->{'Event'} eq 'QueueCallerLeave') {
+    if ( $event->{'Queue'} eq $self->{qname} ) {
+        #Infof("We lost caller %s", $event->{'CallerIDNum'});
+    }
+  } elsif ( $event->{'Event'} eq 'QueueCallerAbandon' ) { 
+    if ( $event->{'Queue'} eq $self->{qname} ) {
+       Infof("We lost caller %s", $event->{'CallerIDNum'});
+    }
+  } elsif ( $event->{'Event'} eq 'QueueCallerJoin') {
+    if ( $event->{'Queue'} eq $self->{qname} ) {
+      Infof("Enter %s", $event->{'CallerIDNum'});
+    }
+  } elsif ( $event->{'Event'} eq 'AgentConnect') {
+    if ( $event->{'Queue'} eq $self->{qname} ) {
+      my $interface = $event->{'Interface'};
+      Infof("Agent %s connected to %s",$interface, $event->{'CallerIDNum'});
+      $self->{failcounters}->{$interface} = 0;
+    }
+  } elsif ( $event->{'Event'} eq 'AgentComplete') {
+    if ( $event->{'Queue'} eq $self->{qname} ) {
+      Infof("Agent %s complete with %s",$event->{'Interface'}, $event->{'CallerIDNum'});
+    }
   } elsif ( defined ( $event->{'Queue'} ) ) {
       if ( $event->{'Queue'} eq $self->{qname} ) {
-          warn Dumper $event;
+          warn Dumper $event->{'Event'};
       }
   }
 }
