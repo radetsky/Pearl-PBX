@@ -7,8 +7,8 @@ After=postgresql.service asterisk.service
 Type=forking
 User=root
 Group=root
-ExecStart=/usr/sbin/NetSDS-hangupd.pl
-PIDFile=/var/run/NetSDS/NetSDS-hangupd.pid
+ExecStart=/usr/sbin/PearlPBX-hangupd.pl
+PIDFile=/var/run/NetSDS/PearlPBX-hangupd.pid
 
 # safe_asterisk emulation
 Restart=always
