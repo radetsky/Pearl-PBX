@@ -2228,4 +2228,8 @@ function load_ivr_modules() {
     $('#pearlpbx-modules-admin-ivr-bodies-preload').load('/modules.pl?list-modules=2&rtype=ivr');
 }
 
+function load_directions_names () {
+    $('#pearlpbx_directions_list').load('/route.pl?a=list-directions-tab');
+}
+
 
