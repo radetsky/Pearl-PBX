@@ -12,6 +12,7 @@ use Plack::App::Directory;
 use PearlPBX::Config -load;
 use PearlPBX::Pages;
 use PearlPBX::Actions;
+use PearlPBX::Route;
 use PearlPBX::API;
 use PearlPBX::DB;
 
@@ -61,6 +62,11 @@ my $app = builder {
             mount "/"      => builder { \&page_index };
             mount "/index" => builder { \&page_index };
             mount "/modules.pl" => builder { \&api_modules };
+            mount "/route" => builder {
+                mount "/manager" => builder {
+                    mount "/credentials" => builder { \&route_manager_credentials };
+                };
+            };
         };
     };
 };

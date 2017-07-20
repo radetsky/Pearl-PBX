@@ -19,7 +19,7 @@
  *
  */
 
-/* Rewritten to use jQuery by Alex Radetsky <rad@rad.kiev.ua> 
+/* Rewritten to use jQuery by Alex Radetsky <rad@rad.kiev.ua>
    See http://www.rad.kiev.ua for more information */
 
 function Astman() {
@@ -38,7 +38,7 @@ function Astman() {
 	};
 	this.clickChannel = function(ev) {
 		var target = ev.target;
-		// XXX This is icky, we statically use astmanEngine to call the callback XXX 
+		// XXX This is icky, we statically use astmanEngine to call the callback XXX
 		if (me.selecttarget)
 			me.restoreTarget(me.selecttarget);
 		while(!target.id || !target.id.length)
@@ -58,7 +58,7 @@ function Astman() {
 			other = target.nextSibling.nextSibling.className;
 		}
 		if (other) {
-			if (other == "chanlisteven") 
+			if (other == "chanlisteven")
 				target.className = "chanlistodd";
 			else
 				target.className = "chanlisteven";
@@ -73,7 +73,7 @@ function Astman() {
 
 		if (!channels[channame])
 			channels[channame] = new Array();
-			
+
 		if (msg.headers.event) {
 			if (msg.headers.event == "Hangup") {
 				delete channels[channame];
@@ -186,7 +186,7 @@ function Astman() {
 		var x,y;
 		//var s = t;
 		var allheaders = t.split('\r\n');
-		if (me.debug) 
+		if (me.debug)
 			me.debug.value = "\n";
 		for (x=0;x<allheaders.length;x++) {
 			if (allheaders[x].length) {
@@ -244,24 +244,24 @@ function Astman() {
 		});
 
 		request.fail(function(jqXHR, textStatus, errorThrown) {
-  			alert( "Astman-jah request failed: " + textStatus + errorThrown);
+  			console.log( "Astman-jah request failed: " + textStatus + errorThrown);
 		});
-	
 
-		me.callback = callback; 
-		me.callback_dest = callback_dest; 
+
+		me.callback = callback;
+		me.callback_dest = callback_dest;
 	};
 	this.pollEvents = function() {
-		var request = $.ajax (this.url , { 
+		var request = $.ajax (this.url , {
 			type: "GET",
-			data: "action=waitevent", 
+			data: "action=waitevent",
 			dataType: "text"
-		}); 
-		request.done (function(msg) { 
+		});
+		request.done (function(msg) {
 			me.eventResponse(msg);
 		});
 		request.fail(function(jqXHR, textStatus, errorThrown) {
-  			alert( "Astman-jah request failed: " + textStatus + errorThrown);
+  			console.log( "Astman-jah request failed: " + textStatus + errorThrown);
 		});
 	};
 };

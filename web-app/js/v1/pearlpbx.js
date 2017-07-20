@@ -498,16 +498,14 @@ function pearlpbx_monitor_login(msgs, callback_dest) {
 	callback_dest();
 
 }
-function pearlpbx_monitor_connect( callback_dest ) {
+function pearlpbx_monitor_connect ( callback_dest ) {
 	var username = "";
 	var secret = "";
 
-	$.getJSON('/route.pl', {
-		a: "get_monitor_credentials",
-	}, function (json) {
+	$.getJSON('/route/manager/credentials', undefined, function (json) {
 		username = json.username;
 		secret = json.secret;
-		// alert (username + ":" + secret );
+		console.log (username + ":" + secret );
 		astmanEngine.setURL("/asterisk/rawman");
     	astmanEngine.sendRequest('action=login&username=' + username + "&secret=" + secret,
     		pearlpbx_monitor_login, callback_dest );
