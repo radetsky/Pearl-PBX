@@ -250,7 +250,7 @@
       <hr>
 
       <footer>
-        <p>&copy; Alexey Radetsky 2011-2015</p>
+        <p>&copy; <a href="mailto:rad@pearlpbx.com">Alexey Radetsky</a></p>
       </footer>
 
     </div><!--/.fluid-container-->
@@ -400,51 +400,6 @@ Date and time of report finish
 </div>
 
 
-<script type="text/javascript">
-function cdrfilter_validate() {
-  return false;
-}
-function cdrfilter_submit () {
-
-  var valid = cdrfilter_validate();
-
-  var cdrfilter_dateFrom = $('#cdrfilter_dateFrom').val();
-  var cdrfilter_timeFrom = $('#cdrfilter_timeFrom').val();
-  var cdrfilter_dateTill = $('#cdrfilter_dateTill').val();
-  var cdrfilter_timeTill = $('#cdrfilter_timeTill').val();
-
-  var cdrfilter_src = $('#cdrfilter_src').val();
-  var cdrfilter_dst = $('#cdrfilter_dst').val();
-
-  var cdrfilter_channel = $('select#cdrfilter_channel option:selected').val();
-  var cdrfilter_dstchannel = $('select#cdrfilter_dstchannel option:selected').val();
-
-  var cdrfilter_disposition = $('select#cdrfilter_disposition option:selected').val();
-  var cdrfilter_billsec = $('select#cdrfilter_billsec option:selected').val();
-
-  $("#cdrfilter_result").html("Request sent...");
-  $.get("/reports.pl",
-    { "exec-report": "cdrfilter",
-      dateFrom: cdrfilter_dateFrom,
-      timeFrom: cdrfilter_timeFrom,
-      dateTill: cdrfilter_dateTill,
-      timeTill: cdrfilter_timeTill,
-      src:      cdrfilter_src,
-      dst:      cdrfilter_dst,
-      channel:  cdrfilter_channel,
-      dstchannel: cdrfilter_dstchannel,
-      disposition: cdrfilter_disposition,
-      billsec: cdrfilter_billsec,
-    },function(data)
-    {
-      $('#cdrfilter_result').html(data);
-    }, "html");
-
-  return false;
-
-}
-</script>
-
 <!-- END OF CDR FILTER -->
 
 <div id="reports-general" style="display: none">
@@ -472,41 +427,6 @@ function cdrfilter_submit () {
 
 <div id="pearlpbx-summary-reports-bodies" style="display: none">
 </div>
-
-<!-- Скрипт, который заполняет список названий отчетов -->
-<script type="text/javascript">
-		<!--
-		$.get("/reports.pl",
-			{ "list-reports": 1, },
-			function(data) {
-				$('#pearlpbx-general-reports-list').html(data);
-			}, "html");
-
-		$.get("/reports.pl",
-			{ "list-reports": 2, },
-			function(data) {
-				$('#pearlpbx-reports-bodies').html(data);
-				$.get("/reports.pl",
-					{ "list-external-numbers": 1, },
-					function(data) {
-						$('.pearlpbx-external-numbers').html(data);
-					},"html");
-				$.get("/reports.pl",
-					{ "list-queues":1, },
-					function(data) {
-						$('.pearlpbx-list-queues').html(data);
-					},"html");
-			}, "html");
-
-			$('#reports-summary-names').load('/reports.pl?list-reports=1&rtype=sum');
-      $('#pearlpbx-summary-reports-bodies').load('/reports.pl?list-reports=2&rtype=sum');
-      $('.pearlpbx_list_channels').load('/reports.pl?list-channels=1');
-
-
-      pearlpbx_fill_check_routing_channel();
-
-		-->
-</script>
 
 <!-- End of the zaglushka -->
 <!-- PearlPBX Player -->
@@ -1070,14 +990,6 @@ function cdrfilter_submit () {
    <a href="#pearlpbx_trunkgroup_edit" data-toggle="modal" class="btn btn-primary" onClick="pearlpbx_empty_trunkgroup_edit_form()">Добавить новую транкгруппу</a>
   </center>
  </div>
-<!-- Скрипт, который заполняет список транкгрупп -->
-<script type="text/javascript">
-    <!--
-
-      $('#pearlpbx_trunkgroups_list').load('/route.pl?a=list-trunkgroups-tab');
-
-    -->
-</script>
 
 </div>
 <!-- Конец Страница со списком транкгрупп -->
@@ -1133,14 +1045,6 @@ function cdrfilter_submit () {
     <a href="#" class="btn btn-danger" onClick="pearlpbx_trunkgroup_remove()">Удалить транкгруппу</a>
   </div>
 </div>
-
-<script type="text/javascript">
-    <!--
-
-      $('select#input_trunkgroup_edit_members').load("/sip.pl?a=list&b=externalAsOptionIdValue");
-
-    -->
-</script>
 
 <!-- Конец диалога редактирования очереди -->
 
@@ -1326,7 +1230,6 @@ function cdrfilter_submit () {
   <div class="modal-footer">
     <a href="javascript:void(0)" class="btn" data-dismiss="modal">Отменить</a>
     <a href="javascript:void(0)" class="btn btn-primary" onClick="pearlpbx_sip_update_peer()">Сохранить</a>
-    <a href='javascript:void(0)' class='btn btn-info' onClick="pearlpbx_sip_edit_advanced_mode()">Профессиональный режим</a>
   </div>
 </div>
 
@@ -1401,49 +1304,44 @@ function cdrfilter_submit () {
  </div>
 </div>
 
-
-
-<script type="text/javascript">
-
-  $('#pearlpbx-modules-admin-ivr-list').load('/modules.pl?list-modules=1&rtype=ivr');
-  $('#pearlpbx-modules-admin-ivr-bodies-preload').load('/modules.pl?list-modules=2&rtype=ivr');
-
-</script>
-
 <div id="modules-katyusha" style="display: none">
  <div class="pearlpbx-main-container-header">
-   <h1><center> Автодозвон </center></h1>
+   <h1><center> Outgoing campaigns </center></h1>
  </div>
  <div class="pearlpbx-main-container-subheader">
  </div>
  <div class="pearlpbx-modules-katyusha-body">
-  <span class="label label-warning"> Этот модуль пока не доступен. </span>
+  <span class="label label-warning"> Dialer API is available in PDF. </span>
+  <p>Please contact <a href="mailto:rad@pearlpbx.com?subject=DialerAPI">Alexey Radetsky</a> GUI for automated calls will be available soon after donation. Anyway contact me.</p>
  </div>
 </div>
 
 
 <div id="modules-konference" style="display: none">
  <div class="pearlpbx-main-container-header">
-   <h1><center> Конференц-связь </center></h1>
+   <h1><center> Conferences </center></h1>
  </div>
  <div class="pearlpbx-main-container-subheader">
   <div id="pearlpbx-modules-konference-list">
   </div>
   <div class="pearlpbx-modules-konference-body">
-     <span class="label label-warning"> Этот модуль пока не доступен. </span>
+     <span class="label label-warning"> Module is unavailable now. </span>
+    <p>Please contact <a href="mailto:rad@pearlpbx.com?subject=Conference">Alexey Radetsky</a> GUI conference calls will be available soon after donation. Anyway contact me.</p>
+
   </div>
  </div>
 </div>
 
 <div id="modules-backup" style="display: none">
  <div class="pearlpbx-main-container-header">
-   <h1><center> Резервное копирование </center></h1>
+   <h1><center> Backups </center></h1>
  </div>
  <div class="pearlpbx-main-container-subheader">
   <div id="pearlpbx-modules-backup-list">
   </div>
   <div class="pearlpbx-modules-backup-body">
-     <span class="label label-warning"> Этот модуль пока не доступен. </span>
+     <span class="label label-warning"> Module is unavailable now.</span>
+     <p>Please contact <a href="mailto:rad@pearlpbx.com?subject=Conference">Alexey Radetsky</a> We want to discuss about backup method</p>
   </div>
  </div>
 </div>

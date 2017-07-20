@@ -2142,4 +2142,90 @@ function pearlpbx_parse_internal_phone ( phone ) {
 
 }
 
+function cdrfilter_validate() {
+  return false;
+}
+function cdrfilter_submit () {
+
+  var valid = cdrfilter_validate();
+
+  var cdrfilter_dateFrom = $('#cdrfilter_dateFrom').val();
+  var cdrfilter_timeFrom = $('#cdrfilter_timeFrom').val();
+  var cdrfilter_dateTill = $('#cdrfilter_dateTill').val();
+  var cdrfilter_timeTill = $('#cdrfilter_timeTill').val();
+
+  var cdrfilter_src = $('#cdrfilter_src').val();
+  var cdrfilter_dst = $('#cdrfilter_dst').val();
+
+  var cdrfilter_channel = $('select#cdrfilter_channel option:selected').val();
+  var cdrfilter_dstchannel = $('select#cdrfilter_dstchannel option:selected').val();
+
+  var cdrfilter_disposition = $('select#cdrfilter_disposition option:selected').val();
+  var cdrfilter_billsec = $('select#cdrfilter_billsec option:selected').val();
+
+  $("#cdrfilter_result").html("Request sent...");
+  $.get("/reports.pl",
+    { "exec-report": "cdrfilter",
+      dateFrom: cdrfilter_dateFrom,
+      timeFrom: cdrfilter_timeFrom,
+      dateTill: cdrfilter_dateTill,
+      timeTill: cdrfilter_timeTill,
+      src:      cdrfilter_src,
+      dst:      cdrfilter_dst,
+      channel:  cdrfilter_channel,
+      dstchannel: cdrfilter_dstchannel,
+      disposition: cdrfilter_disposition,
+      billsec: cdrfilter_billsec,
+    },function(data)
+    {
+      $('#cdrfilter_result').html(data);
+    }, "html");
+
+  return false;
+
+}
+
+function load_reports_names() {
+//<!-- Скрипт, который заполняет список названий отчетов -->
+    $.get("/reports.pl",
+        { "list-reports": 1, },
+        function(data) {
+            $('#pearlpbx-general-reports-list').html(data);
+        }, "html");
+
+    $.get("/reports.pl",
+        { "list-reports": 2, },
+        function(data) {
+            $('#pearlpbx-reports-bodies').html(data);
+            $.get("/reports.pl",
+                { "list-external-numbers": 1, },
+                function(data) {
+                    $('.pearlpbx-external-numbers').html(data);
+                },"html");
+            $.get("/reports.pl",
+                { "list-queues":1, },
+                function(data) {
+                    $('.pearlpbx-list-queues').html(data);
+                },"html");
+        }, "html");
+
+    $('#reports-summary-names').load('/reports.pl?list-reports=1&rtype=sum');
+    $('#pearlpbx-summary-reports-bodies').load('/reports.pl?list-reports=2&rtype=sum');
+    $('.pearlpbx_list_channels').load('/reports.pl?list-channels=1');
+    pearlpbx_fill_check_routing_channel();
+}
+
+function load_trunkgroups_names() {
+    $('#pearlpbx_trunkgroups_list').load('/route.pl?a=list-trunkgroups-tab');
+}
+
+function load_trunkgroups_members() {
+    $('select#input_trunkgroup_edit_members').load("/sip.pl?a=list&b=externalAsOptionIdValue");
+}
+
+function load_ivr_modules() {
+    $('#pearlpbx-modules-admin-ivr-list').load('/modules.pl?list-modules=1&rtype=ivr');
+    $('#pearlpbx-modules-admin-ivr-bodies-preload').load('/modules.pl?list-modules=2&rtype=ivr');
+}
+
 
