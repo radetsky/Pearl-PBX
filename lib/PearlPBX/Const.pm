@@ -14,6 +14,7 @@ our @EXPORT = qw(
     OK
     FAIL
     ERROR
+    PEARLPBX_CONFIG
 );
 
 use constant DEVEL_MODE     => $ENV{STARMAN_DEBUG} ? 1 : 0;
@@ -27,6 +28,7 @@ use constant OK => 'OK';
 use constant FAIL => 'FAIL';
 use constant ERROR => 'ERROR';
 
+use constant PEARLPBX_CONFIG => '/etc/PearlPBX/asterisk-router.conf';
 
 1;
 

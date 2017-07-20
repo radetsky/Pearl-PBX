@@ -594,11 +594,7 @@ function pearlpbx_monitor_get_sip_db() {
 
 function pearlpbx_start_me_up() {
 
-	var authenticated = pearlpbx_authentication();
-	if ( authenticated == false ) {
-		return false;
-	}
-	var callerid = pearlpbx_load_callerid();
+/*	var callerid = pearlpbx_load_callerid();
 	if ( callerid == false ) {
 		alert ("Загрузка таблицы преобразований номеров А закончилось с ошибкой! ");
 		return false;
@@ -612,8 +608,7 @@ function pearlpbx_start_me_up() {
 	//alert($('a#pearlpbx_username').text());
 	pearlpbx_monitor_get_sip_db();
 	pearlpbx_monitor_get_sip_status();
-
-
+*/
 }
 
 function pearlpbx_add_convert_exten() {
@@ -951,22 +946,6 @@ function pearlpbx_load_callerid() {
 	return true;
 }
 
-
-function pearlpbx_authentication() {
-	$.get("/login.pl", {
-		authentication: 1,
-	}, function(data) {
-		var result = data.split(":",2);
-			if (result[0] == "OK") {
-				$('#pearlpbx_username').text(result[1]);
-				return true;
-			}
-			if (result[0] == "ERROR") {
-				window.location.assign("/login.html");
-				return false;
-			}
-	}, "html");
-}
 
 function pearlpbx_logout() {
 	window.location.assign('/login.pl?logout=1');

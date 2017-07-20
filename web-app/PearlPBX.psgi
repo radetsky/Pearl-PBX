@@ -60,6 +60,7 @@ my $app = builder {
             enable 'PearlPBX::Authenticate';
             mount "/"      => builder { \&page_index };
             mount "/index" => builder { \&page_index };
+            mount "/modules.pl" => builder { \&api_modules };
         };
     };
 };
