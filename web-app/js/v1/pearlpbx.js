@@ -505,7 +505,7 @@ function pearlpbx_monitor_connect ( callback_dest ) {
 	$.getJSON('/route/manager/credentials', undefined, function (json) {
 		username = json.username;
 		secret = json.secret;
-		console.log (username + ":" + secret );
+		// console.log (username + ":" + secret );
 		astmanEngine.setURL("/asterisk/rawman");
     	astmanEngine.sendRequest('action=login&username=' + username + "&secret=" + secret,
     		pearlpbx_monitor_login, callback_dest );
