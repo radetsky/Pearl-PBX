@@ -69,6 +69,7 @@ my $app = builder {
                 mount "/manager" => builder {
                     mount "/credentials" => builder { \&route_manager_credentials };
                 };
+                mount "/getulines" => builder { \&route_get_ulines };
             };
         };
     };

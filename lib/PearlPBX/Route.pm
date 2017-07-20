@@ -33,12 +33,14 @@ use JSON::XS;
 use NetSDS::Util::String;
 
 use PearlPBX::Config qw/conf/;
+use PearlPBX::DB qw/pearlpbx_db/;
 
 use Exporter;
 use parent qw(Exporter);
 
 our @EXPORT = qw (
     route_manager_credentials
+    route_get_ulines
 );
 
 
@@ -52,6 +54,33 @@ sub route_manager_credentials {
     $res->body(encode_json($conf->{webuser}->{manager}));
     $res->finalize($env);
 }
+
+
+sub route_get_ulines {
+  my $env = shift;
+  my $req = Plack::Request->new($env);
+
+  my $sql = "select * from integration.ulines where status='busy' order by id";
+  my $sth = pearlpbx_db()->prepare($sql);
+  eval { $sth->execute; };
+  if ( $@ ) {
+      my $res = $req->new_response(400);
+      $res->body(pearlpbx_db()->errstr);
+      $res->finalize($env);
+  }
+
+  my @rows;
+
+  while (my $row = $sth->fetchrow_hashref) {
+    push @rows, $row;
+  }
+
+  my $res = $req->new_response(200);
+  $res->body(encode_json(\@rows));
+  $res->finalize($env);
+
+}
+
 
 #===============================================================================
 #
@@ -930,23 +959,6 @@ sub remove_convert_exten {
 
   $this->{dbh}->commit;
   return "OK";
-}
-
-sub getulines {
-  my $this = shift;
-
-  my $sql = "select * from integration.ulines where status='busy' order by id";
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute; };
-  if ( $@ ) { return $this->{dbh}->errstr; }
-
-  my @rows;
-
-  while (my $row = $sth->fetchrow_hashref) {
-    push @rows, $row;
-  }
-  return encode_json(\@rows);
-
 }
 
 1;

@@ -83,9 +83,7 @@ function pearlpbx_sip_reload() {
 
 function pearlpbx_monitor_get_ulines() {
 	$('#pearlpbx_monitor_ulines tbody').empty();
-	$.getJSON('/route.pl', {
-		a: "getulines",
-	}, function (json) {
+	$.getJSON('/route/getulines', undefined, function (json) {
 		jQuery.each(json, function () {
 			var timt = this['cdr_start'].split(' ');
 			var channel = this['channel_name'].split('-');
@@ -607,6 +605,7 @@ function pearlpbx_start_me_up() {
 	pearlpbx_monitor_get_sip_db();
 	pearlpbx_monitor_get_sip_status();
 */
+    pearlpbx_monitor_get_sip_status();
 }
 
 function pearlpbx_add_convert_exten() {
