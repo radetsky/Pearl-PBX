@@ -24,6 +24,7 @@ use Plack::Middleware::StackTrace;
 use Plack::Middleware::Session;
 use Plack::Session::State::Cookie;
 use Plack::Session::Store::Cache;
+use Plack::App::Proxy;
 
 use POSIX::AtFork;
 
@@ -57,6 +58,8 @@ my $app = builder {
           Plack::App::Directory->new( root => WWW_ROOT . '/js' )->to_app;
         mount "/html" =>
           Plack::App::Directory->new( root => WWW_ROOT . '/html' )->to_app;
+        mount "/asterisk/rawman" =>
+          Plack::App::Proxy->new( remote => "http://127.0.0.1:8088/asterisk/rawman")->to_app;
         mount "/" => builder {
             enable 'PearlPBX::Authenticate';
             mount "/"      => builder { \&page_index };
