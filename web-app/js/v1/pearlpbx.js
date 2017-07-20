@@ -580,9 +580,8 @@ function pearlpbx_monitor_fake_callback() {
 }
 
 function pearlpbx_monitor_get_sip_db() {
-	$.get('/sip.pl',{
-		a: "monitor_get_sip_db",
-	},function(data) {
+	$.get('/sip/monitor/get_sip_db',undefined,
+	function(data) {
 		$('#pearlpbx_monitor_sip_db').html(data);
 	}, "html");
 
@@ -605,6 +604,7 @@ function pearlpbx_start_me_up() {
 	pearlpbx_monitor_get_sip_db();
 	pearlpbx_monitor_get_sip_status();
 */
+    pearlpbx_monitor_get_sip_db();
     pearlpbx_monitor_get_sip_status();
 }
 

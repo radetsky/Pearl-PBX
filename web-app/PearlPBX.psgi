@@ -15,6 +15,7 @@ use PearlPBX::Actions;
 use PearlPBX::Route;
 use PearlPBX::API;
 use PearlPBX::DB;
+use PearlPBX::SIP;
 
 use PearlPBX::Const;
 
@@ -70,6 +71,11 @@ my $app = builder {
                     mount "/credentials" => builder { \&route_manager_credentials };
                 };
                 mount "/getulines" => builder { \&route_get_ulines };
+            };
+            mount "/sip" => builder {
+                mount "/monitor" => builder {
+                    mount "/get_sip_db" => builder { \&sipdb_monitor_get };
+                };
             };
         };
     };
