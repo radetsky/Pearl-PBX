@@ -76,6 +76,12 @@ my $app = builder {
                 mount "/monitor" => builder {
                     mount "/get_sip_db" => builder { \&sipdb_monitor_get };
                 };
+                mount "/list" => builder {
+                    mount "/internal" => builder { \&sipdb_list_internal };
+                    mount "/external" => builder { \&sipdb_list_external };
+                };
+                mount "/getuser" => builder { \&sipdb_getuser };
+                mount "/newsecret" => builder { \&newsecret };
             };
         };
     };

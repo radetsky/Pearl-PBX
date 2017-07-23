@@ -1873,9 +1873,8 @@ function pearlpbx_sip_update_user(){
 		}, "html");
 }
 function pearlpbx_sip_load_id(sip_id) {
-	$.getJSON("/sip.pl",
+	$.getJSON("/sip/getuser",
 	{
-		a: "getuser",
 		id: sip_id,
 	}, function (json) {
 		$('#input_sip_edit_id').val(json.id);
@@ -1942,11 +1941,11 @@ function pearlpbx_sip_edit_advanced_mode() {
 }
 
 function pearlpbx_change_secret_add_form() {
-	$('#input_sip_add_secret').load('/sip.pl?a=newsecret');
+	$('#input_sip_add_secret').load('/sip/newsecret');
 	return false;
 }
 function pearlpbx_change_secret_edit_form() {
-	$('#input_sip_edit_secret').load('/sip.pl?a=newsecret');
+	$('#input_sip_edit_secret').load('/sip/newsecret');
 	return false;
 }
 
@@ -1978,12 +1977,12 @@ function pearlpbx_fill_sip_form() {
 }
 
 function pearlpbx_show_sip_internal_users () {
-	$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=internal');
+	$('#pearlpbx-sip-connections-list').load('/sip/list/internal');
 	$('#pearlpbx-sip-add-internal-button').css('display','block');
 	$('#pearlpbx-sip-add-external-button').css('display','none');
 }
 function pearlpbx_show_sip_external_trunks () {
-	$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=external');
+	$('#pearlpbx-sip-connections-list').load('/sip/list/external');
 	$('#pearlpbx-sip-add-external-button').css('display','block');
 	$('#pearlpbx-sip-add-internal-button').css('display','none');
 }

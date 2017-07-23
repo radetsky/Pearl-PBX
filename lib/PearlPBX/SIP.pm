@@ -1,4 +1,4 @@
-#===============================================================================
+# ===============================================================================
 #
 #         FILE:  SIP.pm
 #
@@ -40,7 +40,17 @@ use parent qw(Exporter);
 
 our @EXPORT = qw (
     sipdb_monitor_get
+    sipdb_list_internal
+    sipdb_list_external
+    sipdb_getuser
+    newsecret
 );
+
+=item B<sipdb_monitor_get>
+
+    Returns count of sip peers in the database
+
+=cut
 
 sub sipdb_monitor_get {
     my $env = shift;
@@ -52,7 +62,7 @@ sub sipdb_monitor_get {
     if ( $@ ) {
         my $res = $req->new_response(400);
         $res->body (pearlpbx_db()->errstr);
-        $res->finalize();
+        $res->finalize;
     }
 
     my $row = $sth->fetchrow_hashref;
@@ -61,10 +71,123 @@ sub sipdb_monitor_get {
 
     my $res = $req->new_response(200);
     $res->body($monitor);
-    $res->finalize();
+    $res->finalize;
 
 }
 
+=item B<sipdb_list_internal>
+
+ возвращает HTML представление списка внутренних пользователей
+
+=cut
+
+sub sipdb_list_internal {
+	my $env = shift;
+
+    my $sql = "select a.id as id, a.comment as comment, a.name as name, b.teletype as termtype from public.sip_peers a, integration.workplaces b where b.sip_id = a.id order by a.name";
+
+    sipdb_list_html($env, $sql, undef );
+}
+
+=item B<sipdb_list_html>
+
+    Returns HTML-view of SIP peers list depends on internal/external
+
+=cut
+
+sub sipdb_list_html {
+	my ($env, $sql, $external) = @_;
+
+    my $js_func_name = $external ? 'pearlpbx_sip_load_external_id' : 'pearlpbx_sip_load_id';
+    my $dialog_name  = $external ? 'pearlpbx_sip_edit_peer'        : 'pearlpbx_sip_edit_user';
+
+    my $req = Plack::Request->new($env);
+
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute(); };
+    if ( $@ ) {
+        my $res = $req->new_response(400);
+        $res->body (pearlpbx_db()->errstr);
+        $res->finalize;
+        return;
+    }
+
+    my $out  = '<table class="table table-bordered table-hover">';
+    $out .= '<tr><th>Name</th><th>Extension</th><th>Terminal type</th></tr>';
+    my $row;
+    while ( my $row = $sth->fetchrow_hashref ) {
+        my $comment = $row->{'comment'} // '';
+        my $termtype = $row->{'termtype'} // 'Not defined';
+
+	    $out .= '<tr><td><a href="#'.$dialog_name.'" data-toggle="modal" onClick="'.$js_func_name.'('.$row->{'id'}.')">'.$comment.'&lt;'.$row->{'name'}.'&gt;'.'</a></td>';
+        $out .= '<td>'.$row->{'name'}.'</td>';
+        $out .= '<td>'.$termtype.'</td></tr>';
+	}
+    $out .= "</table>";
+
+	my $res = $req->new_response(200);
+    $res->body($out);
+    $res->finalize;
+}
+
+=item B<sipdb_getuser>
+
+    Return SIPuser by ID
+
+=cut
+
+sub sipdb_getuser {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+
+    my $sipdb_id = $params->{'id'};
+    unless ( defined ( $sipdb_id ) ) {
+        my $res = $req->new_response(400);
+        $res->body("getuser required parameter id");
+        $res->finalize;
+        return;
+    }
+
+    my $sql = "select a.id, a.name as extension, a.comment, a.secret,
+      b.teletype, b.mac_addr_tel, b.integration_type, b.tcp_port,
+      b.ip_addr_tel, b.ip_addr_pc from public.sip_peers a,
+      integration.workplaces b where a.id=? and a.id=b.sip_id;";
+
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute($sipdb_id); };
+    if ( $@ ) {
+        my $res = $req->new_response(400);
+        $res->body(pearlpbx_db()->errstr);
+        $res->finalize;
+        return;
+    }
+    my $row = $sth->fetchrow_hashref;
+    $row->{'comment'} = str_encode($row->{'comment'});
+    my $res = $req->new_response(200);
+    $res->body( encode_json($row) );
+    $res->finalize;
+
+}
+
+=item B<newsecret>
+
+Returns new password
+
+=cut
+
+
+sub newsecret {
+  my $env = shift;
+  my $req = Plack::Request->new($env);
+
+  my $pw = `pwgen -c 16 -s`;
+  chomp $pw;
+
+  my $res = $req->new_response(200);
+  $res->body($pw);
+  $res->finalize;
+}
 
 
 #===============================================================================
@@ -165,17 +288,6 @@ sub db_connect {
 
     return 1;
 };
-=item B<list_internal>
-
- возвращает HTML представление списка внутренних пользователей
-
-=cut
-sub list_internal {
-	my $this = shift;
-  my $sql = "select a.id as id, a.comment as comment, a.name as name from public.sip_peers a, integration.workplaces b where b.sip_id = a.id order by a.name";
-	return $this->_list($sql,undef);
-}
-
 sub list_internalAsOption {
   my $this = shift;
   my $sql = "select a.id as id, a.comment as comment, a.name as name from public.sip_peers a, integration.workplaces b where b.sip_id = a.id order by a.name";
@@ -250,37 +362,6 @@ sub list_externalAsOptionIdValue {
   return $this->_listAsOptionIdValue($sql);
 }
 
-sub _list {
-	my ($this, $sql, $external) = @_;
-
-  my $js_func_name = sub {
-    return 'pearlpbx_sip_load_external_id' if $external;
-    return 'pearlpbx_sip_load_id';
-  };
-
-  my $dialog_name = sub {
-    return 'pearlpbx_sip_edit_peer' if $external;
-    return 'pearlpbx_sip_edit_user';
-  };
-
-	my $sth = $this->{dbh}->prepare($sql);
-	eval { $sth->execute(); };
-	if ( $@ ) {
-	  print $this->{dbh}->errstr;
-		return undef;
-	}
-
-	my $out = '<ul class="nav nav-tabs">';
-  while ( my $row = $sth->fetchrow_hashref ) {
-		 unless ( defined ( $row->{'comment'} ) ) {
-		 	$row->{'comment'} = '';
-		 }
-	   $out .= '<li><a href="#'.&$dialog_name.'" data-toggle="modal" onClick="'.&$js_func_name.'('.$row->{'id'}.')">'.$row->{'comment'}.'&lt;'.$row->{'name'}.'&gt;'.'</a></li>';
-	}
-  $out .= "</ul>";
-	return $out;
-}
-
 sub _listAsOption {
   my ($this, $sql) = @_;
 
@@ -347,21 +428,6 @@ sub list_internal_free {
     $out .= '<option value="'.$row->{'freename'}.'">'.$row->{'freename'}.'</option>';
   }
   return $out;
-
-}
-
-=item B<newsecret>
-
- Генерирует новый пароль и возвращает его
-
-=cut
-
-sub newsecret {
-  my $this = shift;
-
-  my $pw = `pwgen -c 16`;
-	chomp $pw;
-	return $pw;
 
 }
 
@@ -438,25 +504,6 @@ sub adduser {
 }
 
 
-
-sub getuser {
-  my ($this,$id) = @_;
-
-  my $sql = "select a.id, a.name as extension, a.comment, a.secret,
-  b.teletype, b.mac_addr_tel, b.integration_type, b.tcp_port,
-  b.ip_addr_tel, b.ip_addr_pc from public.sip_peers a,
-  integration.workplaces b where a.id=? and a.id=b.sip_id;";
-
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute($id); };
-  if ( $@ ) {
-    return "ERROR:". $this->{dbh}->errstr;
-  }
-  my $row = $sth->fetchrow_hashref;
-  $row->{'comment'} = str_encode($row->{'comment'});
-  return encode_json($row);
-
-}
 
 sub getpeer {
   my ($this,$id) = @_;
