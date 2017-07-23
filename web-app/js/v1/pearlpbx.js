@@ -1895,39 +1895,22 @@ function pearlpbx_sip_add_user(){
 	// FIXME: validate
 
 	// Submit
-	$.get("/sip.pl",
-		{ a: "adduser",
-		  comment: comment,
+	$.get("/sip/adduser",
+		{ comment: comment,
 		  extension: extension,
 		  terminal: terminal,
 		  macaddr: macaddr,
 		  secret: secret,
-		  integration_type: integration_type,
-		  tcp_port: tcp_port,
-		  ip_addr_pc: ip_addr_pc,
-		  ip_addr_tel: ip_addr_tel,
 		},function(data)
 		{
 			if (data == "OK") {
-				$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=internal');
+				$('#pearlpbx-sip-connections-list').load('/sip/list/internal');
 				$('#add_sip_user').modal('hide');
-				return false;
-			}
-			if (data == "ERROR") {
-				alert("Сервер вернул ошибку!");
 				return false;
 			}
 			alert("Server returns unrecognized answer. Please contact system administrator.");
 			alert(data);
 		}, "html");
-
-}
-function pearlpbx_sip_add_advanced_mode() {
-	alert('Профессиональный режим добавления пользователей SIP будет доступен в следующей версии!');
-}
-
-function pearlpbx_sip_edit_advanced_mode() {
-	alert('Профессиональный режим редактирования пользователей SIP будет доступен в следующей версии!');
 }
 
 function pearlpbx_change_secret_add_form() {

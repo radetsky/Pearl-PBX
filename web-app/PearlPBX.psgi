@@ -83,6 +83,7 @@ my $app = builder {
                 mount "/getuser"   => builder { \&sipdb_getuser };
                 mount "/newsecret" => builder { \&newsecret };
                 mount "/setuser"   => builder { \&sipdb_setuser };
+                mount "/adduser"   => builder { \&sipdb_adduser };
             };
         };
     };

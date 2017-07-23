@@ -46,6 +46,7 @@ our @EXPORT = qw (
     sipdb_getuser
     newsecret
     sipdb_setuser
+    sipdb_adduser
 );
 
 =item B<sipdb_monitor_get>
@@ -125,6 +126,7 @@ sub sipdb_list_html {
 
     my $out  = '<table class="table table-bordered table-hover">';
     $out .= $external ? '<tr><th>Comment</th><th>Trunk name</th></tr>' : '<tr><th>Name</th><th>Extension</th><th>Terminal type</th></tr>';
+
     my $row;
     while ( my $row = $sth->fetchrow_hashref ) {
         my $comment = $row->{'comment'} // '';
@@ -238,6 +240,77 @@ sub sipdb_setuser {
     return http_response($env,200,"OK");
 
 }
+
+=item B<sipdb_adduser>
+
+    Add simple information about SIP user to the database.
+
+=cut
+
+sub sipdb_adduser {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+
+    my $sql  = "insert into public.sip_peers (name, comment, secret, type, host, context ) values (?,?,?,?,?,?) returning id";
+    my $sql2 = "insert into integration.workplaces (sip_id, teletype, autoprovision, mac_addr_tel) values (?,?,?,?)";
+
+    unless ( defined ( $params->{'extension'} ) or
+             defined ( $params->{'comment'} ) or
+             defined ( $params->{'secret'} ) ) {
+       return http_response($env,400,'Invalid one of parameters: extension,comment,secret');
+    }
+
+    my $sth  = pearlpbx_db()->prepare($sql);
+
+    eval {
+        $sth->execute(
+          $params->{'extension'},
+          $params->{'comment'},
+          $params->{'secret'},
+          'friend',
+          'dynamic',
+          'default',
+        );
+    };
+
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+
+    my $row = $sth->fetchrow_hashref;
+    my $sip_id = $row->{'id'};
+
+    my $sth2 = pearlpbx_db()->prepare($sql2);
+    my $teletype = $params->{'terminal'};
+    my $autoprovision = 'true';
+
+    if ( !defined ( $params->{'terminal'})) {
+      $teletype = "softphone";
+    }
+
+    if ( ( $params->{'terminal'} eq 'softphone' ) || ( $params->{'terminal'} eq 'oldhardphone' ) ) {
+      $autoprovision = 'false';
+    }
+
+    eval {
+      $sth2->execute(
+      $sip_id, $teletype, $autoprovision, $params->{'macaddr'},
+    ); };
+
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+
+    eval { pearlpbx_db()->commit; };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+
+    return http_response($env,200,"OK");
+
+}
+
 
 #===============================================================================
 #
@@ -468,79 +541,6 @@ sub list_internal_free {
   return $out;
 
 }
-
-=item B<adduser>
-
- Добавляет нового пользователя в public.sip_peers.
- Простой метод. Сложный будет доступен чуть позже, для advanced administrators и подозреваю,
- что за деньги. Ибо для SMB-сектора текущего метода должно хватить.
-
-=cut
-
-sub adduser {
-  my ($this, $params) = @_;
-
-  my $sql  = "insert into public.sip_peers (name, comment, secret, host, context ) values (?,?,?,?,?) returning id";
-  my $sql2 = "insert into integration.workplaces (sip_id, teletype, autoprovision, mac_addr_tel, integration_type, tcp_port, ip_addr_tel, ip_addr_pc )
-    values (?,?,?,?,?,?,?,?)";
-
-  unless ( defined ( $params->{'extension'} ) or
-         defined ( $params->{'comment'} ) or
-         defined ( $params->{'secret'} ) ) {
-    return "ERROR";
-  }
-
-  my $sth  = $this->{dbh}->prepare($sql);
-
-  eval {
-    $sth->execute(
-      $params->{'extension'},
-      $params->{'comment'},
-      $params->{'secret'},
-      'dynamic',
-      'default',
-    );
-  };
-
-  if ( $@ ) {
-    return "ERROR:". $this->{dbh}->errstr;
-  }
-
-  my $row = $sth->fetchrow_hashref;
-  my $sip_id = $row->{'id'};
-
-
-  my $sth2 = $this->{dbh}->prepare($sql2);
-  my $teletype = $params->{'terminal'};
-  my $autoprovision = 'true';
-
-  unless ( defined ( $params->{'terminal'})) {
-    $teletype = "softphone";
-    $autoprovision = 'false';
-  }
-
-  $params->{'tcp_port'} = undef if $params->{'tcp_port'} eq '';
-
-  eval {
-    $sth2->execute(
-      $sip_id, $teletype, $autoprovision, $params->{'macaddr'},
-      $params->{'integration_type'}, $params->{'tcp_port'},
-      $params->{'ip_addr_tel'}, $params->{'ip_addr_pc'}
-    );
-  };
-
-  if ( $@ ) {
-    return "ERROR:". $this->{dbh}->errstr;
-  }
-
-  eval { $this->{dbh}->commit;};
-  if ( $@ ) {
-    return "ERROR:". $this->{dbh}->errstr;
-  }
-  return "OK";
-
-}
-
 
 
 sub getpeer {
