@@ -91,6 +91,15 @@ sub sipdb_list_internal {
     sipdb_list_html($env, $sql, undef );
 }
 
+sub sipdb_list_external {
+    my $env = shift;
+
+    my $sql = "select id, comment, name from public.sip_peers where id not in ( select sip_id from integration.workplaces ) order by name";
+
+    sipdb_list_html($env, $sql, 1 );
+}
+
+
 =item B<sipdb_list_html>
 
     Returns HTML-view of SIP peers list depends on internal/external
@@ -115,7 +124,7 @@ sub sipdb_list_html {
     }
 
     my $out  = '<table class="table table-bordered table-hover">';
-    $out .= '<tr><th>Name</th><th>Extension</th><th>Terminal type</th></tr>';
+    $out .= $external ? '<tr><th>Comment</th><th>Trunk name</th></tr>' : '<tr><th>Name</th><th>Extension</th><th>Terminal type</th></tr>';
     my $row;
     while ( my $row = $sth->fetchrow_hashref ) {
         my $comment = $row->{'comment'} // '';
@@ -359,17 +368,6 @@ sub list_internalAsOptionIdValue {
   return $this->_listAsOptionIdValue($sql);
 }
 
-=item B<list_external>
-
- возвращает HTML представление списка внешних транков
-
-=cut
-sub list_external {
-	my $this = shift;
-  my $sql = "select id, comment, name from public.sip_peers where id not in ( select sip_id from integration.workplaces ) order by name";
-
-  return $this->_list($sql,1);
-}
 sub list_externalAsJSON {
   my $this = shift;
   my $sql = "select id, comment, name from public.sip_peers where id not in ( select sip_id from integration.workplaces ) order by name";
