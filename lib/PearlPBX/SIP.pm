@@ -34,6 +34,7 @@ use Data::Dumper;
 
 use PearlPBX::Config qw/conf/;
 use PearlPBX::DB qw/pearlpbx_db/;
+use PearlPBX::HttpUtils qw/http_response/;
 
 use Exporter;
 use parent qw(Exporter);
@@ -44,6 +45,7 @@ our @EXPORT = qw (
     sipdb_list_external
     sipdb_getuser
     newsecret
+    sipdb_setuser
 );
 
 =item B<sipdb_monitor_get>
@@ -172,23 +174,61 @@ sub sipdb_getuser {
 
 =item B<newsecret>
 
-Returns new password
+    Returns new password
 
 =cut
 
 
 sub newsecret {
   my $env = shift;
-  my $req = Plack::Request->new($env);
 
   my $pw = `pwgen -c 16 -s`;
   chomp $pw;
 
-  my $res = $req->new_response(200);
-  $res->body($pw);
-  $res->finalize;
+  return http_response($env,200,$pw);
 }
 
+=item B<sipdb_setuser>
+
+    Update user's properties in the database
+
+=cut
+
+sub sipdb_setuser {
+
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+
+    my $sql  = "update public.sip_peers set comment=?, secret=? where id=? ";
+    my $sql2 = "update integration.workplaces set teletype=?, autoprovision=?, mac_addr_tel=?,
+                integration_type=? where sip_id=?";
+
+    my $autoprovision = 'true';
+
+    if ( ( $params->{'terminal'} eq 'softphone' ) || ( $params->{'terminal'} eq 'oldhardphone' ) ) {
+      $autoprovision = 'false';
+    }
+
+    unless ( defined ( $params->{'comment'} ) or defined ( $params->{'secret'} ) ) {
+        return http_response($env,400,'setuser required mandatory parameters:  comment, secret');
+    }
+
+    my $sth  = pearlpbx_db()->prepare($sql);
+    my $sth2 = pearlpbx_db()->prepare($sql2);
+
+    eval {$sth->execute($params->{'comment'}, $params->{'secret'}, $params->{'id'});};
+    if ( $@ ) { return http_response($env,400,pearlpbx_db()->errstr); }
+
+    eval { $sth2->execute($params->{'terminal'}, $autoprovision, $params->{'macaddr'},
+        $params->{'integration_type'}, $params->{'id'} );
+    };
+    if ( $@ ) { return http_response($env,400,pearlpbx_db()->errstr); }
+
+    pearlpbx_db()->commit;
+    return http_response($env,200,"OK");
+
+}
 
 #===============================================================================
 #
@@ -538,45 +578,6 @@ sub getpeer {
 
 }
 
-
-sub setuser {
-
-my ($this, $params) = @_;
-
-  my $sql  = "update public.sip_peers set comment=?, secret=? where id=? ";
-  my $sql2 = "update integration.workplaces set teletype=?, autoprovision=?, mac_addr_tel=?,
-                integration_type=?,tcp_port=?,ip_addr_tel=?,ip_addr_pc=?
-                  where sip_id=?";
-
-  my $autoprovision = 'true';
-
-  if ( $params->{'terminal'} =~ /softphone/ ) {
-      $autoprovision = 'false';
-  }
-
-  unless ( defined ( $params->{'comment'} ) or defined ( $params->{'secret'} ) ) {
-    return "ERROR";
-  }
-
-  my $sth  = $this->{dbh}->prepare($sql);
-  my $sth2 = $this->{dbh}->prepare($sql2);
-
-  $params->{'tcp_port'} = undef if $params->{'tcp_port'} eq '';
-
-  eval {$sth->execute($params->{'comment'}, $params->{'secret'}, $params->{'id'});};
-  if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
-
-  eval { $sth2->execute($params->{'terminal'}, $autoprovision, $params->{'macaddr'},
-    $params->{'integration_type'}, $params->{'tcp_port'},
-    $params->{'ip_addr_tel'}, $params->{'ip_addr_pc'},
-    $params->{'id'} );
-  };
-  if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
-
-  $this->{dbh}->commit;
-  return "OK";
-
-}
 
 sub setpeer {
   my ($this, $params) = @_;

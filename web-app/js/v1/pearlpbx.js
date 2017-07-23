@@ -1845,27 +1845,17 @@ function pearlpbx_sip_update_user(){
 	var ip_addr_pc = $('#input_sip_edit_ip_addr_pc').val();
 
  // Submit
-	$.get("/sip.pl",
-		{ a: "setuser",
-		  id: sip_id,
+	$.get("/sip/setuser",
+		{ id: sip_id,
 		  comment: comment,
 		  terminal: terminal,
 		  macaddr: macaddr,
-		  secret: secret,
-		  integration_type: integration_type,
-		  tcp_port: tcp_port,
-		  ip_addr_tel: ip_addr_tel,
-		  ip_addr_pc:ip_addr_pc,
-
+		  secret: secret
 		},function(data)
 		{
 			if (data == "OK") {
-				$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=internal');
+				$('#pearlpbx-sip-connections-list').load('/sip/list/internal');
 				$('#pearlpbx_sip_edit_user').modal('hide');
-				return false;
-			}
-			if (data == "ERROR") {
-				alert("Сервер вернул ошибку!");
 				return false;
 			}
 			alert("Server returns unrecognized answer. Please contact system administrator.");

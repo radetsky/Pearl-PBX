@@ -80,8 +80,9 @@ my $app = builder {
                     mount "/internal" => builder { \&sipdb_list_internal };
                     mount "/external" => builder { \&sipdb_list_external };
                 };
-                mount "/getuser" => builder { \&sipdb_getuser };
+                mount "/getuser"   => builder { \&sipdb_getuser };
                 mount "/newsecret" => builder { \&newsecret };
+                mount "/setuser"   => builder { \&sipdb_setuser };
             };
         };
     };
