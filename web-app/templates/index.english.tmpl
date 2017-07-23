@@ -668,44 +668,6 @@ Date and time of report finish
           </div>
         </div>
 
-        <div class="control-group" style="float: left; display: none;">
-          <label class="control-label" for="input_sip_edit_integration_type">Тип интеграции</label>
-          <div class="controls">
-            <select name="input_sip_edit_integration_type" class="pearlpbx_integration_list" id="input_sip_edit_integration_type">
-              <option value="nointegration">Нет интеграции</option>
-              <option value="TaxiOffice">Такси "Диспетчер"</option>
-              <option value="TaxiNavigator">Такси "Навигатор"</option>
-            </select>
-            <p class="help-block">Выберите тип интеграции. Если Radetsky Pearl PBX не поддерживает интеграции с Вашей CRM/ERP системой, сообщите об этом по адресу rad@rad.kiev.ua</p>
-          </div>
-        </div>
-
-        <div class="control-group" style="float: left; display: none;" >
-          <label class="control-label" for="input_sip_edit_tcp_port">TCP port</label>
-          <div class="controls">
-            <input type="text" class="input-small" id="input_sip_edit_tcp_port" placeholder="335">
-            <p class="help-block">Порт, на котором ожидает ввода клиентская CRM-система.</p>
-          </div>
-        </div>
-
-
-        <div class="control-group" style="float: left; display: none;" >
-          <label class="control-label" for="input_sip_edit_ip_addr_tel">IP-адрес терминала</label>
-          <div class="controls">
-            <input type="text" class="input-medium" id="input_sip_edit_ip_addr_tel" placeholder="">
-            <p class="help-block">Введите IP-адрес терминала</p>
-          </div>
-        </div>
-
-        <div class="control-group" style="float: left; display: none;">
-          <label class="control-label" for="input_sip_edit_ip_addr_pc">IP-адрес ПК</label>
-          <div class="controls">
-            <input type="text" class="input-medium" id="input_sip_edit_ip_addr_pc" placeholder="">
-            <p class="help-block">Введите IP-адрес соответствующего ПК</p>
-          </div>
-        </div>
-
-
       </fieldset>
     </form>
 
@@ -713,7 +675,8 @@ Date and time of report finish
   <div class="modal-footer">
     <a href="#" class="btn" data-dismiss="modal">Cancel</a>
     <a href="#" class="btn btn-primary" onClick="pearlpbx_sip_update_user()">Save</a>
-    <!-- <a href='#' class='btn btn-info' onClick="pearlpbx_sip_edit_advanced_mode()">Профессиональный режим</a> -->
+    <a href='#' class='btn btn-warning' onClick="pearlpbx_sip_delete_user()">! Delete user !</a>
+
   </div>
 </div>
 

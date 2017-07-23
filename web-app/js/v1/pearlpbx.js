@@ -1833,16 +1833,26 @@ function pearlpbx_queue_edit_advanced_mode() {
 	alert('Профессиональный режим редактирования групп/очередей будет доступен в следующей версии!');
 }
 
+function pearlpbx_sip_delete_user() {
+    var sip_id = $('#input_sip_edit_id').val();
+    $.get("/sip/deluser",{ id: sip_id },
+            function(data) {
+                if (data == "OK") {
+                    $('#pearlpbx-sip-connections-list').load('/sip/list/internal');
+                    $('#pearlpbx_sip_edit_user').modal('hide');
+                    return false;
+                }
+                alert("Server returns unrecognized answer. Please contact system administrator.");
+                alert(data);
+           }, "html");
+}
+
 function pearlpbx_sip_update_user(){
 	var sip_id = $('#input_sip_edit_id').val();
 	var comment = $('#input_sip_edit_comment').val();
 	var terminal = $('select#input_sip_edit_terminal option:selected').val();
 	var macaddr = $('#input_sip_edit_macaddr').val();
 	var secret = $('#input_sip_edit_secret').html();
-	var integration_type = $('select#input_sip_edit_integration_type option:selected').val();
-	var tcp_port = $('#input_sip_edit_tcp_port').val();
-	var ip_addr_tel = $('#input_sip_edit_ip_addr_tel').val();
-	var ip_addr_pc = $('#input_sip_edit_ip_addr_pc').val();
 
  // Submit
 	$.get("/sip/setuser",

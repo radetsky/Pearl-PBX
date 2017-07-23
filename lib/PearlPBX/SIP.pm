@@ -47,6 +47,7 @@ our @EXPORT = qw (
     newsecret
     sipdb_setuser
     sipdb_adduser
+    sipdb_deluser
 );
 
 =item B<sipdb_monitor_get>
@@ -141,6 +142,34 @@ sub sipdb_list_html {
 	my $res = $req->new_response(200);
     $res->body($out);
     $res->finalize;
+}
+
+=item B<sipdb_deluser>
+
+    Delete SIP user by sip_id
+
+=cut
+
+sub sipdb_deluser {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $id = $params->{'id'};
+
+    unless ( defined ( $id ) ) {
+        return http_response($env, 400, "There is no ID to delete the user");
+    }
+
+    my $hash_ref = pearlpbx_db()->selectrow_hashref("select id from sip_peers where id='".$id."'");
+    unless ( defined ( $hash_ref->{'id'} ) ) {
+        return http_response($env, 400, "User not found to delete");
+    }
+    pearlpbx_db()->do("delete from routing.permissions where peer_id=$id");
+    pearlpbx_db()->do("delete from integration.workplaces where sip_id=$id");
+    pearlpbx_db()->do("delete from public.sip_peers where id=$id");
+    pearlpbx_db()->commit;
+
+    return http_response ( $env, 200, "OK");
 }
 
 =item B<sipdb_getuser>
