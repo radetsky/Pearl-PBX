@@ -53,7 +53,7 @@ function pearlpbx_show_module (modulename) {
 }
 
 function pearlpbx_tftp_reload() {
-	var confirmed = confirm ("Обновить настройки телефонов в каталоге TFTP-сервера ?");
+	var confirmed = confirm ("Refresh autoprovision settings ?");
 	if ( confirmed == true ) {
 		$.get('/sip.pl',{
 			a: "tftp_reload",
@@ -1834,17 +1834,22 @@ function pearlpbx_queue_edit_advanced_mode() {
 }
 
 function pearlpbx_sip_delete_user() {
-    var sip_id = $('#input_sip_edit_id').val();
-    $.get("/sip/deluser",{ id: sip_id },
-            function(data) {
-                if (data == "OK") {
-                    $('#pearlpbx-sip-connections-list').load('/sip/list/internal');
-                    $('#pearlpbx_sip_edit_user').modal('hide');
-                    return false;
-                }
-                alert("Server returns unrecognized answer. Please contact system administrator.");
-                alert(data);
-           }, "html");
+
+    var confirmed = confirm("Are you sure to remove this user?\nThis operations is uncancellable.");
+    if ( confirmed == true ) {
+
+        var sip_id = $('#input_sip_edit_id').val();
+        $.get("/sip/deluser",{ id: sip_id },
+                function(data) {
+                    if (data == "OK") {
+                        $('#pearlpbx-sip-connections-list').load('/sip/list/internal');
+                        $('#pearlpbx_sip_edit_user').modal('hide');
+                        return false;
+                    }
+                    alert("Server returns unrecognized answer. Please contact system administrator.");
+                    alert(data);
+               }, "html");
+    }
 }
 
 function pearlpbx_sip_update_user(){
