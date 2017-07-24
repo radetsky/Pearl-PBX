@@ -49,6 +49,7 @@ our @EXPORT = qw (
     sipdb_adduser
     sipdb_deluser
     sipdb_setpeer
+    sipdb_getpeer
 );
 
 =item B<sipdb_monitor_get>
@@ -97,7 +98,7 @@ sub sipdb_list_internal {
 sub sipdb_list_external {
     my $env = shift;
 
-    my $sql = "select id, comment, name from public.sip_peers where id not in ( select sip_id from integration.workplaces ) order by name";
+    my $sql = "select id, comment, name, ipaddr from public.sip_peers where id not in ( select sip_id from integration.workplaces ) order by name";
 
     sipdb_list_html($env, $sql, 1 );
 }
@@ -127,12 +128,12 @@ sub sipdb_list_html {
     }
 
     my $out  = '<table class="table table-bordered table-hover">';
-    $out .= $external ? '<tr><th>Comment</th><th>Trunk name</th></tr>' : '<tr><th>Name</th><th>Extension</th><th>Terminal type</th></tr>';
+    $out .= $external ? '<tr><th>Connection description</th><th>Trunk name</th><th>Trunk IP</th></tr>' : '<tr><th>Name</th><th>Extension</th><th>Terminal type</th></tr>';
 
     my $row;
     while ( my $row = $sth->fetchrow_hashref ) {
         my $comment = $row->{'comment'} // '';
-        my $termtype = $row->{'termtype'} // 'Not defined';
+        my $termtype = $row->{'termtype'} // $row->{'ipaddr'};
 
 	    $out .= '<tr><td><a href="#'.$dialog_name.'" data-toggle="modal" onClick="'.$js_func_name.'('.$row->{'id'}.')">'.$comment.'&lt;'.$row->{'name'}.'&gt;'.'</a></td>';
         $out .= '<td>'.$row->{'name'}.'</td>';
@@ -466,6 +467,53 @@ sub _remove_regstr {
 
 }
 
+=item B<sipdb_getpeer>
+
+    Find and returns SIP peer properties including register string from sip_conf
+
+=cut
+
+sub sipdb_getpeer {
+  my $env = shift;
+  my $req = Plack::Request->new($env);
+  my $params = $req->parameters;
+  my $id = $params->{'id'};
+
+  unless ( defined ( $id ) ) {
+      return http_response($env,400,"No ID parameter in request");
+  }
+
+  my $sql = "select id, name, comment, secret, context, host, insecure, nat, permit, deny, qualify,
+       type, fromuser, defaultuser, ipaddr, \"call-limit\" as cl
+       from public.sip_peers where id = ?";
+
+  my $sth = pearlpbx_db()->prepare($sql);
+  eval { $sth->execute($id); };
+  if ( $@ ) {
+    return http_response($env,400, pearlpbx_db()->errstr);
+  }
+
+  my $row = $sth->fetchrow_hashref;
+  $row->{'comment'} = str_encode($row->{'comment'});
+
+  my $fromuser = $row->{'fromuser'};
+  $row->{'username'} = $row->{'fromuser'};
+
+  $sql = "select id, var_val,commented from public.sip_conf where var_name='register' and var_val like '".$fromuser.":%' ";
+  $sth = pearlpbx_db()->prepare($sql);
+  eval { $sth->execute();};
+  if ($@) {
+    return http_response($env,400, pearlpbx_db()->errstr);
+  }
+  my $row2 = $sth->fetchrow_hashref;
+  $row->{'regstr'} = $row2->{'var_val'};
+  $row->{'regstr_id'} = $row2->{'id'};
+  $row->{'regstr_commented'} = $row2->{'commented'};
+
+  return http_response($env, 200, encode_json($row));
+
+}
+
 #===============================================================================
 #
 =head1 CLASS METHODS
@@ -693,40 +741,6 @@ sub list_internal_free {
     $out .= '<option value="'.$row->{'freename'}.'">'.$row->{'freename'}.'</option>';
   }
   return $out;
-
-}
-
-
-sub getpeer {
-  my ($this,$id) = @_;
-
-  my $sql = "select id, name, comment, secret, context, host, insecure, nat, permit, deny, qualify,
-  type, fromuser, defaultuser, ipaddr, \"call-limit\" as cl
-  from public.sip_peers where id = ?";
-
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute($id); };
-  if ( $@ ) {
-    return "ERROR:". $this->{dbh}->errstr;
-  }
-  my $row = $sth->fetchrow_hashref;
-  $row->{'comment'} = str_encode($row->{'comment'});
-
-  my $fromuser = $row->{'fromuser'};
-  $row->{'username'} = $row->{'fromuser'};
-
-  $sql = "select id, var_val,commented from public.sip_conf where var_name='register' and var_val like '".$fromuser.":%' ";
-  $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute();};
-  if ($@) {
-    return "ERROR:". $this->{dbh}->errstr;
-  }
-  my $row2 = $sth->fetchrow_hashref;
-  $row->{'regstr'} = $row2->{'var_val'};
-  $row->{'regstr_id'} = $row2->{'id'};
-  $row->{'regstr_commented'} = $row2->{'commented'};
-
-  return encode_json($row);
 
 }
 

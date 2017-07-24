@@ -772,9 +772,8 @@ function pearlpbx_edit_peer_registration() {
 
 }
 function pearlpbx_sip_load_external_id (sip_id) {
-	$.getJSON("/sip.pl",
+	$.getJSON("/sip/getpeer",
 	{
-		a: "getpeer",
 		id: sip_id,
 	}, function (json) {
 		$('#input_peer_edit_id').val(json.id);
@@ -801,7 +800,6 @@ function pearlpbx_sip_load_external_id (sip_id) {
 			$('#input_peer_edit_ipaddr').val(json.ipaddr);
 			$('#input_peer_edit_is_dynamic').prop('checked',false);
 			$('#div_input_peer_edit_regstr').show();
-			// FIXME: найти и добавить строку регистрации, если таковая есть.
 		}
 		$('#input_peer_edit_regstr').val(json.regstr);
 		$('#input_peer_edit_regstr_id').val(json.regstr_id);
@@ -814,8 +812,6 @@ function pearlpbx_sip_load_external_id (sip_id) {
 			$('#div_input_peer_edit_regstr').hide();
 			$('#input_peer_edit_registration').prop('checked',false);
 		}
-
-
 	});
 }
 
