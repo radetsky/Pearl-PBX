@@ -1090,7 +1090,7 @@ Date and time of report finish
 <div class="modal fade" id="pearlpbx_sip_edit_peer" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal">×</button>
-    <h3>Редактирование внешнего подключения по SIP</h3>
+    <h3>Edit SIP trunk properties</h3>
   </div>
   <div class="modal-body">
     <form class="form-horizontal">
@@ -1099,10 +1099,10 @@ Date and time of report finish
         <input type='hidden' id='input_peer_edit_regstr_id' value=''>
 
         <div class="control-group">
-          <label class="control-label" for="input_peer_edit_comment">Описание подключения</label>
+          <label class="control-label" for="input_peer_edit_comment">Connection description</label>
           <div class="controls">
             <input type="text" class="input-xlarge" id="input_peer_edit_comment">
-            <p class="help-block">Напишите название оператора, к которому подключаетесь, например, "Оператор связи"</p>
+            <p class="help-block">Describe connection name, example "Global SIP provider","Bell Labs connection"</p>
           </div>
         </div>
 
@@ -1110,7 +1110,7 @@ Date and time of report finish
           <label class="control-label" for="input_peer_edit_name">Name</label>
           <div class="controls">
             <input type="text" class="input-small" id="input_peer_edit_name">
-            <p class="help-block">Имя подключения. То, как будет обозначаться SIP-канал</p>
+            <p class="help-block">Name of the connection. SIP channel will named like SIP/name</p>
           </div>
         </div>
 
@@ -1118,7 +1118,7 @@ Date and time of report finish
           <label class="control-label" for="input_peer_edit_username">Username</label>
           <div class="controls">
             <input type="text" class="input-small" id="input_peer_edit_username">
-            <p class="help-block">То, что выдал оператор в качестве логина или имени подключения.</p>
+            <p class="help-block">Username for connect to provider. Leave it empty if you don't know it.</p>
           </div>
         </div>
 
@@ -1126,31 +1126,31 @@ Date and time of report finish
           <label class="control-label" for="input_peer_edit_secret">Secret</label>
           <div class="controls">
             <input type="password" class="input-small" id="input_peer_edit_secret">
-            <p class="help-block">Пароль для данного подключения.</p>
+            <p class="help-block">Password to connect. Leave it empty if you don't know it.</p>
           </div>
         </div>
 
         <div class="control-group">
-          <label class="control-label" for="input_peer_edit_registration">Регистрация у оператора </label>
+          <label class="control-label" for="input_peer_edit_registration">Remote registration</label>
           <div class="controls">
             <input type="checkbox" id="input_peer_edit_registration" onChange="pearlpbx_edit_peer_registration()">
-            <p class="help-block">Требуется ли регистрация на сервере у оператора ? </p>
+            <p class="help-block">Does provider requires REGISTER operation ?</p>
           </div>
         </div>
 
         <div class="control-group" id="div_input_peer_edit_regstr">
-          <label class="control-label" for="input_peer_edit_regstr">Строка регистрации</label>
+          <label class="control-label" for="input_peer_edit_regstr">Registration string</label>
           <div class="controls">
             <input type="text"  class="input-xlarge" id="input_peer_edit_regstr">
-            <p class="help-block">Строка регистрации у оператора: username:password@ip.ad.dr.es:port/extension</p>
+            <p class="help-block">Remote registration example: username:password@ip.ad.dr.es:port/extension</p>
           </div>
         </div>
 
         <div class="control-group">
-          <label class="control-label" for="input_peer_edit_is_dynamic">Регистрация здесь </label>
+          <label class="control-label" for="input_peer_edit_is_dynamic">Local registration</label>
           <div class="controls">
             <input type="checkbox" id="input_peer_edit_is_dynamic" onChange="pearlpbx_edit_peer_is_dynamic()">
-            <p class="help-block">Если это downlink или равноправный peer, то регистрируется ли он на этом сервере ? </p>
+            <p class="help-block">Do you provide registration for another peer? Usually you need when register GSM,PRI-gateways. </p>
           </div>
         </div>
 
@@ -1158,7 +1158,7 @@ Date and time of report finish
           <label class="control-label" for="input_peer_edit_nat">NAT</label>
           <div class="controls">
             <input type="checkbox" id="input_peer_edit_nat">
-            <p class="help-block">Присутствует ли по пути Network Address Translation ? </p>
+            <p class="help-block">Do you need to turn on Network Address Translation for this connection ? </p>
           </div>
         </div>
 
@@ -1166,7 +1166,7 @@ Date and time of report finish
           <label class="control-label" for="input_peer_edit_ipaddr">IP</label>
           <div class="controls">
             <input type="text" class="input-medium" id="input_peer_edit_ipaddr">
-            <p class="help-block">IP-адрес удаленного сервера или шлюза. Поле можно оставить пустым, если peer регистрируется здесь.</p>
+            <p class="help-block">IP address of remote peer. Leave it empty if peer must register here.</p>
           </div>
         </div>
 
@@ -1174,7 +1174,7 @@ Date and time of report finish
           <label class="control-label" for="input_peer_edit_call_limit">Call limit</label>
           <div class="controls">
             <input type="text" class="input-small" id="input_peer_edit_call_limit">
-            <p class="help-block">Количество параллельных звонков разрешенных на этом транке.</p>
+            <p class="help-block">Maximum of concurrent calls on this trunk</p>
           </div>
         </div>
 
@@ -1184,8 +1184,8 @@ Date and time of report finish
 
   </div>
   <div class="modal-footer">
-    <a href="javascript:void(0)" class="btn" data-dismiss="modal">Отменить</a>
-    <a href="javascript:void(0)" class="btn btn-primary" onClick="pearlpbx_sip_update_peer()">Сохранить</a>
+    <a href="javascript:void(0)" class="btn" data-dismiss="modal">Cancel</a>
+    <a href="javascript:void(0)" class="btn btn-primary" onClick="pearlpbx_sip_update_peer()">Save</a>
   </div>
 </div>
 

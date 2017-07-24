@@ -723,8 +723,8 @@ function pearlpbx_sip_update_peer() {
 	var sip_call_limit = $('#input_peer_edit_call_limit').val();
 
 // Submit
-	$.get("/sip.pl",
-		{ a: "setpeer",
+	$.get("/sip/setpeer",
+		{
 		  sip_id: sip_id,
 		  sip_comment: sip_comment,
 		  sip_name: sip_name,
@@ -740,12 +740,8 @@ function pearlpbx_sip_update_peer() {
 		},function(data)
 		{
 			if (data == "OK") {
-				$('#pearlpbx-sip-connections-list').load('/sip.pl?a=list&b=external');
+				$('#pearlpbx-sip-connections-list').load('/sip/list/external');
 				$('#pearlpbx_sip_edit_peer').modal('hide');
-				return false;
-			}
-			if (data == "ERROR") {
-				alert("Сервер вернул ошибку!");
 				return false;
 			}
 			alert("Server returns unrecognized answer. Please contact system administrator.");

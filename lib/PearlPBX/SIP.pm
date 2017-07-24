@@ -48,6 +48,7 @@ our @EXPORT = qw (
     sipdb_setuser
     sipdb_adduser
     sipdb_deluser
+    sipdb_setpeer
 );
 
 =item B<sipdb_monitor_get>
@@ -340,6 +341,130 @@ sub sipdb_adduser {
 
 }
 
+=item B<sipdb_setpeer>
+
+    Update or add SIP peer information to the database
+
+=cut
+
+sub sipdb_setpeer {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+
+    my $sip_id = $params->{'sip_id'};
+    my $sip_comment = $params->{'sip_comment'};
+    my $sip_name = $params->{'sip_name'};
+    my $sip_username = $params->{'sip_username'};
+    my $sip_defaultuser = $params->{'sip_username'};
+    my $sip_secret = $params->{'sip_secret'};
+    my $sip_remote_register = $params->{'sip_remote_register'};
+    my $sip_regstr_id = $params->{'sip_remote_regstr_id'};
+    my $sip_remote_regstr = $params->{'sip_remote_regstr'};
+    my $sip_local_register = $params->{'sip_local_register'};
+    my $sip_nat = $params->{'sip_nat'};
+    my $sip_ipaddr = $params->{'sip_ipaddr'};
+    my $sip_call_limit = $params->{'sip_call_limit'};
+    if ($sip_call_limit eq '') { $sip_call_limit = 2; }
+
+    my $sip_host = $sip_ipaddr;
+	if ($sip_ipaddr eq '') {
+		$sip_host = 'dynamic';
+	}
+
+    my $sip_type = 'friend';
+    my $sip_insecure = '';
+    my $sip_permit = '';
+    my $sip_deny = '';
+
+    if ($sip_nat eq 'true') { $sip_nat = 'force_rport,comedia'; } else { $sip_nat = 'no'; }
+    if ($sip_local_register eq 'false') {
+        $sip_insecure = 'invite,port';
+        $sip_permit = $sip_ipaddr;
+        $sip_deny = "0.0.0.0";
+        $sip_type = "peer";
+    }
+
+    my @sip_params;
+    my $sql;
+
+    if ($sip_id ne '') {
+        $sql = "update public.sip_peers set name=?,fromuser=?,defaultuser=?,secret=?,
+                      comment=?,nat=?,\"call-limit\"=?,
+                      type=?,host=?,permit=?,deny=?,ipaddr=?,insecure=? where id=?";
+        push @sip_params, $sip_name, $sip_username, $sip_defaultuser, $sip_secret, $sip_comment, $sip_nat,
+            $sip_call_limit, $sip_type, $sip_host, $sip_permit, $sip_deny,
+            $sip_ipaddr, $sip_insecure, $sip_id ;
+    } else {
+
+        $sql = "insert into public.sip_peers (name,fromuser,defaultuser,secret,comment,nat,\"call-limit\",
+            type,host,permit,deny,ipaddr,insecure) values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+        push @sip_params, $sip_name, $sip_username, $sip_defaultuser, $sip_secret, $sip_comment, $sip_nat,
+            $sip_call_limit, $sip_type, $sip_host, $sip_permit, $sip_deny,
+            $sip_ipaddr, $sip_insecure;
+    }
+
+    my $sth = pearlpbx_db()->prepare($sql);
+
+    eval { $sth->execute ( @sip_params ); };
+
+    if ( $@ ) { return http_response($env,400,pearlpbx_db()->errstr); }
+
+    my $doreg = '';
+
+    if ( $sip_remote_register eq 'true') {
+         $doreg = _add_or_replace_regstr ($sip_remote_regstr, $sip_regstr_id);
+    } else {
+	    if ( $sip_regstr_id ne "" ) {
+        if ( ($sip_regstr_id+0) > 0) {
+			  $doreg = _remove_regstr ($sip_regstr_id);
+		  }
+		}
+    }
+
+    unless ( defined ( $doreg ) ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    };
+    pearlpbx_db()->commit;
+    return http_response($env,200,"OK");
+
+}
+
+sub _add_or_replace_regstr {
+  my ( $regstr, $regstr_id) = @_;
+
+  my $sql = '';
+
+  if ($regstr_id eq '') {
+    $sql = "select max(var_metric)+1 as next_metric from public.sip_conf";
+    my $row = pearlpbx_db()->selectrow_hashref($sql);
+    $sql = "insert into public.sip_conf ( cat_metric, var_metric, commented, filename, category, var_name, var_val )
+      values ( 0,?,0,'sip.conf','general','register',?)";
+    my $sth = pearlpbx_db()->prepare ($sql);
+    eval { $sth->execute ($row->{'next_metric'}, $regstr ); };
+    if ( $@ ) { return undef; }
+    return 1;
+  }
+
+  $sql = "update public.sip_conf set var_val=?, commented=0 where id=?";
+  my $sth = pearlpbx_db()->prepare ($sql);
+  eval { $sth->execute ($regstr, $regstr_id ); };
+  if ( $@ ) { return undef; }
+  return 1;
+
+}
+
+sub _remove_regstr {
+  my $sip_regstr_id = shift;
+
+  my $sql = "update public.sip_conf set commented = 1 where id = ?";
+  my $sth = pearlpbx_db()->prepare ($sql);
+  eval { $sth->execute ( $sip_regstr_id );  };
+  if ( $@ ) { return undef; }
+  return 1;
+
+}
 
 #===============================================================================
 #
@@ -605,121 +730,6 @@ sub getpeer {
 
 }
 
-
-sub setpeer {
-  my ($this, $params) = @_;
-
-  my $sip_id = $params->{'sip_id'};
-  my $sip_comment = $params->{'sip_comment'};
-  my $sip_name = $params->{'sip_name'};
-  my $sip_username = $params->{'sip_username'};
-  my $sip_defaultuser = $params->{'sip_username'};
-  my $sip_secret = $params->{'sip_secret'};
-  my $sip_remote_register = $params->{'sip_remote_register'};
-  my $sip_regstr_id = $params->{'sip_remote_regstr_id'};
-  my $sip_remote_regstr = $params->{'sip_remote_regstr'};
-  my $sip_local_register = $params->{'sip_local_register'};
-  my $sip_nat = $params->{'sip_nat'};
-  my $sip_ipaddr = $params->{'sip_ipaddr'};
-  my $sip_call_limit = $params->{'sip_call_limit'};
-  if ($sip_call_limit eq '') { $sip_call_limit = 2; }
-
-  my $sip_host = $sip_ipaddr;
-	if ($sip_ipaddr eq '') {
-		$sip_host = 'dynamic';
-	}
-
-  my $sip_type = 'friend';
-  my $sip_insecure = '';
-  my $sip_permit = '';
-  my $sip_deny = '';
-
-  if ($sip_nat eq 'true') { $sip_nat = 'force_rport,comedia'; } else { $sip_nat = 'no'; }
-  if ($sip_local_register eq 'false') {
-    $sip_insecure = 'invite,port';
-    $sip_permit = $sip_ipaddr;
-    $sip_deny = "0.0.0.0";
-    $sip_type = "peer";
-  }
-
-  my @sip_params;
-  my $sql;
-
-
-  if ($sip_id ne '') {
-    $sql = "update public.sip_peers set name=?,fromuser=?,defaultuser=?,secret=?,
-                      comment=?,nat=?,\"call-limit\"=?,
-                      type=?,host=?,permit=?,deny=?,ipaddr=?,insecure=? where id=?";
-    push @sip_params, $sip_name, $sip_username, $sip_defaultuser, $sip_secret, $sip_comment, $sip_nat,
-        $sip_call_limit, $sip_type, $sip_host, $sip_permit, $sip_deny,
-        $sip_ipaddr, $sip_insecure, $sip_id ;
-  }
-  if ($sip_id eq '' ) {
-    $sql = "insert into public.sip_peers (name,fromuser,defaultuser,secret,comment,nat,\"call-limit\",
-    type,host,permit,deny,ipaddr,insecure) values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
-
-    push @sip_params, $sip_name, $sip_username, $sip_defaultuser, $sip_secret, $sip_comment, $sip_nat,
-        $sip_call_limit, $sip_type, $sip_host, $sip_permit, $sip_deny,
-        $sip_ipaddr, $sip_insecure;
-
-  }
-  my $sth = $this->{dbh}->prepare($sql);
-
-  eval { $sth->execute ( @sip_params ); };
-
-  if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
-
-  my $doreg = '';
-
-  if ( $sip_remote_register eq 'true') {
-    $doreg = $this->_add_or_replace_regstr ($sip_remote_regstr, $sip_regstr_id);
-  } else {
-	  if ( $sip_regstr_id ne "" ) {
-      if ( ($sip_regstr_id+0) > 0) {
-			  $doreg = $this->_remove_regstr ($sip_regstr_id);
-		  }
-		}
-  }
-
-  if ($doreg =~ /^ERROR/ ) { return $doreg; }
-
-  $this->{dbh}->commit;
-  return "OK";
-}
-
-sub _add_or_replace_regstr {
-  my ($this, $regstr, $regstr_id) = @_;
-
-  my $sql = '';
-
-  if ($regstr_id eq '') {
-    $sql = "select max(var_metric)+1 as next_metric from public.sip_conf";
-    my $row = $this->{'dbh'}->selectrow_hashref($sql);
-    $sql = "insert into public.sip_conf ( cat_metric, var_metric, commented, filename, category, var_name, var_val )
-      values ( 0,?,0,'sip.conf','general','register',?)";
-    my $sth = $this->{dbh}->prepare ($sql);
-    eval { $sth->execute ($row->{'next_metric'}, $regstr ); };
-    if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
-    return "OK";
-  }
-
-  $sql = "update public.sip_conf set var_val=?, commented=0 where id=?";
-  my $sth = $this->{dbh}->prepare ($sql);
-  eval { $sth->execute ($regstr, $regstr_id ); };
-  if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
-  return "OK";
-
-}
-
-sub _remove_regstr {
-  my ($this, $sip_regstr_id) = @_;
-
-  my $sql = "update public.sip_conf set commented = 1 where id = ?";
-  my $sth = $this->{dbh}->prepare ($sql);
-  eval { $sth->execute ( $sip_regstr_id );  };
-  if ( $@ ) { return "ERROR:". $this->{dbh}->errstr; }
-
-}
 
 sub monitor_get_sip_db {
   my $this = shift;

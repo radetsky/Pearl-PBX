@@ -85,6 +85,7 @@ my $app = builder {
                 mount "/setuser"   => builder { \&sipdb_setuser };
                 mount "/adduser"   => builder { \&sipdb_adduser };
                 mount "/deluser"   => builder { \&sipdb_deluser };
+                mount "/setpeer"   => builder { \&sipdb_setpeer };
             };
         };
     };
