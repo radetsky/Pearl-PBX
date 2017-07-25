@@ -40,6 +40,8 @@ use parent qw(Exporter);
 
 our @EXPORT = qw (
     queues_list
+    queues_getqueue
+    queues_listmembers
 );
 
 sub queues_list {
@@ -85,6 +87,58 @@ sub queues_list {
     return http_response($env,200,$text_response);
 
 }
+
+=item B<queues_getqueue>
+
+    Looking for queue in the database and returns all fields
+
+=cut
+
+sub queues_getqueue {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $qname  = $params->{'name'};
+
+    my $sql = "select * from public.queues where name=?";
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute ($qname); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->stderr);
+    }
+    my $row = $sth->fetchrow_hashref;
+    return http_response($env,200,encode_json($row));
+
+}
+
+=item B<queues_listmembers>
+
+    Searching in the database queue members and returns the list
+
+=cut
+
+sub queues_listmembers {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $qname = $params->{'name'};
+
+    my $sql = "select membername,interface from queue_members where queue_name = ? order by membername";
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute ($qname); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->stderr);
+    }
+
+    my @rows;
+    while (my $row = $sth->fetchrow_hashref) {
+        push @rows,$row;
+    }
+
+    return http_response($env,200,encode_json(\@rows));
+
+}
+
 
 #===============================================================================
 #
@@ -220,21 +274,6 @@ sub _list {
 	return $out;
 }
 
-sub getqueue {
-  my ($this, $qname) = @_;
-
-  my $sql = "select * from public.queues where name=?";
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute ($qname); };
-  if ($@) {
-    print $this->{dbh}->errstr;
-    return undef;
-  }
-  my $row = $sth->fetchrow_hashref;
-  return encode_json($row);
-
-}
-
 sub setqueue {
   my ($this, $oldname, $name, $strategy, $timeout, $maxlen) = @_;
 
@@ -282,28 +321,6 @@ sub addqueue {
   }
   $this->{dbh}->commit;
   return "OK";
-
-}
-
-sub listmembersAsJSON {
-  my ($this, $qname) = @_;
-
-  my $sql = "select membername,interface from queue_members where queue_name = ? order by membername";
-  my $sth = $this->{dbh}->prepare($sql);
-  eval {
-    $sth->execute ($qname);
-  };
-  if ($@) {
-    warn $this->{dbh}->errstr;
-    return 'ERROR';
-  }
-
-  my @rows;
-  while (my $row = $sth->fetchrow_hashref) {
-    push @rows,$row;
-  }
-
-  return encode_json(\@rows);
 
 }
 

@@ -89,10 +89,23 @@ sub sipdb_monitor_get {
 
 sub sipdb_list_internal {
 	my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $format = $params->{'format'} // 'HTML';
 
     my $sql = "select a.id as id, a.comment as comment, a.name as name, b.teletype as termtype from public.sip_peers a, integration.workplaces b where b.sip_id = a.id order by a.name";
 
-    sipdb_list_html($env, $sql, undef );
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute(); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+
+    if ($format eq 'OPTION') {
+        return sipdb_list_options($env, $sth, undef );
+    } else {
+        sipdb_list_html($env, $sth, undef );
+    }
 }
 
 sub sipdb_list_external {
@@ -100,7 +113,31 @@ sub sipdb_list_external {
 
     my $sql = "select id, comment, name, ipaddr from public.sip_peers where id not in ( select sip_id from integration.workplaces ) order by name";
 
-    sipdb_list_html($env, $sql, 1 );
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute(); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+    sipdb_list_html($env, $sth, 1 );
+}
+
+=item B<sipdb_list_options>
+
+    Returns list of SIP peers as select options
+
+=cut
+
+sub sipdb_list_options {
+    my ($env, $sth, $external ) = @_;
+
+    my $out = '';
+    while ( my $row = $sth->fetchrow_hashref ) {
+        unless ( defined ( $row->{'comment'} ) ) {
+            $row->{'comment'} = '';
+        }
+        $out .= '<option value="'.$row->{'name'}.'">'.$row->{'comment'}.'&lt;'.$row->{'name'}.'&gt;</option>';
+    }
+    return http_response($env,200,$out);
 }
 
 
@@ -111,21 +148,13 @@ sub sipdb_list_external {
 =cut
 
 sub sipdb_list_html {
-	my ($env, $sql, $external) = @_;
+	my ($env, $sth, $external) = @_;
 
     my $js_func_name = $external ? 'pearlpbx_sip_load_external_id' : 'pearlpbx_sip_load_id';
     my $dialog_name  = $external ? 'pearlpbx_sip_edit_peer'        : 'pearlpbx_sip_edit_user';
 
     my $req = Plack::Request->new($env);
 
-    my $sth = pearlpbx_db()->prepare($sql);
-    eval { $sth->execute(); };
-    if ( $@ ) {
-        my $res = $req->new_response(400);
-        $res->body (pearlpbx_db()->errstr);
-        $res->finalize;
-        return;
-    }
 
     my $out  = '<table class="table table-bordered table-hover">';
     $out .= $external ? '<tr><th>Connection description</th><th>Trunk name</th><th>Trunk IP</th></tr>' : '<tr><th>Name</th><th>Extension</th><th>Terminal type</th></tr>';
@@ -141,9 +170,7 @@ sub sipdb_list_html {
 	}
     $out .= "</table>";
 
-	my $res = $req->new_response(200);
-    $res->body($out);
-    $res->finalize;
+    return http_response($env,200,$out);
 }
 
 =item B<sipdb_deluser>

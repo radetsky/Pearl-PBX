@@ -90,7 +90,9 @@ my $app = builder {
                 mount "/getpeer"   => builder { \&sipdb_getpeer };
             };
             mount "/queues" => builder {
-                mount "/list" => builder { \&queues_list };
+                mount "/list"        => builder { \&queues_list };
+                mount "/getqueue"    => builder { \&queues_getqueue };
+                mount "/listmembers" => builder { \&queues_listmembers };
             };
         };
     };

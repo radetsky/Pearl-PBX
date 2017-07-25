@@ -1713,9 +1713,8 @@ function pearlpbx_queue_add_member() {
 }
 
 function pearlpbx_fill_operators_select () {
-	$.get("/sip.pl", {
-		a: "list",
-		b: "internalAsOption",
+	$.get("/sip/list/internal", {
+        format: "OPTION"
 	},  function (data) {
 		$('#input_queue_edit_members').empty();
 		$('#input_queue_edit_members').append(data);
@@ -1786,9 +1785,8 @@ function pearlpbx_queues_load_by_name (qname) {
 
 
 	// fill
-	$.getJSON("/queues.pl",
+	$.getJSON("/queues/getqueue",
 	{
-		a: "getqueue",
 		name: qname,
 	},function (json) {
 		$('#input_queue_hidden_oldname').val(json.name);
@@ -1798,10 +1796,9 @@ function pearlpbx_queues_load_by_name (qname) {
 		$('#input_queue_edit_maxlen').val(json.maxlen);
 	} );
 
-	$.getJSON("/queues.pl",
+	$.getJSON("/queues/listmembers",
 	{
-		a: "listmembers",
-		b: qname,
+		name: qname,
 	}, function (json) {
 
 		jQuery.each(json, function () {
