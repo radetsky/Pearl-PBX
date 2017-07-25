@@ -514,104 +514,10 @@ sub sipdb_getpeer {
 
 }
 
-#===============================================================================
-#
-=head1 CLASS METHODS
 
-=over
+###### Old shit. Remove it. ######
 
-=item B<new($configfilename)> - class constructor
 
-    my $object = PearlPBX::Report->new(%options);
-
-=cut
-
-#-----------------------------------------------------------------------
-sub new {
-
-	my $class = shift;
-
-  my $conf = shift;
-
-  my $this = {};
-
-  unless ( defined ( $conf ) ) {
-     $conf = '/etc/PearlPBX/asterisk-router.conf';
-  }
-
-  my $config = Config::General->new (
-    -ConfigFile        => $conf,
-    -AllowMultiOptions => 'yes',
-    -UseApacheInclude  => 'yes',
-    -InterPolateVars   => 'yes',
-    -ConfigPath        => [ $ENV{PEARL_CONF_DIR}, '/etc/PearlPBX' ],
-    -IncludeRelative   => 'yes',
-    -IncludeGlob       => 'yes',
-    -UTF8              => 'yes',
-  );
-
-  unless ( ref $config ) {
-    return undef;
-  }
-
-  my %cf_hash = $config->getall or ();
-  $this->{conf} = \%cf_hash;
-  $this->{dbh} = undef;     # DB handler
-  $this->{error} = undef;   # Error description string
-
-	bless ( $this,$class );
-	return $this;
-
-};
-
-#***********************************************************************
-=head1 OBJECT METHODS
-
-=over
-
-=item B<db_connect(...)> - соединяется с базой данных.
-Возвращает undef в случае неуспеха или true если ОК.
-DBH хранит в this->{dbh};
-
-=cut
-
-#-----------------------------------------------------------------------
-
-sub db_connect {
-	my $this = shift;
-
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'dsn'} ) ) {
-        $this->{error} = "Can't find \"db main->dsn\" in configuration.";
-        return undef;
-    }
-
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'login'} ) ) {
-        $this->{error} = "Can't find \"db main->login\" in configuraion.";
-        return undef;
-    }
-
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'password'} ) ) {
-        $this->{error} = "Can't find \"db main->password\" in configuraion.";
-        return undef;
-    }
-
-    my $dsn    = $this->{conf}->{'db'}->{'main'}->{'dsn'};
-    my $user   = $this->{conf}->{'db'}->{'main'}->{'login'};
-    my $passwd = $this->{conf}->{'db'}->{'main'}->{'password'};
-
-    # If DBMS isn' t accessible - try reconnect
-    if ( !$this->{dbh} or !$this->{dbh}->ping ) {
-        $this->{dbh} =
-            DBI->connect_cached( $dsn, $user, $passwd, { RaiseError => 1, AutoCommit => 0 } );
-    }
-
-    if ( !$this->{dbh} ) {
-        $this->{error} = "Cant connect to DBMS!";
-        return undef;
-    }
-
-    return 1;
-};
 sub list_internalAsOption {
   my $this = shift;
   my $sql = "select a.id as id, a.comment as comment, a.name as name from public.sip_peers a, integration.workplaces b where b.sip_id = a.id order by a.name";

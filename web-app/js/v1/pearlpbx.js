@@ -1817,7 +1817,7 @@ function pearlpbx_queues_load_by_name (qname) {
 
 function pearlpbx_show_queues() {
 	$('#pearl-pbx-main-container').html($('#queues').html());
-	$('#pearlpbx-queues-list').load('/queues.pl?a=list&b=li');
+	$('#pearlpbx-queues-list').load('/queues/list?format=li');
 	return false;
 }
 

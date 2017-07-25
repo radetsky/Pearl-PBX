@@ -5,10 +5,10 @@
 #  DESCRIPTION:  PearlPBX Queues management API
 #
 #       AUTHOR:  Alex Radetsky (Rad), <rad@rad.kiev.ua>
-#      COMPANY:  Net.Style
-#      VERSION:  1.0
+#      COMPANY:  PearlPBX
+#      VERSION:  2.0
 #      CREATED:  23.06.12
-#      REVISION: 001 
+#     MODIFIED:  25.07.17
 #===============================================================================
 =head1 NAME
 
@@ -27,12 +27,64 @@ use strict;
 use warnings;
 
 use DBI;
-use Config::General; 
-use JSON;
-use NetSDS::Util::String; 
+use Config::General;
+use JSON::XS;
+use NetSDS::Util::String;
 
-use version; our $VERSION = "1.00";
-our @EXPORT_OK = qw();
+use PearlPBX::Config qw/conf/;
+use PearlPBX::DB qw/pearlpbx_db/;
+use PearlPBX::HttpUtils qw/http_response/;
+
+use Exporter;
+use parent qw(Exporter);
+
+our @EXPORT = qw (
+    queues_list
+);
+
+sub queues_list {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $format = $params->{'format'};
+
+    use constant HEADER => {
+        'li' => '<ul class="nav nav-tabs">'
+    };
+
+    use constant FOOTER => {
+        'li' => '</ul>'
+    };
+
+    use constant BODY => {
+        'li' => '<li><a href="#pearlpbx_queues_edit" data-toggle="modal" onClick="pearlpbx_queues_load_by_name(\'%s\')">%s</a></li>'
+    };
+
+    unless ( defined ( $format ) ) {
+        return http_response($env,400,"Format is unavailable");
+    }
+
+    my $sql = "select name from public.queues order by name";
+    my $qnames = pearlpbx_db()->selectall_arrayref($sql);
+    my $count = @{$qnames};
+
+    unless ( $count ) {
+        return http_response($env,200,'Queues not defined');
+    }
+
+    my $header = HEADER->{$format};
+    my $footer = FOOTER->{$format};
+    my $body   = '';
+
+    foreach my $q ( @{$qnames} ) {
+        $body .= sprintf(BODY->{$format},$q->[0],$q->[0]);
+    }
+
+    my $text_response = $header . $body . $footer;
+
+    return http_response($env,200,$text_response);
+
+}
 
 #===============================================================================
 #
@@ -49,11 +101,11 @@ our @EXPORT_OK = qw();
 #-----------------------------------------------------------------------
 sub new {
 
-	my $class = shift; 
-	
+	my $class = shift;
+
   my $conf = shift;
 
-  my $this = {}; 
+  my $this = {};
 
   unless ( defined ( $conf ) ) {
      $conf = '/etc/PearlPBX/asterisk-router.conf';
@@ -76,10 +128,10 @@ sub new {
 
   my %cf_hash = $config->getall or ();
   $this->{conf} = \%cf_hash;
-  $this->{dbh} = undef;     # DB handler 
-  $this->{error} = undef;   # Error description string    
+  $this->{dbh} = undef;     # DB handler
+  $this->{error} = undef;   # Error description string
 
-	bless ( $this,$class ); 
+	bless ( $this,$class );
 	return $this;
 
 };
@@ -89,20 +141,20 @@ sub new {
 
 =over
 
-=item B<db_connect(...)> - соединяется с базой данных. 
+=item B<db_connect(...)> - соединяется с базой данных.
 Возвращает undef в случае неуспеха или true если ОК.
-DBH хранит в this->{dbh};  
+DBH хранит в this->{dbh};
 
 =cut
 
 #-----------------------------------------------------------------------
 
 sub db_connect {
-	my $this = shift; 
-  
+	my $this = shift;
+
     unless ( defined( $this->{conf}->{'db'}->{'main'}->{'dsn'} ) ) {
         $this->{error} = "Can't find \"db main->dsn\" in configuration.";
-        return undef;  
+        return undef;
     }
 
     unless ( defined( $this->{conf}->{'db'}->{'main'}->{'login'} ) ) {
@@ -121,7 +173,7 @@ sub db_connect {
 
     # If DBMS isn' t accessible - try reconnect
     if ( !$this->{dbh} or !$this->{dbh}->ping ) {
-        $this->{dbh} = 
+        $this->{dbh} =
             DBI->connect_cached( $dsn, $user, $passwd, { RaiseError => 1, AutoCommit => 0 } );
     }
 
@@ -133,12 +185,12 @@ sub db_connect {
     return 1;
 };
 
-=item B<list_internal> 
+=item B<list_internal>
 
  возвращает HTML представление списка внутренних пользователей
 
-=cut 
-sub list_as_li { 
+=cut
+sub list_as_li {
 	my $this = shift;
 	my $sql = "select name from public.queues order by name";
 
@@ -146,68 +198,68 @@ sub list_as_li {
 }
 
 
-sub _list { 
-	my ($this, $sql) = @_; 
+sub _list {
+	my ($this, $sql) = @_;
 
-	my $sth = $this->{dbh}->prepare($sql); 
-	eval { $sth->execute(); }; 
+	my $sth = $this->{dbh}->prepare($sql);
+	eval { $sth->execute(); };
 	if ( $@ ) {
-	  print $this->{dbh}->errstr; 
-		return undef; 
+	  print $this->{dbh}->errstr;
+		return undef;
 	}
 
 	my $out = '<ul class="nav nav-tabs">';
-  while ( my $row = $sth->fetchrow_hashref ) { 
-		 unless ( defined ( $row->{'comment'} ) ) { 
-		 	$row->{'comment'} = ''; 
-		 } 
-	   $out .= '<li><a href="#pearlpbx_queues_edit" data-toggle="modal" 
+  while ( my $row = $sth->fetchrow_hashref ) {
+		 unless ( defined ( $row->{'comment'} ) ) {
+		 	$row->{'comment'} = '';
+		 }
+	   $out .= '<li><a href="#pearlpbx_queues_edit" data-toggle="modal"
          onClick="pearlpbx_queues_load_by_name(\''.$row->{'name'}.'\')">'.$row->{'name'}.'</a></li>';
-	}		 
+	}
   $out .= "</ul>";
-	return $out; 
+	return $out;
 }
 
-sub getqueue { 
-  my ($this, $qname) = @_; 
+sub getqueue {
+  my ($this, $qname) = @_;
 
   my $sql = "select * from public.queues where name=?";
   my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute ($qname); }; 
-  if ($@) { 
-    print $this->{dbh}->errstr; 
-    return undef; 
+  eval { $sth->execute ($qname); };
+  if ($@) {
+    print $this->{dbh}->errstr;
+    return undef;
   }
   my $row = $sth->fetchrow_hashref;
   return encode_json($row);
 
 }
 
-sub setqueue { 
-  my ($this, $oldname, $name, $strategy, $timeout, $maxlen) = @_; 
+sub setqueue {
+  my ($this, $oldname, $name, $strategy, $timeout, $maxlen) = @_;
 
   #  Сохраняем параметры группы
 
-  my $sql = "update public.queues set name=?, strategy=?, timeout=?, maxlen=? where name=?";  
+  my $sql = "update public.queues set name=?, strategy=?, timeout=?, maxlen=? where name=?";
   my $sth  = $this->{dbh}->prepare($sql);
-  eval { 
-    $sth->execute ($name, $strategy, $timeout, $maxlen, $oldname); 
+  eval {
+    $sth->execute ($name, $strategy, $timeout, $maxlen, $oldname);
   };
-  if ($@) { 
+  if ($@) {
     warn $this->{dbh}->errstr;
-    return 'ERROR'; 
+    return 'ERROR';
   }
 
-  # Если у группы новое имя, то стоит и членам группы поменять название группы 
+  # Если у группы новое имя, то стоит и членам группы поменять название группы
   if ( $oldname ne $name ) {
-    $sql = "update public.queue_members set queue_name=? where queue_name=?"; 
+    $sql = "update public.queue_members set queue_name=? where queue_name=?";
     $sth  = $this->{dbh}->prepare($sql);
-    eval { 
-      $sth->execute ($name, $oldname); 
+    eval {
+      $sth->execute ($name, $oldname);
     };
-    if ($@) { 
+    if ($@) {
       warn $this->{dbh}->errstr;
-      return 'ERROR'; 
+      return 'ERROR';
     }
   }
 
@@ -216,37 +268,37 @@ sub setqueue {
 
 }
 
-sub addqueue { 
-  my ($this, $name, $strategy, $timeout, $maxlen) = @_; 
+sub addqueue {
+  my ($this, $name, $strategy, $timeout, $maxlen) = @_;
 
-  my $sql = "insert into public.queues (name, strategy,timeout,maxlen ) values ( ?, ? ,? ,?);"; 
+  my $sql = "insert into public.queues (name, strategy,timeout,maxlen ) values ( ?, ? ,? ,?);";
   my $sth  = $this->{dbh}->prepare($sql);
-  eval { 
-    $sth->execute ($name, $strategy, $timeout, $maxlen ); 
+  eval {
+    $sth->execute ($name, $strategy, $timeout, $maxlen );
   };
-  if ($@) { 
+  if ($@) {
     warn $this->{dbh}->errstr;
-    return 'ERROR'; 
+    return 'ERROR';
   }
   $this->{dbh}->commit;
   return "OK";
 
 }
 
-sub listmembersAsJSON { 
+sub listmembersAsJSON {
   my ($this, $qname) = @_;
 
-  my $sql = "select membername,interface from queue_members where queue_name = ? order by membername"; 
+  my $sql = "select membername,interface from queue_members where queue_name = ? order by membername";
   my $sth = $this->{dbh}->prepare($sql);
-  eval { 
+  eval {
     $sth->execute ($qname);
   };
-  if ($@) { 
+  if ($@) {
     warn $this->{dbh}->errstr;
     return 'ERROR';
   }
 
-  my @rows; 
+  my @rows;
   while (my $row = $sth->fetchrow_hashref) {
     push @rows,$row;
   }
@@ -255,25 +307,25 @@ sub listmembersAsJSON {
 
 }
 
-sub addmember { 
-  my ($this, $qname, $member) = @_; 
+sub addmember {
+  my ($this, $qname, $member) = @_;
 
-  # Check for existing operator. 
+  # Check for existing operator.
   my $sql = "select membername,interface from public.queue_members where queue_name=? and membername=?";
   my $sth = $this->{dbh}->prepare($sql);
   eval { $sth->execute($qname,$member);};
-  if ($@) { 
+  if ($@) {
     warn $this->{dbh}->errstr;
     return "ERROR";
   }
   my $row = $sth->fetchrow_hashref;
-  if ($row->{'membername'}) { 
+  if ($row->{'membername'}) {
     return "ALREADY";
   }
   $sql = "insert into public.queue_members (membername,queue_name,interface) values (?,?,?);";
   $sth = $this->{dbh}->prepare($sql);
   eval { $sth->execute($member,$qname,'SIP/'.$member);};
-  if ($@) { 
+  if ($@) {
     warn $this->{dbh}->errstr;
     return "ERROR";
   }
@@ -282,42 +334,42 @@ sub addmember {
 
 }
 
-sub removemember { 
-  my ($this, $qname, $member) = @_; 
+sub removemember {
+  my ($this, $qname, $member) = @_;
 
-  my $sql = "delete from public.queue_members where queue_name=? and membername=?"; 
+  my $sql = "delete from public.queue_members where queue_name=? and membername=?";
   my $sth = $this->{dbh}->prepare($sql);
   eval { $sth->execute($qname,$member);};
-  if ($@) { 
+  if ($@) {
     warn $this->{dbh}->errstr;
     return "ERROR";
   }
   $this->{dbh}->commit;
   return "OK";
 }
-sub delqueue { 
-  my ($this, $name) = @_; 
+sub delqueue {
+  my ($this, $name) = @_;
 
   #  Сохраняем параметры группы
 
-  my $sql = "delete from public.queues where name=?";  
+  my $sql = "delete from public.queues where name=?";
   my $sth  = $this->{dbh}->prepare($sql);
-  eval { 
-    $sth->execute ($name); 
+  eval {
+    $sth->execute ($name);
   };
-  if ($@) { 
+  if ($@) {
     warn $this->{dbh}->errstr;
-    return 'ERROR'; 
+    return 'ERROR';
   }
 
-  $sql = "delete from public.queue_members where queue_name=?"; 
+  $sql = "delete from public.queue_members where queue_name=?";
   $sth  = $this->{dbh}->prepare($sql);
-    eval { 
-      $sth->execute ($name); 
+    eval {
+      $sth->execute ($name);
     };
-    if ($@) { 
+    if ($@) {
       warn $this->{dbh}->errstr;
-      return 'ERROR'; 
+      return 'ERROR';
     }
 
   $this->{dbh}->commit;

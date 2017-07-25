@@ -16,6 +16,7 @@ use PearlPBX::Route;
 use PearlPBX::API;
 use PearlPBX::DB;
 use PearlPBX::SIP;
+use PearlPBX::Queues;
 
 use PearlPBX::Const;
 
@@ -87,6 +88,9 @@ my $app = builder {
                 mount "/deluser"   => builder { \&sipdb_deluser };
                 mount "/setpeer"   => builder { \&sipdb_setpeer };
                 mount "/getpeer"   => builder { \&sipdb_getpeer };
+            };
+            mount "/queues" => builder {
+                mount "/list" => builder { \&queues_list };
             };
         };
     };
