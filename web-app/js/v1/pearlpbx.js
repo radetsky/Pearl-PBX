@@ -995,10 +995,19 @@ function pearlpbx_trunkgroup_add_member() {
 	var tgrp_id = $('#input_trunkgroup_hidden_id').val();
 	var tgrp_name = $('#input_trunkgroup_edit_name').val();
 
-	$.get("/route.pl",
-		{ a: "tgrp_addmember",
-		  newmember: member,
-		  tgrp_id: tgrp_id,
+    if ( tgrp_id == '') {
+        var added = pearlpbx_trunkgroup_add(tgrp_name);
+        if ( added == false ) {
+            return false;
+        }
+        $('#input_trunkgroup_hidden_id').load('/trunkgroups/id?name='+tgrp_name);
+        tgrp_id = $('#input_trunkgroup_hidden_id').val();
+    }
+
+	$.get("/trunkgroups/addmember",
+		{
+		  member: member,
+          tgrp_id: tgrp_id,
 		},function(data)
 		{
 			if (data == "OK") {
@@ -1023,20 +1032,15 @@ function pearlpbx_trunkgroup_add(tgrp_name) {
 	if (valid == false) {
 		return false;
 	}
-	$.get("/route.pl",
-		{ a: "newtrunkgroup",
-		  b: tgrp_name,
+	$.get("/trunkgroups/add",
+		{
+		  name: tgrp_name,
 		},function(data)
 		{
-			var result = data.split(":",2);
-			if (result[0] == "OK") {
-				$('#pearlpbx_trunkgroups_list').load('/route.pl?a=list-trunkgroups-tab');
+			if (data == "OK") {
+				load_trunkgroups_names();
 				$('#pearlpbx_trunkgroup_edit').modal('hide');
 				return true;
-			}
-			if (result[0] == "ERROR") {
-				alert("Сервер вернул ошибку! : "+result[1]);
-				return false;
 			}
 		}, "html");
 	return false;
@@ -1098,8 +1102,10 @@ function pearlpbx_trunkgroup_remove() {
 		}, "html");
 	return false;
 }
+
 function pearlpbx_empty_trunkgroup_edit_form() {
 	$('#pearlpbx_edit_trunkgroup_items_list tbody').empty();
+    load_trunkgroups_members();
 	$('#input_trunkgroup_hidden_oldname').val('');
 	$('#input_trunkgroup_edit_name').val('');
 	$('#input_trunkgroup_hidden_id').val('');
@@ -1372,14 +1378,18 @@ function pearlpbx_isalpha_plus_russian(str) {
 }
 
 function pearlpbx_validate_russian_name (str) {
-	var trimmed =  str.trim();
+    if ( str == undefined ) {
+        alert("Name must be defined!");
+        return false;
+    }
+	var trimmed = str.trim();
 	if (trimmed == '') {
-		alert("Название не может быть пустым!");
+		alert("Name can not be an empty!");
 		return false;
 	}
 	var valid = pearlpbx_isalpha_plus_russian(str);
 	if (valid == false) {
-		alert("Название может содержать только латинские, кириллические символы и не должно быть пустым или содержать только пробелы.");
+		alert("Name must contain only english letters and digits. Example: trunkgroup123");
 		return false;
 	}
 	return true;
@@ -2174,11 +2184,11 @@ function load_reports_names() {
 }
 
 function load_trunkgroups_names() {
-    $('#pearlpbx_trunkgroups_list').load('/route.pl?a=list-trunkgroups-tab');
+    $('#pearlpbx_trunkgroups_list').load('/trunkgroups/list?format=table');
 }
 
 function load_trunkgroups_members() {
-    $('select#input_trunkgroup_edit_members').load("/sip.pl?a=list&b=externalAsOptionIdValue");
+    $('select#input_trunkgroup_edit_members').load("/sip/list/external?format=OptionIdValue");
 }
 
 function load_ivr_modules() {

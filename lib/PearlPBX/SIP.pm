@@ -110,6 +110,9 @@ sub sipdb_list_internal {
 
 sub sipdb_list_external {
     my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $format = $params->{'format'} // 'HTML';
 
     my $sql = "select id, comment, name, ipaddr from public.sip_peers where id not in ( select sip_id from integration.workplaces ) order by name";
 
@@ -118,7 +121,23 @@ sub sipdb_list_external {
     if ( $@ ) {
         return http_response($env,400,pearlpbx_db()->errstr);
     }
+    if ($format eq 'OptionIdValue') {
+        return sipdb_list_optionIdValue($env,$sth,1);
+    }
     sipdb_list_html($env, $sth, 1 );
+}
+
+sub sipdb_list_optionIdValue {
+    my ($env, $sth, $external ) = @_;
+
+    my $out = '';
+    while ( my $row = $sth->fetchrow_hashref ) {
+        unless ( defined ( $row->{'comment'} ) ) {
+            $row->{'comment'} = '';
+        }
+        $out .= '<option value="'.$row->{'id'}.'">'.$row->{'comment'}.'&lt;'.$row->{'name'}.'&gt;</option>';
+    }
+    return http_response($env,200,$out);
 }
 
 =item B<sipdb_list_options>

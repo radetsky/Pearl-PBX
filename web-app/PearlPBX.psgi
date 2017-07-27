@@ -17,6 +17,7 @@ use PearlPBX::API;
 use PearlPBX::DB;
 use PearlPBX::SIP;
 use PearlPBX::Queues;
+use PearlPBX::Trunkgroups;
 
 use PearlPBX::Const;
 
@@ -97,6 +98,11 @@ my $app = builder {
                 mount "/listmembers" => builder { \&queues_listmembers };
                 mount "/addmember"   => builder { \&queues_addmember };
                 mount "/removemember" => builder { \&queues_removemember };
+            };
+            mount "/trunkgroups" => builder {
+                mount "/list"       => builder { \&trunkgroups_list };
+                mount "/add"        => builder { \&trunkgroups_add  };
+                mount "/id"         => builder { \&trunkgroups_id   };
             };
         };
     };
