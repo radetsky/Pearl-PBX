@@ -92,7 +92,11 @@ my $app = builder {
             mount "/queues" => builder {
                 mount "/list"        => builder { \&queues_list };
                 mount "/getqueue"    => builder { \&queues_getqueue };
+                mount "/setqueue"    => builder { \&queues_setqueue };
+                mount "/delqueue"    => builder { \&queues_delqueue };
                 mount "/listmembers" => builder { \&queues_listmembers };
+                mount "/addmember"   => builder { \&queues_addmember };
+                mount "/removemember" => builder { \&queues_removemember };
             };
         };
     };

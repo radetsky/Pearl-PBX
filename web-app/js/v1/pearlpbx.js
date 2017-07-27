@@ -1241,15 +1241,13 @@ function pearlpbx_fill_check_routing_channel () {
 	$('select#check_routing_channel').empty();
 	$('select#check_routing_channel').append('<optgroup>');
 
-	$.get("/sip.pl", {
-		a: "list",
-		b: "internalAsOption"
+	$.get("/sip/list/internal", {
+		format: "OPTION"
 	}, function (data) {
 		$('select#check_routing_channel').append(data);
 		$('select#check_routing_channel').append('</optgroup><optgroup>');
-		$.get("/sip.pl", {
-			a: "list",
-			b: "externalAsOption"
+		$.get("/sip/list/external", {
+			format: "OPTION"
 		}, function (data) {
 			$('select#check_routing_channel').append(data);
 			$('select#check_routing_channel').append('</optgroup>');
@@ -1604,11 +1602,10 @@ function pearlpbx_direction_load_by_id (dlist_id, dlist_name) {
 
 }
 function pearlpbx_queue_remove_operator(membername,qname) {
-	var confirmed = confirm ("Вы действительно уверены в том, что хотите удалить оператора "+
-		membername+" из группы "+qname+" ?");
+	var confirmed = confirm ("Are you sure you want to remove operator "+ membername+" from group "+qname+" ?");
 	if (confirmed == true) {
-		$.get("/queues.pl",
-		{ a: "removemember",
+		$.get("/queues/removemember",
+		{
 		  member: membername,
 		  queue: qname,
 		},function(data)
@@ -1616,10 +1613,6 @@ function pearlpbx_queue_remove_operator(membername,qname) {
 			if (data == "OK") {
 				pearlpbx_queues_load_by_name(qname);
 				return true;
-			}
-			if (data == "ERROR") {
-				alert("Сервер вернул ошибку!");
-				return false;
 			}
 			alert("Server returns unrecognized answer. Please contact system administrator.");
 			alert(data);
@@ -1629,7 +1622,7 @@ function pearlpbx_queue_remove_operator(membername,qname) {
 function pearlpbx_queue_remove() {
 	var qname = $('#input_queue_edit_name').val();
 	if ( qname == '') {
-		alert("Невозможно удалить группу, у которой нет имени.");
+		alert("Imposible remove group/queue without name!");
 		return false;
 	}
 	$('#pearlpbx_remove_queue_confirm_name').val(qname);
@@ -1641,17 +1634,13 @@ function pearlpbx_queue_remove_сonfirmed() {
 	$('#pearlpbx_queues_edit').modal('hide');
 	var qname = $('#pearlpbx_remove_queue_confirm_name').val();
 // Submit
-	$.get("/queues.pl",
-		{ a: "delqueue",
+	$.get("/queues/delqueue",
+		{
 		  queue: qname,
 		},function(data)
 		{
 			if (data == "OK") {
 				pearlpbx_show_queues();
-				return false;
-			}
-			if (data == "ERROR") {
-				alert("Сервер вернул ошибку!");
 				return false;
 			}
 			alert("Server returns unrecognized answer. Please contact system administrator.");
@@ -1689,8 +1678,8 @@ function pearlpbx_queue_add_member() {
 
 	var operator = $('select#input_queue_edit_members option:selected').val();
 	// Submit
-	$.get("/queues.pl",
-		{ a: "addmember",
+	$.get("/queues/addmember",
+		{
 		  newmember: operator,
 		  queue: qname,
 		},function(data)
@@ -1699,12 +1688,8 @@ function pearlpbx_queue_add_member() {
 				pearlpbx_queues_load_by_name(qname);
 				return true;
 			}
-			if (data == "ERROR") {
-				alert("Сервер вернул ошибку!");
-				return false;
-			}
 			if (data == "ALREADY") {
-				alert ("Данный оператор уже присутствует в группе.");
+				alert ("Operator already in the group.");
 				return false;
 			}
 			alert("Server returns unrecognized answer. Please contact system administrator.");
@@ -1723,9 +1708,13 @@ function pearlpbx_fill_operators_select () {
 
 function pearlpbx_validate_queue() {
 	var name = $('#input_queue_edit_name').val();
+    if (name == "" ) {
+        alert("Input name of the queue!");
+        return false;
+    }
     var alphaExp = /^[0-9a-zA-Z]+$/;
     if(name.search(/[^0-9A-Za-z]/) != -1) {
-    	alert("Имя группы должно содержать только латинские символы и цифры! Без пробелов!");
+    	alert("Queue name must contain only english letters andd digits without spaces.");
     	return false;
     }
 }
@@ -1743,8 +1732,8 @@ function pearlpbx_queue_update () {
 	}
 
 	// Submit
-	$.get("/queues.pl",
-		{ a: "setqueue",
+	$.get("/queues/setqueue",
+		{
 		  oldname: oldname,
 		  name: queue_name,
 		  strategy: strategy,
@@ -1755,10 +1744,6 @@ function pearlpbx_queue_update () {
 			if (data == "OK") {
 				pearlpbx_show_queues();
 				$('#pearlpbx_queues_edit').modal('hide');
-				return false;
-			}
-			if (data == "ERROR") {
-				alert("Сервер вернул ошибку!");
 				return false;
 			}
 			alert("Server returns unrecognized answer. Please contact system administrator.");
