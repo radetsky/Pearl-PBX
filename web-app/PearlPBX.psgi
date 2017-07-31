@@ -103,6 +103,11 @@ my $app = builder {
                 mount "/list"       => builder { \&trunkgroups_list };
                 mount "/add"        => builder { \&trunkgroups_add  };
                 mount "/id"         => builder { \&trunkgroups_id   };
+                mount "/channels"   => builder { \&trunkgroups_channels };
+                mount "/addmember"  => builder { \&trunkgroups_addmember };
+                mount "/delmember"  => builder { \&trunkgroups_delmember };
+                mount "/update"     => builder { \&trunkgroups_update };
+                mount "/remove"     => builder { \&trunkgroups_remove };
             };
         };
     };

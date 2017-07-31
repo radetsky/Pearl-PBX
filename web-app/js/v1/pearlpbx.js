@@ -970,9 +970,9 @@ function pearlpbx_tgrpitem_remove (tgrp_item_id) {
 
 	var confirmed = confirm ("Вы действительно уверены в том, что хотите удалить транк из группы ?");
 	if (confirmed == true) {
-		$.get("/route.pl",
-		{ a: "tgrp_removemember",
-		  member: tgrp_item_id,
+		$.get("/trunkgroups/delmember",
+		{
+		  tgrp_item_id: tgrp_item_id,
 		},function(data)
 		{
 			if (data == "OK") {
@@ -1053,21 +1053,16 @@ function pearlpbx_trunkgroup_update() {
 		// Добавляем новую группу
 		return pearlpbx_trunkgroup_add(tgrp_name);
 	}
-	$.get("/route.pl",
-		{ a: "updatetrunkgroup",
-		  b: tgrp_id,
-		  c: tgrp_name
+	$.get("/trunkgroups/update",
+		{
+		  tgrp_id : tgrp_id,
+		  name    : tgrp_name
 		},function(data)
 		{
-			var result = data.split(":",2);
-			if (result[0] == "OK") {
-				$('#pearlpbx_trunkgroups_list').load('/route.pl?a=list-trunkgroups-tab');
+			if (data == "OK") {
+				load_trunkgroups_names();
 				$('#pearlpbx_trunkgroup_edit').modal('hide');
 				return true;
-			}
-			if (result[0] == "ERROR") {
-				alert("Сервер вернул ошибку! : "+result[1]);
-				return false;
 			}
 		}, "html");
 	return false;
@@ -1084,20 +1079,15 @@ function pearlpbx_trunkgroup_remove() {
 		return false;
 	}
 
-	$.get("/route.pl",
-		{ a: "removetrunkgroup",
-		  b: tgrp_id,
+	$.get("/trunkgroups/remove",
+		{
+		  tgrp_id: tgrp_id,
 		},function(data)
 		{
-			var result = data.split(":",2);
-			if (result[0] == "OK") {
-				$('#pearlpbx_trunkgroups_list').load('/route.pl?a=list-trunkgroups-tab');
+			if (data == "OK") {
+				load_trunkgroups_names();
 				$('#pearlpbx_trunkgroup_edit').modal('hide');
 				return true;
-			}
-			if (result[0] == "ERROR") {
-				alert("Сервер вернул ошибку! : "+result[1]);
-				return false;
 			}
 		}, "html");
 	return false;
@@ -1115,14 +1105,14 @@ function pearlpbx_trunkgroup_load_by_id (tgrp_id, tgrp_name) {
 	$('#input_trunkgroup_hidden_oldname').val(tgrp_name);
 	$('#input_trunkgroup_hidden_id').val(tgrp_id);
 	$('#input_trunkgroup_edit_name').val(tgrp_name);
+    load_trunkgroups_members();
 
 	var remicon = "<img src=/img/remove-icon.png width=16>";
 
 	$('#pearlpbx_edit_trunkgroup_items_list tbody').empty();
-	$.getJSON("/route.pl",
+	$.getJSON("/trunkgroups/channels",
 	{
-		a: "gettrunkgroup-items",
-		b: tgrp_id,
+		tgrp_id: tgrp_id,
 	},function (json) {
 		jQuery.each(json, function () {
 			var remurl = '<td><a href="#" onClick="pearlpbx_tgrpitem_remove('+
