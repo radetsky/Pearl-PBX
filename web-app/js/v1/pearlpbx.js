@@ -1404,7 +1404,7 @@ function pearlpbx_direction_remove (){
 		{
 			var result = data.split(":",2);
 			if (result[0] == "OK") {
-				$('#pearlpbx_directions_list').load('/route.pl?a=list-directions-tab');
+				load_directions_names();
 				$('#pearlpbx_direction_edit').modal('hide');
 				return true;
 			}
@@ -1432,7 +1432,7 @@ function pearlpbx_direction_new() {
 			var result = data.split(":",2);
 			if (result[0] == "OK") {
 				$('#input_direction_id').val(result[1]);
-				$('#pearlpbx_directions_list').load('/route.pl?a=list-directions-tab');
+				load_directions_names();
 				$('#pearlpbx_direction_edit').modal('hide');
 				return true;
 			}
@@ -1463,7 +1463,7 @@ function pearlpbx_direction_update (){
 			{
 				var result = data.split(":",2);
 				if (result[0] == "OK") {
-					$('#pearlpbx_directions_list').load('/route.pl?a=list-directions-tab');
+					load_directions_names();
 					$('#pearlpbx_direction_edit').modal('hide');
 					return true;
 				}
