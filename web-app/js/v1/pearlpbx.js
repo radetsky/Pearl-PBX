@@ -2187,7 +2187,7 @@ function load_ivr_modules() {
 }
 
 function load_directions_names () {
-    $('#pearlpbx_directions_list').load('/route.pl?a=list-directions-tab');
+    $('#pearlpbx_directions_list').load('/route/list?format=table');
 }
 
 

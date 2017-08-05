@@ -34,6 +34,8 @@ use NetSDS::Util::String;
 
 use PearlPBX::Config qw/conf/;
 use PearlPBX::DB qw/pearlpbx_db/;
+use PearlPBX::HttpUtils qw/http_response/;
+use Data::Dumper;
 
 use Exporter;
 use parent qw(Exporter);
@@ -41,12 +43,12 @@ use parent qw(Exporter);
 our @EXPORT = qw (
     route_manager_credentials
     route_get_ulines
+    route_list
 );
 
 
 sub route_manager_credentials {
     my $env = shift;
-
     my $req = Plack::Request->new($env);
     my $res = $req->new_response(200);
 
@@ -78,9 +80,81 @@ sub route_get_ulines {
   my $res = $req->new_response(200);
   $res->body(encode_json(\@rows));
   $res->finalize($env);
-
 }
 
+=item B<route_list>
+
+ Returns HTML view of directions list depends on format (HTML table, options )
+
+=cut
+
+sub route_list {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+
+    my $format = $params->{'format'} // 'table';
+
+	my $sql = "select dlist_id,dlist_name from routing.directions_list order by dlist_name";
+
+	my $sth = pearlpbx_db()->prepare($sql);
+	eval { $sth->execute(); };
+	if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+	}
+
+    my @list;
+    while ( my $row = $sth->fetchrow_hashref ) {
+       push @list, $row; # sorted array by database
+    }
+
+    if ($format eq 'table') {
+        return route_list_table($env, @list);
+    }
+    # List as OPTION
+    my $out = '';
+    foreach my $row ( @list ) {
+        my $dname = str_encode ($row->{'dlist_name'});
+        $out .= '<option value="'.$row->{'dlist_id'}.'">'.$dname.'</option>';
+    }
+    return http_response($env, 200, $out);
+}
+
+sub route_list_table {
+    my $env = shift;
+    my @list = @_;
+
+    my $out = '<table class="table table-bordered table-hover">
+                <tr><th>Route Name</th><th>Prefixes</th></tr>';
+
+    foreach my $row (@list) {
+      my @prefixes = route_get_prefixes($row->{'dlist_id'});
+      my $prefixesString = join (',', map { $_->{'dr_prefix'} } @prefixes );
+
+      my $dname = str_encode ($row->{'dlist_name'});
+	  $out .= '<tr><td><a href="#pearlpbx_direction_edit" data-toggle="modal"
+         onClick="pearlpbx_direction_load_by_id(\''.$row->{'dlist_id'}.'\',
+          \''.$dname.'\')">'.$dname.'</a></td><td>'.$prefixesString.'</td></tr>';
+	}
+    $out .= "</table>";
+	return http_response($env, 200, $out);
+}
+
+sub route_get_prefixes {
+  my $dlist_id = shift;
+
+  my $sql = "select dr_id, dr_prefix, dr_prio from routing.directions where dr_list_item=? order by dr_id";
+  my $sth = pearlpbx_db()->prepare($sql);
+  eval { $sth->execute($dlist_id); };
+  if ( $@ ) {
+      return undef;
+  }
+  my @rows;
+  while ( my $row = $sth->fetchrow_hashref) {
+    push @rows, $row;
+  }
+  return @rows;
+}
 
 #===============================================================================
 #
@@ -180,55 +254,6 @@ sub db_connect {
 
     return 1;
 };
-
-=item B<list_internal>
-
- возвращает HTML представление списка внутренних пользователей
-
-=cut
-sub list_directions_tab {
-	my $this = shift;
-	my $sql = "select dlist_id,dlist_name from routing.directions_list order by dlist_name";
-
-	my $sth = $this->{dbh}->prepare($sql);
-	eval { $sth->execute(); };
-	if ( $@ ) {
-	  print $this->{dbh}->errstr;
-		return undef;
-	}
-
-	my $out = '<ul class="nav nav-tabs">';
-  while ( my $row = $sth->fetchrow_hashref ) {
-    my $dname = str_encode ($row->{'dlist_name'});
-	  $out .= '<li><a href="#pearlpbx_direction_edit" data-toggle="modal"
-         onClick="pearlpbx_direction_load_by_id(\''.$row->{'dlist_id'}.'\',
-          \''.$dname.'\')">'.$dname.'</a></li>';
-	}
-  $out .= "</ul>";
-	return $out;
-}
-
-sub list_directions_options {
-
-  my $this = shift;
-  my $sql = "select dlist_id,dlist_name from routing.directions_list order by dlist_name";
-
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute(); };
-  if ( $@ ) {
-    print $this->{dbh}->errstr;
-    return undef;
-  }
-
-  my $out = '';
-  while ( my $row = $sth->fetchrow_hashref ) {
-    my $dname = str_encode ($row->{'dlist_name'});
-    $out .= '<option value="'.$row->{'dlist_id'}.'">'.$dname.'</option>';
-  }
-
-  return $out;
-}
-
 
 sub getdirectionAsJSON {
   my ($this, $dlist_id) = @_;
