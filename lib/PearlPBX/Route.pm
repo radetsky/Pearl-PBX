@@ -44,6 +44,8 @@ our @EXPORT = qw (
     route_manager_credentials
     route_get_ulines
     route_list
+    route_get_direction
+    route_get_routing
 );
 
 
@@ -154,6 +156,57 @@ sub route_get_prefixes {
     push @rows, $row;
   }
   return @rows;
+}
+
+=item B<route_get_direction>
+
+    Returns route parameters in JSON
+
+=cut
+
+sub route_get_direction {
+  my $env = shift;
+  my $req = Plack::Request->new($env);
+  my $params = $req->parameters;
+  my $route_id = $params->{'id'};
+
+  unless ( defined ( $route_id ) ) {
+    return http_response($env, 400, "route ID not found");
+  }
+
+  my @rows = route_get_prefixes($route_id);
+  return http_response($env,200, encode_json(\@rows));
+}
+
+=item B<route_get_routing>
+
+    Return routing information for route as JSON
+
+=cut
+
+sub route_get_routing {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $route_id = $params->{'id'};
+
+    unless ( defined ( $route_id ) ) {
+        return http_response($env,400,"route ID not found");
+    }
+
+    my $sql = "select route_id, route_step, route_type, destname, sipname from \
+      routing.get_route_list_gui() where route_direction_id=? order by route_step,sipname";
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute($route_id); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+
+    my @rows;
+    while ( my $row = $sth->fetchrow_hashref) {
+       push @rows, $row;
+    }
+    return http_response($env,200,encode_json(\@rows));
 }
 
 #===============================================================================
@@ -362,23 +415,6 @@ sub removedirection {
   $this->{dbh}->commit;
   return "OK";
 
-}
-
-sub getroutingAsJSON {
-  my ($this, $dlist_id) = @_;
-  my $sql = "select route_id, route_step, route_type, destname, sipname from \
-    routing.get_route_list_gui() where route_direction_id=? order by route_step,sipname";
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute($dlist_id); };
-  if ( $@ ) {
-      print $this->{dbh}->errstr;
-      return undef;
-  }
-  my @rows;
-  while ( my $row = $sth->fetchrow_hashref) {
-    push @rows, $row;
-  }
-  return encode_json(\@rows);
 }
 
 sub list_tgrpsAsOption {

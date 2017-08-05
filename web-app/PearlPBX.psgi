@@ -72,8 +72,10 @@ my $app = builder {
                 mount "/manager" => builder {
                     mount "/credentials" => builder { \&route_manager_credentials };
                 };
-                mount "/getulines" => builder { \&route_get_ulines };
-                mount "/list" => builder { \&route_list };
+                mount "/getulines"    => builder { \&route_get_ulines };
+                mount "/list"         => builder { \&route_list };
+                mount "/getdirection" => builder { \&route_get_direction };
+                mount "/getrouting"   => builder { \&route_get_routing   };
             };
             mount "/sip" => builder {
                 mount "/monitor" => builder {

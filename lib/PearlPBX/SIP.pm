@@ -103,7 +103,9 @@ sub sipdb_list_internal {
 
     if ($format eq 'OPTION') {
         return sipdb_list_options($env, $sth, undef );
-    } else {
+    } elsif ($format eq 'OptionIdValue') {
+        sipdb_list_optionIdValue($env, $sth, undef);
+    }else {
         sipdb_list_html($env, $sth, undef );
     }
 }
