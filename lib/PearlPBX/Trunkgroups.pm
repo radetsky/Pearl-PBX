@@ -9,6 +9,7 @@ use PearlPBX::HttpUtils qw/http_response/;
 
 use JSON::XS;
 use NetSDS::Util::String;
+use Data::Dumper;
 
 use Exporter;
 use parent qw(Exporter);
@@ -98,8 +99,7 @@ sub trunkgroups_list_html {
 
     foreach my $row ( @list ) {
         my @members = trunkgroups_members_list($row->{'tgrp_id'});
-
-        my $members_names = join (',', map { $_->{'tgrp_name'} } @members );
+        my $members_names = join (',', map { $_->{'name'} } @members );
 
         $out .= '<tr><td><a href="#pearlpbx_trunkgroup_edit" data-toggle="modal"
         onClick="pearlpbx_trunkgroup_load_by_id(\''.$row->{'tgrp_id'}.'\',
