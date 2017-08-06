@@ -1343,20 +1343,20 @@ function pearlpbx_routing_type_change(){
 
 	$('select#input_direction_routing_dest').empty();
 	if ( newvalue == 'user') {
-		$('select#input_direction_routing_dest').load("/sip.pl?a=list&b=internalAsOptionIdValue");
+		$('select#input_direction_routing_dest').load("/sip/list/internal?format=OptionIdValue");
 	}
 	if ( newvalue == 'context') {
-		$('select#input_direction_routing_dest').load("/route.pl?a=list&b=contextsAsOption");
+		$('select#input_direction_routing_dest').load("/dialplan/contexts/list?format=option");
 	}
 	if ( newvalue == 'lmask') {
-		$('select#input_direction_routing_dest').append("<option value='0'>Кто угодно</option>");
+		$('select#input_direction_routing_dest').append("<option value='0'>Any</option>");
 		return true;
 	}
 	if ( newvalue == 'trunk') {
-		$('select#input_direction_routing_dest').load("/sip.pl?a=list&b=externalAsOptionIdValue");
+		$('select#input_direction_routing_dest').load("/sip/list/external?format=OptionIdValue");
 	}
 	if ( newvalue == 'tgrp') {
-		$('select#input_direction_routing_dest').load("/route.pl?a=list&b=tgrpsAsOption");
+		$('select#input_direction_routing_dest').load("/trunkgroups/list?format=OPTION");
 	}
 
 }
