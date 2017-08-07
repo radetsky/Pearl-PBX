@@ -1273,35 +1273,29 @@ function pearlpbx_direction_add_routing() {
 		return false;
 	}
 
-	$.get("/route.pl", {
-		a: "addrouting",
+	$.get("/route/addrouting", {
 		dlist_id: dlist_id,
 		route_step: route_step,
 		route_type: route_type,
 		route_dest: route_dest,
 		route_src: route_src,
 	}, function (data) {
-		var result = data.split(":",2);
-			if (result[0] == "OK") {
+			if (data == "OK") {
 				var dlist_id = $('#input_direction_id').val();
 				pearlpbx_routing_load_by_direction_id (dlist_id);
 				return true;
 			}
-			if (result[0] == "ERROR") {
-				alert("Сервер вернул ошибку! : "+data);
-				return false;
-			}
+            alert("Server returns unrecognized answer. Please contact system administrator.");
+            alert(data);
 		}, "html");
-
 	return true;
 }
 function pearlpbx_routing_load_by_direction_id (dlist_id) {
 	var remicon = "<img src=/img/remove-icon.png width=16>";
 	$('#pearlpbx_direction_route_list tbody').empty();
-	$.getJSON("/route.pl",
+	$.getJSON("/route/getrouting",
 	{
-		a: "getrouting",
-		b: dlist_id,
+		id: dlist_id,
 	},function (json) {
 		jQuery.each(json, function () {
 			var remurl = '<td><a href="#" onClick="pearlpbx_routing_remove('+
@@ -1316,25 +1310,22 @@ function pearlpbx_routing_load_by_direction_id (dlist_id) {
 
 }
 function pearlpbx_routing_remove (id) {
-	var confirmed = confirm ("Вы уверены, что хотите удалить данную запись из таблицы маршрутизации ?");
+	var confirmed = confirm ("Are you sure to remove this record from routes table ?");
 	if (confirmed == false ) {
 		return false;
 	}
-	$.get("/route.pl",
-		{ a: "removeroute",
-		  b: id,
+	$.get("/route/removerouting",
+		{
+		  id: id,
 		},function(data)
 		{
-			var result = data.split(":",2);
-			if (result[0] == "OK") {
+			if (data == "OK") {
 				var dlist_id = $('#input_direction_id').val();
 				pearlpbx_routing_load_by_direction_id (dlist_id);
 				return true;
 			}
-			if (result[0] == "ERROR") {
-				alert("Сервер вернул ошибку! : "+data);
-				return false;
-			}
+            alert("Server returns unrecognized answer. Please contact system administrator.");
+            alert(data);
 		}, "html");
 
 }
@@ -1477,11 +1468,11 @@ function pearlpbx_direction_update (){
 }
 
 function pearlpbx_route_direction_prefix_remove(dr_id) {
-	var confirmed = confirm ("Вы действительно уверены в том, что хотите удалить данный префикс ?");
+	var confirmed = confirm ("Are you really sure to remove this prefix ?");
 	if (confirmed == true) {
-		$.get("/route.pl",
-		{ a: "removeprefix",
-		  b: dr_id,
+		$.get("/route/removeprefix",
+		{
+		  prefix: dr_id,
 		},function(data)
 		{
 			if (data == "OK") {
@@ -1489,10 +1480,6 @@ function pearlpbx_route_direction_prefix_remove(dr_id) {
 				var dlist_id = $('#input_direction_id').val();
 				pearlpbx_direction_load_by_id(dlist_id, dlist_name);
 				return true;
-			}
-			if (data == "ERROR") {
-				alert("Сервер вернул ошибку!");
-				return false;
 			}
 			alert("Server returns unrecognized answer. Please contact system administrator.");
 			alert(data);
@@ -1510,11 +1497,11 @@ function pearlpbx_direction_add_prefix(){
 		return false;
 	}
 	// Submit
-	$.get("/route.pl",
-		{ a: "addprefix",
-		  b: dlist_id,
-		  c: new_prefix,
-		  d: prefix_prio,
+	$.get("/route/addprefix",
+		{
+		  route_id : dlist_id,
+		  prefix   : new_prefix,
+		  priority : prefix_prio,
 		},function(data)
 		{
 			if (data == "OK") {
@@ -1522,16 +1509,12 @@ function pearlpbx_direction_add_prefix(){
 				pearlpbx_direction_load_by_id(dlist_id, dlist_name);
 				return true;
 			}
-			if (data == "ERROR") {
-				alert("Сервер вернул ошибку!");
-				return false;
-			}
 			if (data == "ALREADY") {
-				alert ("Данный префикс уже присутствует в этом направлении.");
+				alert ("This prefix already exists here.");
 				return false;
 			}
 			if (data == "ALREADY_ANOTHER") {
-				alert ("Данный префикс уже присутствует в другом направлении.");
+				alert ("This prefix already exists in another route.");
 				return false;
 			}
 			alert("Server returns unrecognized answer. Please contact system administrator.");

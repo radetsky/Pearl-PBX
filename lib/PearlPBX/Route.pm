@@ -46,6 +46,10 @@ our @EXPORT = qw (
     route_list
     route_get_direction
     route_get_routing
+    route_addprefix
+    route_removeprefix
+    route_addrouting
+    route_removerouting
 );
 
 
@@ -209,6 +213,134 @@ sub route_get_routing {
     return http_response($env,200,encode_json(\@rows));
 }
 
+=item B<route_addprefix>
+
+    Checks and adds prefix to route
+
+=cut
+
+sub route_addprefix {
+  my $env = shift;
+  my $req = Plack::Request->new($env);
+  my $params = $req->parameters;
+  my $dlist_id = $params->{'route_id'};
+  unless ( defined ( $dlist_id) ) {
+      return http_response($env,400,'route_id is not defined');
+  }
+  my $prefix = $params->{'prefix'};
+  unless ( defined ( $prefix ) ) {
+      return http_response($env,400,'prefix is not defined');
+  }
+  my $prio = $params->{'priority'};
+  unless ( defined ( $prio ) ) {
+      return http_response($env,400,'priority is not defined ');
+  }
+
+  my $sql = "select dr_id,dr_list_item from routing.directions where dr_prefix=?";
+  my $sth = pearlpbx_db()->prepare ($sql);
+  eval { $sth->execute($prefix); };
+  if ($@) {
+    return http_response($env,400, pearlpbx_db()->errstr);
+  }
+
+  my $row = $sth->fetchrow_hashref;
+  if ($row->{'dr_id'}) {
+    if (( $row->{'dr_list_item'} eq $dlist_id ) or ( $row->{'dr_list_item'} == $dlist_id )) {
+        return http_response($env,200,"ALREADY");
+    }
+    return http_response($env,200,"ALREADY_ANOTHER");
+  }
+
+  $sql = "insert into routing.directions (dr_list_item,dr_prefix,dr_prio) values (?,?,?)";
+  $sth = pearlpbx_db()->prepare($sql);
+
+  eval { $sth->execute($dlist_id,$prefix, $prio);};
+  if ($@) {
+    return http_response($env,400, pearlpbx_db()->errstr);
+  }
+  return http_response($env,200,"OK");
+
+}
+
+sub route_removeprefix {
+  my $env = shift;
+  my $req = Plack::Request->new($env);
+  my $params = $req->parameters;
+  my $dr_id = $params->{'prefix'};
+
+  unless ( defined ( $dr_id ) ) {
+      return http_response($env,400,"prefix is not defined");
+  }
+
+  my $sql = "delete from routing.directions where dr_id=?";
+  my $sth = pearlpbx_db()->prepare($sql);
+  eval { $sth->execute($dr_id); };
+  if ($@) {
+    return http_response($env,400, pearlpbx_db()->errstr);
+  }
+  return http_response($env,200,"OK");
+}
+
+=item B<route_addrouting>
+
+    Adds routing steps to the route
+
+=cut
+
+sub route_addrouting {
+  my $env = shift;
+  my $req = Plack::Request->new($env);
+  my $params = $req->parameters;
+
+  my $dlist_id = $params->{'dlist_id'};
+  my $route_step = $params->{'route_step'};
+  my $route_type = $params->{'route_type'};
+  my $route_dest = $params->{'route_dest'};
+  my $route_src  = $params->{'route_src'};
+
+  if ( ! defined ( $dlist_id ) || ! defined ($route_step) ||
+       ! defined ( $route_type ) || ! defined ($route_dest ) ||
+       ! defined ( $route_src ) ) {
+       return http_response($env,400,'One of the parameters is undefined');
+  }
+
+  my $sql = "insert into routing.route (route_direction_id, route_step, route_type, route_dest_id, route_sip_id )
+    values (?,?,?,?,?) ";
+  my $sth = pearlpbx_db()->prepare ($sql);
+  if ($route_src =~ /^Anybody/i ) {
+    $route_src = undef;
+  }
+
+  eval {
+    $sth->execute ($dlist_id, $route_step, $route_type, $route_dest, $route_src);
+  };
+  if ( $@ ) {
+    return http_response($env,400,pearlpbx_db()->errstr);
+  }
+
+  return http_response($env,200, "OK");
+
+}
+
+sub route_removerouting {
+  my $env = shift;
+  my $req = Plack::Request->new($env);
+  my $params = $req->parameters;
+  my $route_id = $params->{'id'};
+
+  unless ( defined ( $route_id ) ) {
+      return http_response($env, 400, "nothing to remove");
+  }
+
+  my $sql = "delete from routing.route where route_id=?";
+  my $sth = pearlpbx_db()->prepare($sql);
+  eval { $sth->execute($route_id); };
+  if ($@) {
+      return http_response($env,400,pearlpbx_db()->errstr);
+  }
+  return http_response($env,200,"OK");
+}
+
 #===============================================================================
 #
 =head1 CLASS METHODS
@@ -324,48 +456,6 @@ sub getdirectionAsJSON {
   return encode_json(\@rows);
 }
 
-sub addprefix {
-  my ($this, $dlist_id, $prefix, $prio) = @_;
-
-  my $sql = "select dr_id,dr_list_item from routing.directions where dr_prefix=?";
-  my $sth = $this->{dbh}->prepare ($sql);
-  eval { $sth->execute($prefix); };
-  if ($@) {
-    return 'ERROR: '.$this->{dbh}->errstr;
-  }
-
-  my $row = $sth->fetchrow_hashref;
-  if ($row->{'dr_id'}) {
-    if (( $row->{'dr_list_item'} eq $dlist_id ) or ( $row->{'dr_list_item'} == $dlist_id )) { return "ALREADY"; }
-    return "ALREADY_ANOTHER";
-  }
-
-  $sql = "insert into routing.directions (dr_list_item,dr_prefix,dr_prio) values (?,?,?)";
-  $sth = $this->{dbh}->prepare($sql);
-
-  eval { $sth->execute($dlist_id,$prefix, $prio);};
-  if ($@) {
-    warn $this->{dbh}->errstr;
-    return "ERROR";
-  }
-  $this->{dbh}->commit;
-  return "OK";
-
-}
-
-sub removeprefix {
-  my ($this, $dr_id) = @_;
-
-  my $sql = "delete from routing.directions where dr_id=?";
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute($dr_id); };
-  if ($@) {
-    return 'ERROR: '.$this->{dbh}->errstr;
-  }
-  $this->{dbh}->commit;
-  return "OK";
-}
-
 sub adddirection {
   my ($this, $dlist_name) = @_;
 
@@ -456,41 +546,6 @@ sub list_contextsAsOption {
   return $out;
 
 }
-sub removeroute {
-  my ($this, $route_id) = @_;
-
-  my $sql = "delete from routing.route where route_id=?";
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute($route_id); };
-  if ($@) {
-      return $this->{dbh}->errstr;
-  }
-  $this->{dbh}->commit;
-  return "OK";
-}
-
-sub addrouting {
-  my ($this, $dlist_id, $route_step, $route_type, $route_dest, $route_src ) = @_;
-
-  my $sql = "insert into routing.route (route_direction_id, route_step, route_type, route_dest_id, route_sip_id )
-    values (?,?,?,?,?) ";
-  my $sth = $this->{dbh}->prepare ($sql);
-  if ($route_src =~ /^Anybody/i ) {
-    $route_src = undef;
-  }
-
-  eval {
-    $sth->execute ($dlist_id, $route_step, $route_type, $route_dest, $route_src);
-  };
-  if ( $@ ) {
-    return $this->{dbh}->errstr;
-  }
-
-  $this->{dbh}->commit;
-  return "OK";
-
-}
-
 sub checkroute {
   my ($this, $peername, $extension) = @_;
   my $route_type = {

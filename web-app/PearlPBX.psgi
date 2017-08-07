@@ -76,6 +76,11 @@ my $app = builder {
                 mount "/list"         => builder { \&route_list };
                 mount "/getdirection" => builder { \&route_get_direction };
                 mount "/getrouting"   => builder { \&route_get_routing   };
+                mount "/addprefix"    => builder { \&route_addprefix     };
+                mount "/removeprefix" => builder { \&route_removeprefix  };
+                mount "/addrouting"   => builder { \&route_addrouting    };
+                mount "/removerouting" => builder { \&route_removerouting };
+
             };
             mount "/sip" => builder {
                 mount "/monitor" => builder {
