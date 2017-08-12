@@ -23,7 +23,6 @@ PearlPBX::Route
 
 package PearlPBX::Route;
 
-use 5.8.0;
 use strict;
 use warnings;
 
@@ -50,6 +49,9 @@ our @EXPORT = qw (
     route_removeprefix
     route_addrouting
     route_removerouting
+    route_savedirection
+    route_removedirection
+    route_adddirection
 );
 
 
@@ -341,170 +343,88 @@ sub route_removerouting {
   return http_response($env,200,"OK");
 }
 
-#===============================================================================
-#
-=head1 CLASS METHODS
+sub route_savedirection {
+  my $env = shift;
+  my $req = Plack::Request->new($env);
+  my $params = $req->parameters;
+  my $dlist_id = $params->{'route_id'};
+  my $dlist_name = $params->{'route_name'};
 
-=over
-
-=item B<new($configfilename)> - class constructor
-
-    my $object = PearlPBX::Report->new(%options);
-
-=cut
-
-#-----------------------------------------------------------------------
-sub new {
-
-	my $class = shift;
-
-  my $conf = shift;
-
-  my $this = {};
-
-  unless ( defined ( $conf ) ) {
-     $conf = '/etc/PearlPBX/asterisk-router.conf';
+  if ( ! defined ( $dlist_id ) || ! defined ( $dlist_name ) ) {
+      return http_response($env,400,"required parameters is undefined");
   }
 
-  my $config = Config::General->new (
-    -ConfigFile        => $conf,
-    -AllowMultiOptions => 'yes',
-    -UseApacheInclude  => 'yes',
-    -InterPolateVars   => 'yes',
-    -ConfigPath        => [ $ENV{PEARL_CONF_DIR}, '/etc/PearlPBX' ],
-    -IncludeRelative   => 'yes',
-    -IncludeGlob       => 'yes',
-    -UTF8              => 'yes',
-  );
-
-  unless ( ref $config ) {
-    return undef;
-  }
-
-  my %cf_hash = $config->getall or ();
-  $this->{conf} = \%cf_hash;
-  $this->{dbh} = undef;     # DB handler
-  $this->{error} = undef;   # Error description string
-
-	bless ( $this,$class );
-	return $this;
-
-};
-
-#***********************************************************************
-=head1 OBJECT METHODS
-
-=over
-
-=item B<db_connect(...)> - соединяется с базой данных.
-Возвращает undef в случае неуспеха или true если ОК.
-DBH хранит в this->{dbh};
-
-=cut
-
-#-----------------------------------------------------------------------
-
-sub db_connect {
-	my $this = shift;
-
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'dsn'} ) ) {
-        $this->{error} = "Can't find \"db main->dsn\" in configuration.";
-        return undef;
-    }
-
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'login'} ) ) {
-        $this->{error} = "Can't find \"db main->login\" in configuraion.";
-        return undef;
-    }
-
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'password'} ) ) {
-        $this->{error} = "Can't find \"db main->password\" in configuraion.";
-        return undef;
-    }
-
-    my $dsn    = $this->{conf}->{'db'}->{'main'}->{'dsn'};
-    my $user   = $this->{conf}->{'db'}->{'main'}->{'login'};
-    my $passwd = $this->{conf}->{'db'}->{'main'}->{'password'};
-
-    # If DBMS isn' t accessible - try reconnect
-    if ( !$this->{dbh} or !$this->{dbh}->ping ) {
-        $this->{dbh} =
-            DBI->connect_cached( $dsn, $user, $passwd, { RaiseError => 1, AutoCommit => 0 } );
-    }
-
-    if ( !$this->{dbh} ) {
-        $this->{error} = "Cant connect to DBMS!";
-        return undef;
-    }
-
-    return 1;
-};
-
-sub getdirectionAsJSON {
-  my ($this, $dlist_id) = @_;
-  my $sql = "select dr_id, dr_prefix, dr_prio from routing.directions where dr_list_item=? order by dr_id";
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute($dlist_id); };
-  if ( $@ ) {
-      print $this->{dbh}->errstr;
-      return undef;
-  }
-  my @rows;
-  while ( my $row = $sth->fetchrow_hashref) {
-    push @rows, $row;
-  }
-  return encode_json(\@rows);
-}
-
-sub adddirection {
-  my ($this, $dlist_name) = @_;
-
-  my $sql = "insert into routing.directions_list (dlist_name) values (?) returning dlist_id";
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute ($dlist_name); };
-  if ( $@ ) {
-    return 'ERROR: '.$this->{dbh}->errstr;
-  }
-  my $row = $sth->fetchrow_hashref;
-  unless ( $row ) {
-    return 'ERROR: '.$this->{dbh}->errstr;
-  }
-  my $dlist_id = $row->{'dlist_id'};
-  $this->{dbh}->commit;
-  return "OK:".$dlist_id;
-}
-
-sub setdirection {
-  my ($this, $dlist_id, $dlist_name) = @_;
   my $sql = "update routing.directions_list set dlist_name=? where dlist_id=?";
-  my $sth = $this->{dbh}->prepare($sql);
+  my $sth = pearlpbx_db()->prepare($sql);
   eval { $sth->execute ($dlist_name, $dlist_id); };
   if ( $@ ) {
-    return 'ERROR: '.$this->{dbh}->errstr;
+    return http_response($env,400,pearlpbx_db()->errstr);
   }
-  $this->{dbh}->commit;
-  return "OK:".$dlist_id;
+  return http_response($env,200,"OK");
 }
 
-sub removedirection {
-  my ($this, $dlist_id) = @_;
+sub route_removedirection {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $id = $params->{'id'};
+    unless ( defined ( $id ) ) {
+        return http_response($env, 400, "Required parameter id is not found");
+    }
 
-  my $sql = "delete from routing.directions where dr_list_item=?";
-  my $sql2 = "delete from routing.directions_list where dlist_id=?";
+    my $sql  = "delete from routing.directions where dr_list_item=?";
+    my $sql2 = "delete from routing.directions_list where dlist_id=?";
+    my $sql3 = "delete from routing.permissions where direction_id=?";
+    my $sql4 = "delete from routing.route where route_direction_id=?";
 
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute($dlist_id); };
-  if ( $@ ) {
-    return $this->{dbh}->errstr;
-  }
-  $sth = $this->{dbh}->prepare($sql2);
-  eval { $sth->execute($dlist_id); };
-  if ( $@ ) {
-    return $this->{dbh}->errstr;
-  }
-  $this->{dbh}->commit;
-  return "OK";
+    my $perm = pearlpbx_db()->prepare($sql3);
+    eval { $perm->execute ( $id ); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
 
+    my $rsth = pearlpbx_db()->prepare($sql4);
+    eval { $rsth->execute ( $id ); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute ( $id ); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+
+    $sth = pearlpbx_db()->prepare($sql2);
+    eval { $sth->execute ( $id ); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+    return http_response($env,200,"OK");
+}
+
+
+sub route_adddirection {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $dlist_name = $params->{'dlist_name'};
+    unless ( defined ( $dlist_name ) ) {
+        return http_response($env,400,"Required parameter dlist_name is not found.");
+    }
+
+    my $sql = "insert into routing.directions_list (dlist_name) values (?) returning dlist_id";
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute ($dlist_name); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+    my $row = $sth->fetchrow_hashref;
+    unless ( $row ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+    my $dlist_id = $row->{'dlist_id'};
+    return http_response($env,200,"OK:".$dlist_id);
 }
 
 sub list_tgrpsAsOption {

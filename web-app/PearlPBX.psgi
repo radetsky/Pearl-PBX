@@ -80,6 +80,9 @@ my $app = builder {
                 mount "/removeprefix" => builder { \&route_removeprefix  };
                 mount "/addrouting"   => builder { \&route_addrouting    };
                 mount "/removerouting" => builder { \&route_removerouting };
+                mount "/savedirection" => builder { \&route_savedirection };
+                mount "/removedirection" => builder { \&route_removedirection };
+                mount "/adddirection"  => builder { \&route_adddirection };
 
             };
             mount "/sip" => builder {
