@@ -1143,21 +1143,15 @@ function pearlpbx_save_permissions() {
 
 	});
 	//alert("count="+count);
-	$.post("/route.pl",
+	$.post("/permissions/update",
 	{
-		a:"savepermissions",
-		b: matrix,
+		matrix: matrix,
 	}, function (data) {
-		var result = data.split(":",2);
-			if (result[0] == "OK") {
-				alert("Права сохранены успешно!");
-				return true;
-			}
-			if (result[0] == "ERROR") {
-				alert("Сервер вернул ошибку! : "+data);
-				return false;
-			}
-		}, "html");
+        if (data == "OK") {
+            alert("Permissions updated successfully.");
+            return true;
+        }
+	}, "html");
 }
 
 function pearlpbx_permissions_selectall() {
@@ -1197,12 +1191,12 @@ function pearlpbx_permissions_set_x(x) {
 
 function pearlpbx_reload_permissions() {
 	$('#pearlpbx_permissions_div').empty();
-	$.get("/route.pl", {
-		a: "loadpermissions",
+	$.get("/permissions/show", {
+		format: "html",
 	}, function (data) {
 		$('#pearlpbx_permissions_div').append(data);
-		$.getJSON("/route.pl", {
-			a: "loadpermissionsJSON",
+		$.getJSON("/permissions/show", {
+            format: "JSON",
 			}, function (json) {
 				jQuery.each(json, function () {
 				var id = "#X"+this['peer_id']+"_Y"+this['direction_id'];

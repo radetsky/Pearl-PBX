@@ -18,6 +18,7 @@ use PearlPBX::DB;
 use PearlPBX::SIP;
 use PearlPBX::Queues;
 use PearlPBX::Trunkgroups;
+use PearlPBX::Permissions;
 
 use PearlPBX::Const;
 
@@ -119,6 +120,10 @@ my $app = builder {
                 mount "/delmember"  => builder { \&trunkgroups_delmember };
                 mount "/update"     => builder { \&trunkgroups_update };
                 mount "/remove"     => builder { \&trunkgroups_remove };
+            };
+            mount "/permissions" => builder {
+                mount "/show"     => builder { \&permissions_show   };
+                mount "/update"   => builder { \&permissions_update };
             };
         };
     };
