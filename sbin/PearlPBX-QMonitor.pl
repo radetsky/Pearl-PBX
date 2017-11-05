@@ -17,7 +17,7 @@
 use strict;
 use warnings;
 
-use lib "./lib";
+# use lib "./lib";
 $ENV{LOG_STDERR} = 1;
 QMonitor->run(
     daemon      => undef,
@@ -46,7 +46,7 @@ use NetSDS::Asterisk::Manager;
 
 use constant STRATEGY => 'rrmemory'; # New strategy
 use constant LASTCALL => 7200;     # Did not answer for 1 hour ? -> Pause
-use constant UNANSWERED => 9;      # Did not answer 5 times ? -> Pause
+use constant UNANSWERED => 3;      # Did not answer 5 times ? -> Pause
 use constant UNAVAILABLE => 5;     # Status = 5 in QueueStatus means that agent unavailable
 use constant REACHABLE => 1;
 
@@ -117,7 +117,7 @@ sub queue_status {
   my @replies;
   while (1) {
       $reply  = $self->mgr->receive_answer();
-      warn Dumper $reply;
+      # warn Dumper $reply;
       my $event = $reply->{'Event'};
       if ( $event =~ /QueueStatusComplete/i ) {
         last;
@@ -205,7 +205,7 @@ sub queue_reload_parameters {
   my $self = shift;
   Infof("Reload parameters for %s", $self->{qname});
   my $command = 'queue reload parameters '. $self->{qname};
-  warn $command;
+  # warn $command;
   my $sent = $self->mgr->sendcommand (
     'Action'  => "Command",
     'Command' => $command,
@@ -317,7 +317,7 @@ sub process {
     }
   } elsif ( defined ( $event->{'Queue'} ) ) {
       if ( $event->{'Queue'} eq $self->{qname} ) {
-          warn Dumper $event->{'Event'};
+          # warn Dumper $event->{'Event'};
       }
   }
 }

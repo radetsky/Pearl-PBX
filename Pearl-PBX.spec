@@ -178,6 +178,7 @@ install -D -m 600 var/lib/pgsql/data/pg_hba.conf %buildroot/var/tmp/pg_hba.conf
 /usr/sbin/csv2integration.pl
 /usr/sbin/csv2sip_peers.pl
 /usr/sbin/pgsql2mysql.pl
+/usr/sbin/PearlPBX-QMonitor.pl 
 /usr/share/asterisk/sounds/en/pearlpbx-nomorelines.alaw
 /usr/share/asterisk/sounds/en/pearlpbx-nomorelines.mp3
 /usr/share/asterisk/sounds/en/pearlpbx-nomorelines.wav
