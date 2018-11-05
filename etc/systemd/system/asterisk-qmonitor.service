@@ -1,0 +1,18 @@
+[Unit]
+Description=PearlPBX Queue Monitor 
+Requires=asterisk.service
+After=asterisk.service 
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/sbin/PearlPBX-QMonitor.pl --qname=express
+
+# safe_asterisk emulation
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
