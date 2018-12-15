@@ -37,12 +37,100 @@ use PearlPBX::Logger;
 use NetSDS::Asterisk::EventListener;
 use NetSDS::Asterisk::Manager;
 
+# Queue - The name of the queue.
+# MemberName - The name of the queue member.
+#  Interface - The queue member's channel technology or location.
+# StateInterface - Channel technology or location from which to read device state changes.
+# Membership dynamic, realtime, static
+# Penalty - The penalty associated with the queue member.
+# CallsTaken - The number of calls this queue member has serviced.
+# LastCall - The time this member last took a call, expressed in seconds since 00:00, Jan 1, 1970 UTC.
+# InCall - Set to 1 if member is in call. Set to 0 after LastCall time is updated.
+# Status - The numeric device state status of the queue member.
+
+use constant QueueStatus => [ qw/ 
+AST_DEVICE_UNKNOWN
+AST_DEVICE_NOT_INUSE
+AST_DEVICE_INUSE
+AST_DEVICE_BUSY
+AST_DEVICE_INVALID
+AST_DEVICE_UNAVAILABLE
+AST_DEVICE_RINGING
+AST_DEVICE_RINGINUSE
+AST_DEVICE_ONHOLD 
+/]; 
+
+use constant PauseStatus => [ qw/
+NOT_IN_PAUSE
+PAUSED
+/]; 
+
+
+use constant CALL_TIMEOUT => 60*1000;
+
 sub start {
     my $this = shift;
-    $self->SUPER::start();
-    $SIG{INT}  = sub { $self->{to_finalize} = 1; };
-    $SIG{TERM} = sub { $self->{to_finalize} = 1; };
-    $this->queue_status()
+    $this->SUPER::start();
+    $SIG{INT}  = sub { $this->{to_finalize} = 1; };
+    $SIG{TERM} = sub { $this->{to_finalize} = 1; };
+}
+
+sub _check_queue_status {
+    my $this = shift; 
+
+    $this->queue_status();
+    return unless defined ( $this->{'queue_members'} );
+
+    foreach my $qm ( @{$this->{queue_members}} ) {
+        # $this->speak(Dumper($qm));
+        $this->log( "info", $qm->{'StateInterface'} . " " . QueueStatus->[$qm->{'Status'}] . " " . PauseStatus->[$qm->{'Paused'}]); 
+        if ($qm->{'Event'} eq 'QueueMember') {
+            if ($qm->{'Paused'} == 0) {
+                if ($qm->{'Status'} == 1) {
+                    my $agent = $qm->{'StateInterface'};
+                    my $queue = $qm->{'Queue'}; 
+                    my $service = substr $queue, 8;
+                    my $dst   = $this->_get_today_undone ($service); 
+                    unless ( defined ( $dst ) ) {
+                       $this->log("info","_check_queue_status: No destination for service $service");  
+                       next; 
+                    }
+#  'Paused' => 0,
+#  'Queue' => 'CallbackAutoExpress',
+#  'StateInterface' => 'SIP/200',
+#  'Status' => 1
+                   $this->_originate_call($dst, $agent, $service); 
+                   $this->log("info", "_check_queue_status: Calling to $agent with connect to $dst and service $service"); 
+                   return;
+               } 
+           } #end if 
+       } #end if 
+    } #end foreac 
+}
+
+sub _originate_call {
+    my ($this, $dst, $agent, $service) = @_; 
+
+    $this->log("info","Calling to $agent with connect to $dst and service $service");
+    $this->_set_inprogress($service, $dst); 
+    $this->mgr->sendcommand (
+        Action   => 'Originate',
+        ActionID => $dst,
+        Channel  => $agent,
+        Context  => "IVR2018".$service."Callback",
+        Exten    => $dst,
+        Priority => '1',
+        Timeout  => CALL_TIMEOUT,
+        CallerID => $dst,
+        Account  => $service,
+        Async    => 'true',
+    );
+
+    my $reply = 0;
+    while ( !$reply ) {
+        $reply = $this->mgr->receive_answer();
+        $this->log( "info", Dumper $reply);
+    }
 
 }
 
@@ -76,10 +164,9 @@ sub queue_status {
       if ( $event =~ /QueueStatusComplete/i ) {
         last;
       }
-      if ( $reply->{'Queue'} ~ 'Callback' ) {
+      if ( $reply->{'Queue'} =~ 'Callback' ) {
         if ( $event =~ /QueueParams/i ) {
           $self->{queue_params} = $reply;
-          $foundQueue = 1;
         } elsif ( $event =~ /QueueMember/i ) {
           push @queue_members, $reply;
         }
@@ -87,25 +174,53 @@ sub queue_status {
   }
   $self->{queue_members} = \@queue_members;
 
-  unless ( defined ( $foundQueue ) ) {
-      die "Given queue name not found in QueueStatus response\n";
-  }
+  #warn Dumper $self->{queue_members}; 
   return 1;
 }
 
 sub _get_today_undone {
     my $this       = shift;
-    # Find all undone applications for last 24 hours 
+    my $service    = shift; 
+
+    # Find all undone applications for last 1 hour 
     my $sth = $this->dbh->prepare(
-        "select * from callback_list where created between now()-'1 day'::interval and now() and not done");
-    eval { $sth->execute(); };
+        "select * from callback_list where created >= now()-'1 hour'::interval and not inprogress and servicename=? order by updated limit 1");
+    eval { $sth->execute($service); };
     if ($@) {
         $this->_exit( $this->dbh->errstr );
     }
-    my $result = $sth->fetchall_hashref('id');
-    return $result;
+    my $result = $sth->fetchrow_hashref;
+    return undef unless ( defined ( $result ) );
+    return $result->{'callerid'}; 
 }
 
+sub _set_inprogress {
+    my $this = shift; 
+    my $service = shift; 
+    my $callerid = shift; 
+
+    my $sth = $this->dbh->prepare(
+        "update callback_list set inprogress='t' where servicename=? and callerid=?" 
+    ); 
+    eval { $sth->execute($service, $callerid); };
+    if ( $@ ) {
+       $this->_exit( $this->dbh->errstr );
+    }
+    return 1; 
+}
+
+sub _set_end_progress {
+    my $this = shift; 
+    my $num  = shift; 
+
+    eval { 
+        $this->dbh->do("update callback_list set inprogress='f' where callerid='$num'");
+    }; 
+    if ($@) {
+        $this->_exit( $this->dbh->errstr );
+    };
+    return 1; 
+}
 
 sub _cutoff_channel {
     my $this    = shift;
@@ -120,13 +235,13 @@ sub _cutoff_channel {
 sub process {
     my $this = shift;
 
-    warn Dumper $this->queue_members; 
     my $event = undef;
-
-    $event = $self->el->_getEvent();
+    $event = $this->el->_getEvent();
+    
     unless ( defined ( $event ) ) {
         Info("EOF from asterisk manager");
-        $self->{to_finalize} = 1;
+        $this->{to_finalize} = 1;
+        return; 
     }
 
     if ($event == 0)  {
@@ -138,9 +253,47 @@ sub process {
         Debug("STRANGE EVENT: %s", $event);
         return;
     }
+   
+#  'ActionID' => '0504139380',
+#  'Event' => 'OriginateResponse',
+#  'Reason' => 5,
 
-    warn Dumper $event->{'Event'}
+    if ( $event->{'Event'} =~ 'OriginateResponse' ) {
+        if ($event->{'Reason'} != 4) {
+            $this->_set_end_progress($event->{'ActionID'});
+        }
+    }
+
+    if ( $event->{'Event'} =~ 'QueueMemberStatus' ) {
+        if ( $event->{'Paused'} == 0 ) {
+            if ( $event->{'Queue'} =~ 'Callback' ) {
+                $this->log( "info", $event->{'StateInterface'} . " " . QueueStatus->[$event->{'Status'}] . " " . PauseStatus->[$event->{'Paused'}]);
+                if ( QueueStatus->[$event->{'Status'}] eq 'AST_DEVICE_NOT_INUSE' ) {
+                    my $agent = $event->{'StateInterface'}; 
+                    my $queue = $event->{'Queue'}; 
+                    $queue    =~ s/Callback//ig;
+                    my $dst   = $this->_get_today_undone ($queue);
+                    unless ( defined ( $dst ) ) {
+                       $this->log( "info", "No destination for service $queue");
+                       return;
+                    }
+                    $this->_originate_call($dst, $agent, $queue);
+                    return;
+                }
+            }
+        }
+    }
+
+    unless ( defined ( $this->{'queue_checked'} ) ) {
+        $this->_check_queue_status();
+        $this->{'queue_checked'} = time; 
+        return; 
+    }  
+    
+    if ( $this->{'queue_checked'} < (time - 10))  {
+        $this->_check_queue_status();
+        $this->{'queue_checked'} = time;
+    }
 
 }
-
 1;
