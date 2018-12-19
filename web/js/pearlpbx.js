@@ -47,8 +47,12 @@ function pearlpbx_get_calendar() {
 	}, "html");
 }
 
-function pearlpbx_show_module (modulename) {
-	$('.pearlpbx-modules-admin-ivr-body').html($(modulename).html());
+function pearlpbx_show_module (modulename, rtype) {
+    if (rtype == undefined || rtype == 'ivr') {
+    	$('.pearlpbx-modules-admin-ivr-body').html($(modulename).html());
+    } else {
+        $('.pearlpbx-modules-'+rtype+'-body').html($(modulename).html());
+    }
 	return false;
 }
 
@@ -979,6 +983,32 @@ function pearlpbx_load_lost_calls (queuename, sincedatetime,tilldatetime) {
 	$.getJSON("/reports.pl",
 	{
 		"exec-report": "listlostcalls",
+		queuename: queuename,
+		sincedatetime: sincedatetime,
+		tilldatetime: tilldatetime,
+	},function (json) {
+		$('#pearlpbx_lost_calls_list tbody').empty();
+		jQuery.each(json, function () {
+			$('#pearlpbx_lost_calls_list').append("<tr><td>"+this['msisdn']
+				+"</td><td>"+this['datetimelost']+"</td>"
+				+"<td>"+this['holdtime']+"</td>"
+				+"<td>"+this['lucky']+"</td>"
+				+"<td>"+this['luckyhold']+"</td>"
+				+"<td>"+this['outtime']+"</td>"
+				+"<td>"+this['source']+"</td>"
+				+"<td>"+this['billsec']+"</td>"
+				+"</tr>");
+		});
+	} );
+
+}
+
+function pearlpbx_load_lost_calls1 (queuename, sincedatetime,tilldatetime) {
+	$('#pearlpbx_lost_calls_list tbody').empty();
+	$('#pearlpbx_lost_calls_list').append("<tr><td colspan=5>Request sent...</td></tr>");
+	$.getJSON("/reports.pl",
+	{
+		"exec-report": "listlostcalls1",
 		queuename: queuename,
 		sincedatetime: sincedatetime,
 		tilldatetime: tilldatetime,

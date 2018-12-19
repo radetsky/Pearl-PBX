@@ -267,27 +267,19 @@ sub hashref2arrayofhashes {
 sub modulesnames { 
 	my ($this,$rtype) = @_; 
 
-	my $dirname = "/usr/share/pearlpbx/modules/";
-	if ($rtype =~ /^ivr$/) {
-		$dirname .= $rtype; 
-	}
-	if ($rtype =~ /^katyusha$/ ) { 
-		$dirname .= $rtype; 
-	}
-	if ($rtype =~ /^konference$/ ) { 
-		$dirname .= $rtype; 
-	}
-	if ($rtype =~ /^backup$/ ) { 
-		$dirname .= $rtype; 
-	}
-
-	return $this->read1stlines($dirname);
+	return $this->read1stlines($this->_dirname($rtype));
 
 }
 
 sub modulesbodies { 
 	my ($this,$rtype) = @_; 
 
+	return $this->readwholebodies($this->_dirname($rtype));
+}
+
+sub _dirname {
+    my ($this, $rtype) = @_; 
+
 	my $dirname = "/usr/share/pearlpbx/modules/";
 	if ($rtype =~ /^ivr$/) {
 		$dirname .= $rtype; 
@@ -302,11 +294,12 @@ sub modulesbodies {
 		$dirname .= $rtype; 
 	}
 
-	return $this->readwholebodies($dirname);
+    if ($rtype =~ /^callback$/) {
+        $dirname .= $rtype; 
+    }
 
+    return $dirname;
 }
-
-
 
 1;
 

@@ -59,7 +59,7 @@ if ( defined ( $listmodules ) ) {
 
 		my @list = $pearl->modulesnames($rtype); 
 		foreach my $item (@list) { 
-			$out .= '<li><a href="javascript:void(0)" onclick="pearlpbx_show_module('."\'#".@$item[0]."\'".')">'.@$item[1] .'</a></li>';
+			$out .= '<li><a href="javascript:void(0)" onclick="pearlpbx_show_module('."\'#".@$item[0]."\'".',\''.$rtype.'\')">'.@$item[1] .'</a></li>';
 		}
 		$out .= '</ul>'; 
 	}
