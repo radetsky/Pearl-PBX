@@ -7,13 +7,6 @@ use warnings;
 $| = 1;
 
 FastServer->run(
-    conf_file   => '/etc/PearlPBX/asterisk-router.conf',
-    has_conf    => 1,
-    daemon      => undef,
-    use_pidfile => 1,
-    verbose     => undef,
-    debug       => 1,
-    infinite    => undef,
     port        => '4573',
 );
 
@@ -51,6 +44,50 @@ sub child_init_hook {
 
 }
 
+sub _cut_the_plus {
+    my $this = shift;
+    my $str  = shift;
+
+    my $first = substr( $str, 0, 1 );
+    if ( $first eq '+' ) {
+        return substr( $str, 1 );
+    } else {
+        return $str;
+    }
+}
+
+sub _cut_local_callerid {
+    my $this     = shift;
+    my $callerid = shift;
+
+    my $local_country_code  = '38';
+    my $local_number_length = 10;
+
+    my $calleridlen = length($callerid);
+    if ( $calleridlen > $local_number_length ) {
+        # Длина входящего номера больше чем длина национального,
+        # Значит будем обрезать.
+        if ( $callerid =~ /^$local_country_code/ ) {
+            # Еще и попал под regexp с началом номера с национального кода ?
+            # Точно будем обрезать
+            $callerid = substr( $callerid, $calleridlen - $local_number_length, $local_number_length );
+        }
+    } elsif ( $calleridlen == $local_number_length-1 ) {
+        $callerid = "0".$callerid;
+    }
+    return $callerid;
+}
+
+sub _normalize_callerid {
+    my $this = shift;
+    my $param = shift;
+
+    my $callerid = $this->_cut_the_plus($param);
+    $callerid = $this->_cut_local_callerid($callerid);
+
+    return $callerid;
+}
+
 sub blacklist {
 	my $this = shift;
 
@@ -58,6 +95,9 @@ sub blacklist {
     unless ( defined ( $callerid_num ) ) {
         return;
     }
+
+    $callerid_num = $this->_normalize_callerid ( $callerid_num );
+#    warn $callerid_num . "\n";
 
     my $sql = "select count(*) as blacklisted from public.blacklist where number=?";
     my $sth = $this->{dbh}->prepare($sql);
