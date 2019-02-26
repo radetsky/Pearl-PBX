@@ -8,7 +8,18 @@ use PearlPBX::Localization;
 
 use Exporter;
 use parent qw(Exporter);
-our @EXPORT_OK = qw (http_accept_lang);
+our @EXPORT_OK = qw (http_accept_lang http_response);
+
+sub http_response {
+    my $env = shift;
+    my $code = shift;
+    my $response = shift;
+
+    my $req = Plack::Request->new($env);
+    my $res = $req->new_response($code);
+    $res->body ($response);
+    $res->finalize;
+}
 
 sub http_accept_lang {
 

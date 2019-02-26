@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Radetsky Pearl PBX</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PearlPBX Graphical User Interface">
+    <meta name="author" content="Alexey Radetsky rad@rad.kiev.ua">
+
+    <!-- Le styles -->
+    <link href="css/v1/bootstrap.css" rel="stylesheet">
+	<link href="css/bootstrap-datepicker.css" rel="stylesheet">
+	<link href="jPlayer/skin/blue.monday/jplayer.blue.monday.css" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="/js/jqPlot/jquery.jqplot.css" />
+    <link href="css/pearlpbx.css" rel="stylesheet">
+
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="images/favicon.ico">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+  </head>
+
+  <body>
+
+    <script src="js/jquery-2.2.3.js"></script>
+    <script src="js/bootstrap.js"></script>
+		<script src="js/bootstrap-datepicker.js"></script>
+    <script src="js/astman-jah.js"></script>
+		<script src="js/pearlpbx.js"></script>
+		<script src="jPlayer/jquery.jplayer.min.js"></script>
+ 		<script language="javascript" type="text/javascript" src="/js/jqPlot/jquery.jqplot.min.js"></script>
+
+    <script src="/js/jquery.form.js"></script>
+    <script language="javascript" type="text/javascript">
+      $(document).ready(pearlpbx_start_me_up());
+    </script>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <img style="float: left; margin-right: 5px;" width="40" src="/img/PearlPBX-logo.png">
+          <a class="brand" href="/">PearlPBX</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="#">Главная</a></li>
+              <li><a href="http://www.pearlpbx.com">О проекте</a></li>
+            </ul>
+            <p class="navbar-text pull-right">Logged in as <a id="pearlpbx_username" href="#">admin</a></p>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+              <li class="nav-header">Настройки</li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#sip-connections')">SIP-подключения</a></li>
+			  <li><a href="javascript:void(0)" onClick="pearlpbx_show_queues()">Группы/Очереди</a><li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#trunkgroups')">Транкгруппы</a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#directions')">Направления</a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_reload_permissions(); pearlpbx_show('#pearlpbx_permissions');">Права доступа</a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#pearlpbx_set_callerid')">Установка номеров А</a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#pearlpbx_convert_extension')">Установка номеров Б</a></li>
+
+
+              <li class="nav-header">Отчеты</li>
+              <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-general')">Общие</a></li>
+              <li><a href="javascript:void(0)"  onClick="pearlpbx_show('#cdr-filter')">CDR-фильтр</a></li>
+							<li><a href="javascript:void(0)"  onClick="pearlpbx_show('#reports-summary')">Количественные</a></li>
+
+              <li class="nav-header">Модули</li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-admin-ivr')"> Визуальное управление IVR </a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-katyusha')">
+              Автодозвон </a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-konference')">
+              Конференц-связь </a></li>
+              <li><a href="javascript:void(0)" onClick="pearlpbx_show('#modules-backup')">
+              Резервное копирование </a></li>
+
+
+              <li class='nav-header'> Пользователь </li>
+              <li> <button class='btn btn-info'>Мой профиль</button>
+              <li> <button class='btn btn-danger' onClick='pearlpbx_logout()'>Закончить сессию</button>
+            </ul>
+          </div><!--/.well -->
+
+        <div class="span3">
+              <h2>Проверка маршрутизации</h2>
+              <form>
+              <label>Канал А</label>
+              <select id="check_routing_channel" name="check_routing_channel">
+              </select>
+              <label>Номер Б</label>
+              <input id="check_routing_destination" type="text" placeholder="Введите номер">
+              <p><a class="btn btn-success" href="#" onClick="pearlpbx_check_routing();">Проверить</a></p>
+            </form>
+            </div><!--/span-->
+         </div><!--/span-->
+
+				<!-- Здесь начинается div с "телом" кредита :)-->
+
+        <div class="span9" id="pearl-pbx-main-container">
+          <div class="row-fluid">
+            <div class="span4">
+              <h2 style='float: left;'>Краткая сводка</h2>
+              <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_monitor_get_sip_status()'><span class='icon icon-refresh icon-white'></span></a>
+              <table id="pearlpbx_monitor_zagalom" class="table bordered">
+                <thead>
+                  <tr><th>Name</th><th>count</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Звонков в очередях:</td><td id="pearlpbx_monitor_zagalom_qcalls"></td></tr>
+                  <tr><td>Операторов в работе:</td><td id="pearlpbx_monitor_zagalom_inuse"></td></tr>
+                  <tr><td>Операторов в простое:</td><td id="pearlpbx_monitor_zagalom_notinuse"></td></tr>
+                  <tr><td>Активных каналов:</td><td id="pearlpbx_monitor_zagalom_channels"></td></tr>
+                  <tr><td>Активных звонков:</td><td id="pearlpbx_monitor_zagalom_talks"></td></tr>
+                  <tr><td>Припаркованных звонков:</td><td id="pearlpbx_monitor_zagalom_parked"></td></tr>
+                </tbody>
+              </table>
+
+            </div><!--/span-->
+            <div class="span4">
+              <h2 style='float: left;'>SIP</h2>
+              <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_monitor_get_sip_status()'><span class='icon icon-refresh icon-white'></span></a>
+              <table class="table bordered" id="pearlpbx_monitor_sip">
+                <thead>
+                  <tr><th>Name</th><th>count</th></tr>
+                </thead>
+                <tbody>
+                <tr><td>В базе данных</td>     <td id="pearlpbx_monitor_sip_db"></td></tr>
+                <tr><td>Realtime asterisk</td> <td id="pearlpbx_monitor_sip_peers"></td></tr>
+                <tr><td>Online </td>           <td id="pearlpbx_monitor_sip_online"></td></tr>
+                <tr><td>Неизвестно</td>        <td id="pearlpbx_monitor_sip_unknown"></td></tr>
+                <tr><td>Недоступен</td>        <td id="pearlpbx_monitor_sip_offline"></td></tr>
+              </tbody>
+              </table>
+              <!-- <p><a class="btn" href="#">View details &raquo;</a></p> -->
+            </div><!--/span-->
+            <div class="span4">
+              <h2 style='float: left;'>Queues</h2>
+              <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_monitor_get_queue_status()'><span class='icon icon-refresh icon-white'></span></a>
+              <table class='table bordered' id="pearlpbx_monitor_queue">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Wait</th>
+                    <th>Use</th>
+                    <th>Not</th>
+                    <th>Ready</th>
+                    <th>N/R</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+              </table>
+              <!-- <p><a class="btn" href="#">View details &raquo;</a></p>-->
+            </div><!--/span-->
+
+          </div><!--/row-->
+          <div class="row-fluid">
+
+            <div class="span4">
+              <h2 style='float: left;'>Активные каналы</h2>
+              <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_monitor_get_active_channels()'><span class='icon icon-refresh icon-white'></span></a>
+              <table class='table bordered' id='pearlpbx_monitor_active_channels'>
+                <thead>
+                  <tr>
+                    <th>Канал</th>
+                    <th>Номер</th>
+                    <th>State</th>
+                    <th>Link</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+
+            </div><!--/span-->
+            <div class="span4">
+              <h2 style='float: left;' >Внутренние линии</h2>
+              <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_monitor_get_ulines()'><span class='icon icon-refresh icon-white'></span></a>
+              <table class='table bordered' id='pearlpbx_monitor_ulines'>
+                <thead>
+                  <tr>
+                    <th>id</th>
+                    <th>Номер</th>
+                    <th>Начало</th>
+                    <th>Канал</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div><!--/span-->
+
+            <div class="span4">
+              <h2 style='float: left;'>Парковка</h2>
+              <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_monitor_get_parkedcalls()'><span class='icon icon-refresh icon-white'></span></a>
+              <table id="pearlpbx_monitor_parkedcalls" class="table bordered">
+                <thead>
+                  <tr>
+                    <th>Номер A</th>
+                    <th>Линия</th>
+                    <th>Канал А</th>
+                    <th>Таймаут</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+              </table>
+
+            </div><!--/span-->
+
+          </div><!--/row-->
+        </div><!--/span-->
+      </div><!--/row-->
+
+      <hr>
+
+      <footer>
+        <p>&copy; Alexey Radetsky 2011-2015</p>
+				<p>Designed with Twitter bootstrap v.2.0.</p>
+      </footer>
+
+    </div><!--/.fluid-container-->
+<!-- STORED SESSIONS FORM -->
+
+		<div id="stored_sessions" style="display: none;">
+		 <div class="pearlpbx-main-container-header">
+			<h1><center>Записанные разговоры</center></h1>
+		 </div>
+		 <div class="pearlpbx-main-container-body">
+
+   <form class="well" onSubmit="return stored_sessions_submit()">
+		<fieldset>
+        <input id='dateFrom' data-datepicker="datepicker" class="input-small" type="text" value="" />
+        <input id='timeFrom' class="input-mini" type="text" value="00:00" />
+                to
+        <input id='dateTo' data-datepicker="datepicker" class="input-small" type="text" value="" />
+        <input id='timeTo' class="input-mini" type="text" value="23:59" />
+    		<input id='phone'  type="text" class="input-small" placeholder="Телефон">
+	  		<input type="submit" class="btn btn-primary" value="Поиск">
+		</fieldset>
+    </form>
+		<div id="stored_sessions_result">
+		</div>
+		 </div>
+		</div>
+
+<!-- END OF STORED SESSIONS FORM -->
+
+
+<!-- Begin of the navigations parts -->
+<div id="sip-connections" style="display: none">
+ <div class="pearlpbx-main-container-header">
+	<h1><center> SIP Connections </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+  <ul class="nav nav-tabs">
+   <li><a href="javascript:void(0)" onClick="pearlpbx_show_sip_internal_users()">Внутренние пользователи</a></li>
+   <li><a href="javascript:void(0)" onClick="pearlpbx_show_sip_external_trunks()">Внешние транки</a></li>
+   </ul>
+ </div>
+
+ <div id="pearlpbx-sip-connections-list">
+ </div>
+ <div id="pearlpbx-sip-add-internal-button" style="display: none;" class="pearlpbx-main-container-header">
+    <center>  <button class="btn btn-primary" href="#add_sip_user" data-toggle="modal" onClick="pearlpbx_fill_sip_form();">Добавить нового пользователя</button> </center>
+ </div>
+<div id="pearlpbx-sip-add-external-button" style="display: none;" class="pearlpbx-main-container-header">
+  <center> <a class="btn btn-primary" href="#pearlpbx_sip_edit_peer" data-toggle="modal" onClick="pearlpbx_sip_add_trunk()">Добавить новый транк</a></center>
+</div>
+<div id="pearlpbx-sip-reload-button" class="pearlpbx-main-container-header">
+  <center>
+    <a href="javascript:void(0)" onClick="pearlpbx_sip_reload()" class='btn btn-success'>Обновить настройки протокола SIP</a>
+    <a href="javascript:void(0)" onClick="pearlpbx_tftp_reload()" class='btn btn-success'>Обновить настройки телефонов </a>
+  </center>
+</div>
+</div>
+
+<div id="queues" style="display: none">
+ <div class="pearlpbx-main-container-header">
+	<h1><center> Группы/Очереди </center></h1>
+ </div>
+ <div id="pearlpbx-queues-list"></div>
+ <div id="pearlpbx-queues-add-button" class="pearlpbx-main-container-header">
+  <center>
+    <button class="btn btn-primary" href="#pearlpbx_queues_edit" data-toggle="modal" onClick="pearlpbx_queues_clear()">Добавить группу операторов
+    </button>
+  </center>
+ </div>
+
+</div>
+
+
+<!-- CDR FILTER -->
+
+<div id="cdr-filter" style="display: none">
+
+ <div class="pearlpbx-main-container-header">
+  <h1><center> CDR Filter </center></h1>
+ </div>
+ <form class="well form-inline" onSubmit="return cdrfilter_submit()">
+  <fieldset>
+      Дата и время начала
+        <input id='cdrfilter_dateFrom' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id='cdrfilter_timeFrom' class="input-mini" type="text" value="00:00" />
+      Дата и время окончания
+        <input id='cdrfilter_dateTill' data-datepicker="datepicker" class="input-date" type="text" value="" />
+        <input id="cdrfilter_timeTill" class="input-mini" type="text" value="23:59" />
+
+  <table>
+    <tr> <th>Номер А</th><th>Номер Б</th><th>Канал А</th><th>Канал Б</th> </tr>
+
+    <tr>
+      <td><input type="text" class="input-small" id="cdrfilter_src" placeholder="0504139380" value=""></td>
+      <td><input type="text" class="input-small" id="cdrfilter_dst" placeholder="2391515" value=""></td>
+      <td>
+        <select name="cdrfilter_channel" id="cdrfilter_channel" class="pearlpbx_list_channels">
+        </select>
+      </td>
+      <td>
+        <select name="cdrfilter_dstchannel" id="cdrfilter_dstchannel" class="pearlpbx_list_channels">
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <th align="center" colspan="2">Статус</th><th align="center" colspan="2">Общее время<th>
+    </tr>
+    <tr>
+      <td colspan="2" align="center">
+        <select name="cdrfilter_disposition" id="cdrfilter_disposition">
+          <option value="ANY">Любой</option>
+          <option value="ANSWERED">ANSWERED</option>
+          <option value="NO ANSWER">NO ANSWER</option>
+          <option value="BUSY">BUSY</option>
+          <option value="FAILED">FAILED</option>
+        </select>
+      </td>
+      <td colspan="2" align="center">
+        <select name="cdrfilter_billsec" id="cdrfilter_billsec">
+          <option value="0"> Любое </option>
+          <option value="1"> 0 - 30 сек.</option>
+          <option value="2">30 - 60 сек.</option>
+          <option value="3">60 - 120 сек.</option>
+          <option value="4">120 - 180 сек.</option>
+          <option value="5">180 - 300 сек.</option>
+          <option value="7">60 - ... сек.</option>
+          <option value="8">120 - ... сек.</option>
+          <option value="9">180 - ... сек.</option>
+          <option value="10">240 - ... сек.</option>
+          <option value="6">300 - ... сек.</option>
+        </select>
+      </td>
+    </tr>
+    </tr>
+    </table>
+    </fieldset>
+
+</br>
+  <center>
+      <input type="submit" class="btn btn-primary btn-large" value="Поиск">
+  </center>
+ </form>
+
+<div id="cdrfilter_result">
+</div>
+
+</div>
+
+
+<script type="text/javascript">
+function cdrfilter_validate() {
+  return false;
+}
+function cdrfilter_submit () {
+
+  var valid = cdrfilter_validate();
+
+  var cdrfilter_dateFrom = $('#cdrfilter_dateFrom').val();
+  var cdrfilter_timeFrom = $('#cdrfilter_timeFrom').val();
+  var cdrfilter_dateTill = $('#cdrfilter_dateTill').val();
+  var cdrfilter_timeTill = $('#cdrfilter_timeTill').val();
+
+  var cdrfilter_src = $('#cdrfilter_src').val();
+  var cdrfilter_dst = $('#cdrfilter_dst').val();
+
+  var cdrfilter_channel = $('select#cdrfilter_channel option:selected').val();
+  var cdrfilter_dstchannel = $('select#cdrfilter_dstchannel option:selected').val();
+
+  var cdrfilter_disposition = $('select#cdrfilter_disposition option:selected').val();
+  var cdrfilter_billsec = $('select#cdrfilter_billsec option:selected').val();
+
+  $("#cdrfilter_result").html("Request sent...");
+  $.get("/reports.pl",
+    { "exec-report": "cdrfilter",
+      dateFrom: cdrfilter_dateFrom,
+      timeFrom: cdrfilter_timeFrom,
+      dateTill: cdrfilter_dateTill,
+      timeTill: cdrfilter_timeTill,
+      src:      cdrfilter_src,
+      dst:      cdrfilter_dst,
+      channel:  cdrfilter_channel,
+      dstchannel: cdrfilter_dstchannel,
+      disposition: cdrfilter_disposition,
+      billsec: cdrfilter_billsec,
+    },function(data)
+    {
+      $('#cdrfilter_result').html(data);
+    }, "html");
+
+  return false;
+
+}
+</script>
+
+<!-- END OF CDR FILTER -->
+
+<div id="reports-general" style="display: none">
+ <div class="pearlpbx-main-container-header">
+   <h1><center> Общие отчеты </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+	<div id="pearlpbx-general-reports-list">
+	</div>
+  <div class="pearlpbx-report-body">
+	</div>
+ </div>
+</div>
+
+<div id="pearlpbx-reports-bodies" style="display: none">
+</div>
+
+<div id="reports-summary" style="display: none">
+ <div class="pearlpbx-main-container-header">
+	<h1><center> Количественные отчеты </center></h1>
+ </div>
+ <div id="reports-summary-names"> </div>
+ <div class="pearlpbx-report-body"></div>
+</div>
+
+<div id="pearlpbx-summary-reports-bodies" style="display: none">
+</div>
+
+<!-- Скрипт, который заполняет список названий отчетов -->
+<script type="text/javascript">
+		<!--
+		$.when( $.get("/reports.pl",{ "list-reports": 1, } ) ).then (
+            function(data) {
+				$('#pearlpbx-general-reports-list').html(data);
+			} );
+
+		$.get("/reports.pl",
+			{ "list-reports": 2, },
+			function(data) {
+				$('#pearlpbx-reports-bodies').html(data);
+				$.get("/reports.pl",
+					{ "list-external-numbers": 1, },
+					function(data) {
+						$('.pearlpbx-external-numbers').html(data);
+					},"html");
+				$.get("/reports.pl",
+					{ "list-queues":1, },
+					function(data) {
+						$('.pearlpbx-list-queues').html(data);
+					},"html");
+			}, "html");
+
+			$('#reports-summary-names').load('/reports.pl?list-reports=1&rtype=sum');
+      $('#pearlpbx-summary-reports-bodies').load('/reports.pl?list-reports=2&rtype=sum');
+      $('.pearlpbx_list_channels').load('/reports.pl?list-channels=1');
+
+
+      pearlpbx_fill_check_routing_channel();
+
+		-->
+</script>
+
+<!-- End of the zaglushka -->
+<!-- PearlPBX Player -->
+<div class="modal fade" id="pearlpbx_player" style="display: none; width: 1000px; position: fixed; left: 300px;   ">
+ <div class="modal-header">
+ 	<a class="close" data-dismiss="modal">x</a>
+	<h3> PearlPBX Player </h3>
+ </div>
+ <div class="modal-body">
+ <p style="float: left"> <b>Дата и время:</b>&nbsp;</p>
+ <div id="param_cdr_start" style="float: left;" ></div>
+ <p style="float: left"> &nbsp;<b>Номер А: </b>&nbsp; </p>
+ <div id="param_cdr_src" style="float: left;"> </div>
+ <p style="float: left"> &nbsp;<b>Номер Б: </b>&nbsp; </p>
+ <div id="param_cdr_dst"></div>
+ <br>
+
+ <div id="recordings_table">
+
+ </div>
+<!-- jQuery jPlayer -->
+
+  <div id="jquery_jplayer_1" class="jp-jplayer"></div>
+  <div id="jp_container_1" class="jp-audio">
+    <div class="jp-type-single">
+      <div class="jp-gui jp-interface">
+        <ul class="jp-controls">
+          <li><a href="javascript:;" class="jp-play" tabindex="1">play</a></li>
+          <li><a href="javascript:;" class="jp-pause" tabindex="1">pause</a></li>
+          <li><a href="javascript:;" class="jp-stop" tabindex="1">stop</a></li>
+          <li><a href="javascript:;" class="jp-mute" tabindex="1" title="mute">mute</a></li>
+          <li><a href="javascript:;" class="jp-unmute" tabindex="1" title="unmute">unmute</a></li>
+          <li><a href="javascript:;" class="jp-volume-max" tabindex="1" title="max volume">max volume</a></li>
+        </ul>
+        <div class="jp-progress">
+          <div class="jp-seek-bar">
+            <div class="jp-play-bar"></div>
+          </div>
+        </div>
+        <div class="jp-volume-bar">
+          <div class="jp-volume-bar-value"></div>
+        </div>
+        <div class="jp-time-holder">
+          <div class="jp-current-time"></div>
+          <div class="jp-duration"></div>
+          <ul class="jp-toggles">
+            <li><a href="javascript:;" class="jp-repeat" tabindex="1" title="repeat">repeat</a></li>
+            <li><a href="javascript:;" class="jp-repeat-off" tabindex="1" title="repeat off">repeat off</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="jp-title">
+        <ul>
+          <li>jPlayer 2.2.0</li>
+        </ul>
+      </div>
+      <div class="jp-no-solution">
+        <span>Update Required</span>
+        To play the media you will need to either update your browser to a recent version or update your <a href="http://get.adobe.com/flashplayer/" target="_blank">Flash plugin</a>.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<!-- End of PearlPBX Player -->
+
+<div id="pearlpbx-external-numbers" style="display: none">
+</div>
+
+<!-- Диалог добавления SIP-пользователя. Модальный. -->
+
+<div class="modal fade" id="add_sip_user" style="display: none; width: 800px; max-height: 800px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Добавление пользователя SIP</h3>
+  </div>
+  <div class="modal-body" style="max-height: 600px">
+    <form class="form-horizontal">
+      <fieldset>
+
+        <div class="control-group">
+          <label class="control-label" for="input_sip_add_comment">Описание пользователя</label>
+          <div class="controls">
+            <input type="text" class="input-xlarge" id="input_sip_add_comment">
+            <p class="help-block">Это может быть описание рабочего места "Оператор №1" или ФИО "Иванова И.И."</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_sip_add_extension">Внутренний номер</label>
+          <div class="controls">
+<!--            <select name="input_sip_add_extension" class="pearlpbx_internal_free_list" id="input_sip_add_extension"></select>
+-->
+						<input type="text" class="input-small" id="input_sip_add_extension">
+            <p class="help-block">Введите внутренний номер для абонента.</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;">
+          <label class="control-label" for="input_sip_add_comment">Модель терминала</label>
+          <div class="controls">
+            <select name="input_sip_add_terminal_type" class="pearlpbx_terminal_list" id="input_sip_add_terminal">
+
+              <option value="SPA502G">Cisco SPA502G</option>
+              <option value="SPA504G">Cisco SPA504G</option>
+              <option value="GrandStreamGXP1200">GrandStream GXP1200</option>
+              <option value="softphone">Other/Softphone</option>
+							<option value="oldhardphone">Other/Old Terminal</option>
+            </select>
+            <p class="help-block">Выберите модель терминала/телефона.</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_sip_add_macaddr">MAC-addr терминала</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_sip_add_macaddr" placeholder="01234567890abcdef">
+            <p class="help-block">Введите МАК-адрес терминала, если это не программный телефон</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Пароль</label>
+          <div class="controls">
+            <span class="input-xlarge uneditable-input" id="input_sip_add_secret"></span>
+            <a class="btn btn-inverse" onclick="pearlpbx_change_secret_add_form();">Поменять</a>
+            <p class="help-block">Вводить свой пароль запрещено. Нажмите кнопку "Поменять", если текущий пароль не устраивает.</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_sip_add_integration_type">Тип интеграции</label>
+          <div class="controls">
+            <select name="input_sip_add_integration_type" class="pearlpbx_integration_list" id="input_sip_add_integration_type">
+                <option value="nointegration">Нет интеграции</option>
+                <option value="YourTaxi">YourTaxi</option>
+                <option value="TaxiOffice">Такси "Диспетчер"</option>
+                <option value="TaxiNavigator">Такси "Навигатор"</option>
+            </select>
+            <p class="help-block">Выберите тип интеграции. Если Radetsky Pearl PBX не поддерживает интеграции с Вашей CRM/ERP системой, сообщите об этом по адресу rad@rad.kiev.ua</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;" >
+          <label class="control-label" for="input_sip_add_tcp_port">TCP port</label>
+          <div class="controls">
+            <input type="text" class="input-small" id="input_sip_add_tcp_port" placeholder="335">
+            <p class="help-block">Порт, на котором ожидает ввода клиентская CRM-система.</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;" >
+          <label class="control-label" for="input_sip_add_ip_addr_tel">IP-адрес терминала</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_sip_add_ip_addr_tel" placeholder="">
+            <p class="help-block">Введите IP-адрес терминала</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;">
+          <label class="control-label" for="input_sip_add_ip_addr_pc">IP-адрес ПК</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_sip_add_ip_addr_pc" placeholder="">
+            <p class="help-block">Введите IP-адрес соответствующего ПК</p>
+          </div>
+        </div>
+
+      </fieldset>
+    </form>
+
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Отменить</a>
+    <a href="#" class="btn btn-primary" onClick="pearlpbx_sip_add_user()">Добавить</a>
+    <a href='#' class='btn btn-info' onClick="pearlpbx_sip_add_advanced_mode()">Профессиональный режим</a>
+  </div>
+</div>
+
+<!-- Конец диалога добавления SIP-пользователя -->
+
+
+
+<!-- Диалог редактирования SIP-пользователя. Модальный. -->
+
+<div class="modal fade" id="pearlpbx_sip_edit_user" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Редактирование пользователя SIP</h3>
+  </div>
+  <div class="modal-body" style="max-height: 600px;">
+    <form class="form-horizontal">
+      <fieldset>
+        <input type='hidden' id='input_sip_edit_id' value=''>
+
+        <div class="control-group">
+          <label class="control-label" for="input_sip_edit_comment">Описание пользователя</label>
+          <div class="controls">
+            <input type="text" class="input-xlarge" id="input_sip_edit_comment">
+            <p class="help-block">Это может быть описание рабочего места "Оператор №1" или ФИО "Иванова И.И."</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_sip_edit_extension">Внутренний номер</label>
+          <div class="controls">
+            <span class="input-small uneditable-input" id="input_sip_edit_extension"></span>
+            <p class="help-block">Текущий внутренний номер пользователя. Его нельзя поменять.</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;">
+          <label class="control-label" for="input_sip_edit_terminal">Модель терминала</label>
+          <div class="controls">
+            <select name="input_sip_edit_terminal" class="pearlpbx_terminal_list" id="input_sip_edit_terminal">
+
+              <option value="SPA502G">Cisco SPA502G</option>
+              <option value="SPA504G">Cisco SPA504G</option>
+              <option value="GrandStreamGXP1200">GrandStream GXP1200</option>
+              <option value="softphone">Other/Softphone</option>
+							<option value="oldhardphone">Other/Old Terminal</option>
+            </select>
+            <p class="help-block">Выберите модель терминала/телефона.</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_sip_edit_macaddr">MAC-addr терминала</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_sip_edit_macaddr" placeholder="01234567890abcdef">
+            <p class="help-block">Введите МАК-адрес терминала, если это не программный телефон</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;">
+          <label class="control-label">Пароль</label>
+          <div class="controls">
+            <span class="input-xlarge uneditable-input" id="input_sip_edit_secret"></span>
+            <a class="btn btn-inverse" onclick="pearlpbx_change_secret_edit_form();">Поменять</a>
+            <p class="help-block">Вводить свой пароль запрещено. Нажмите кнопку "Поменять", если текущий пароль не устраивает.</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;">
+          <label class="control-label" for="input_sip_edit_integration_type">Тип интеграции</label>
+          <div class="controls">
+            <select name="input_sip_edit_integration_type" class="pearlpbx_integration_list" id="input_sip_edit_integration_type">
+                <option value="nointegration">Нет интеграции</option>
+                <option value="YourTaxi">YourTaxi</option>
+                <option value="TaxiOffice">Такси "Диспетчер"</option>
+                <option value="TaxiNavigator">Такси "Навигатор"</option>
+            </select>
+            <p class="help-block">Выберите тип интеграции. Если Radetsky Pearl PBX не поддерживает интеграции с Вашей CRM/ERP системой, сообщите об этом по адресу rad@rad.kiev.ua</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;" >
+          <label class="control-label" for="input_sip_edit_tcp_port">TCP port</label>
+          <div class="controls">
+            <input type="text" class="input-small" id="input_sip_edit_tcp_port" placeholder="335">
+            <p class="help-block">Порт, на котором ожидает ввода клиентская CRM-система.</p>
+          </div>
+        </div>
+
+
+        <div class="control-group" style="float: left;" >
+          <label class="control-label" for="input_sip_edit_ip_addr_tel">IP-адрес терминала</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_sip_edit_ip_addr_tel" placeholder="">
+            <p class="help-block">Введите IP-адрес терминала</p>
+          </div>
+        </div>
+
+        <div class="control-group" style="float: left;">
+          <label class="control-label" for="input_sip_edit_ip_addr_pc">IP-адрес ПК</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_sip_edit_ip_addr_pc" placeholder="">
+            <p class="help-block">Введите IP-адрес соответствующего ПК</p>
+          </div>
+        </div>
+
+
+      </fieldset>
+    </form>
+
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Отменить</a>
+    <a href="#" class="btn btn-primary" onClick="pearlpbx_sip_update_user()">Сохранить</a>
+    <a href='#' class='btn btn-info' onClick="pearlpbx_sip_edit_advanced_mode()">Профессиональный режим</a>
+  </div>
+</div>
+
+<!-- Конец диалога редактирования очереди -->
+
+<!-- Диалог редактирования очереди. Модальный. -->
+<div class="modal fade" id="pearlpbx_queues_edit" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Редактирование группы/очереди операторов</h3>
+  </div>
+  <div class="modal-body" style="max-height: 800px;">
+    <form class="form-horizontal">
+      <fieldset>
+        <input type='hidden' id='input_queue_hidden_oldname' value=''>
+
+        <div class="control-group">
+          <label class="control-label" for="input_queue_edit_name">Название группы/очереди</label>
+          <div class="controls">
+            <input type="text" class="input-xlarge" id="input_queue_edit_name">
+            <p class="help-block">Название группы/очереди состоит только из ЛАТИНСКИХ символов и цифр. Например: "group123".</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_queue_edit_strategy">Стратегия распределения звонков</label>
+          <div class="controls">
+            <select name="input_queue_edit_strategy" class="pearlpbx_queue_stategy_list" id="input_queue_edit_strategy" style="width: 500px;">
+              <option value="ringall">Звонить всем доступным (по-умолчанию)</option>
+              <option value="roundrobin">Последовательный выбор по кругу</option>
+              <option value="random">Случайный выбор</option>
+              <option value="rrmemory">Последовательный выбор с запоминанием предыдущей позиции
+              </option>
+            </select>
+            <p class="help-block">Выберите одну из стратегий распределения звонков между операторами.</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_queue_edit_timeout">Сколько секунд звонит телефон</label>
+          <div class="controls">
+            <input type="text" class="input-small" id="input_queue_edit_timeout" value="15">
+            <p class="help-block">Время вызова оператора(-ов) в группе. По истечению будет вызван другой оператор, если стратегия не "звонить всем".</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_queue_edit_maxlen">Максимальное кол-во ожидающих в очереди</label>
+          <div class="controls">
+            <input type="text" class="input-small" id="input_queue_edit_maxlen" value="0">
+            <p class="help-block">Сколько абонентов могут становиться в очередь, не учитывая тех, кто уже разговаривает. 0 - без ограничений. </p>
+          </div>
+        </div>
+
+          <center>
+          <table class="table table-bordered" id="pearlpbx_edit_queue_operators_list">
+            <thead>
+              <tr>
+                <th>Оператор</th>
+                <th>Интерфейс оператора</th>
+              </tr>
+            </thead>
+            <!--  А здесь размещаются список операторов, которые подгружаются автоматически -->
+          </table>
+          </center>
+
+        <div class="control-group">
+          <div class="controls">
+            <select name="input_queue_edit_members" class="pearlpbx_queue_stategy_list"
+            id="input_queue_edit_members" style="width: 300px;">
+            </select>
+            <a class="btn btn-inverse" onclick="pearlpbx_queue_add_member();">Добавить оператора</a>
+            <p class="help-block">Выберите оператора из списка внутренних пользователей и нажмите кнопку "Добавить оператора".</p>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Отменить</a>
+    <a href="#" class="btn btn-primary" onClick="pearlpbx_queue_update()">Сохранить</a>
+    <a href='#' class='btn btn-info' onClick="pearlpbx_queue_edit_advanced_mode()">Профессиональный режим</a>
+    <a href="#" class="btn btn-danger" onClick="pearlpbx_queue_remove()">Удалить группу</a>
+  </div>
+</div>
+
+<!-- Конец диалога редактирования очереди -->
+
+<!-- Модальный диалог подтверждения удаления очереди -->
+<div class="modal" id="pearlpbx_remove_queue_confirm_dialog" style="display: none; width: 900px; max-height: 650px;">
+  <div class="modal-header">
+    <h3>Удаление группы/очереди операторов</h3>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="pearlpbx_remove_queue_confirm_name" value="">
+  <h3>
+    Удаление группы приведет к невозможности получения СТАТИСТИКИ по этой группе, а так же к возможным сбоям в работе, если на группу до сих пор смаршрутизированы звонки.
+  </h3>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal" onClick="$('#pearlpbx_remove_queue_confirm_dialog').hide()">Отменить</a>
+    <a href="#" class="btn btn-danger" onClick="pearlpbx_queue_remove_сonfirmed()">Удалить группу</a>
+  </div>
+
+</div>
+<!-- Конец диалога редактирования очереди -->
+
+<!-- Страница со списком направлений -->
+<div id="directions" style="display: none">
+ <div class="pearlpbx-main-container-header">
+  <h1><center> Направления </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader" id="pearlpbx_directions_list">
+ </div>
+
+ <div id="pearlpbx_button_add_direction">
+  <center>
+   <a href="#pearlpbx_direction_edit" data-toggle="modal" class="btn btn-primary" onClick="pearlpbx_empty_direction_edit_form()">Добавить новое направление</a>
+  </center>
+ </div>
+<!-- Скрипт, который заполняет список направлений -->
+<script type="text/javascript">
+    <!--
+
+      $('#pearlpbx_directions_list').load('/route.pl?a=list-directions-tab');
+
+    -->
+</script>
+
+</div>
+<!-- Конец Страница со списком направлений -->
+
+
+<!-- Диалог редактирования направления Модальный. -->
+<div class="modal fade" id="pearlpbx_direction_edit" style="display: none; left: 400px;  width: 900px; max-height: 650px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Редактирование направления</h3>
+  </div>
+  <div class="modal-body">
+    <form class="form-horizontal">
+      <fieldset>
+        <input type='hidden' id='input_direction_id' value=''>
+
+        <div class="control-group">
+          <label class="control-label" for="input_direction_edit_name">Название направления</label>
+          <div class="controls">
+            <input type="text" class="input-xlarge" id="input_direction_edit_name">
+            <p class="help-block">Название направления может состоять из символов и цифр. Например: "Local Office" или "Мобильные".</p>
+          </div>
+        </div>
+        <div id="pearlpbx_direction_tables" class="control-group">
+          <table style="float: left; width: 280px;" class="table table-bordered" id="pearlpbx_direction_edit_list">
+            <thead>
+              <tr>
+                <th>Префикс</th>
+                <th>Приоритет</th>
+              </tr>
+            </thead>
+            <!--  А здесь размещается список префиксов для напрвления и приоритеты -->
+          </table>
+          <table style="float: left; width: 400px; margin-left: 10px;" class="table table-bordered" id="pearlpbx_direction_route_list">
+            <thead>
+              <tr>
+                <th>n/n</th>
+                <th>Тип маршрутизации</th>
+                <th>Назначение</th>
+                <th>Для кого</th>
+              </tr>
+            </thead>
+            <!--  А здесь размещается список маршрутизации для направления -->
+          </table>
+        </div>
+
+        <div class="control-group">
+          <div style="float: left;" class="controls">
+            <input type="text" class="input-small" id="input_direction_new_prefix" placeholder="Префикс">
+            <select name="input_direction_new_prio" id="input_direction_new_prio" style="width: 50px;">
+              <option value='5'>5</option>
+              <option value='4'>4</option>
+              <option value='3'>3</option>
+              <option value='2'>2</option>
+              <option value='1'>1</option>
+            </select>
+            <a class="btn btn-inverse" onclick="pearlpbx_direction_add_prefix();">Добавить префикс</a>
+          </div>
+        </div>
+        <div class="control-group">
+          <div>
+            <label class="control-label" for="input_direction_routing_step">Шаг №&nbsp;&nbsp;&nbsp;</label>
+            <select name="input_direction_routing_step" id="input_direction_routing_step" style="width: 50px;">
+              <option value='1'>1</option>
+              <option value='2'>2</option>
+              <option value='3'>3</option>
+              <option value='4'>4</option>
+              <option value='5'>5</option>
+            </select>
+
+            <select name="input_direction_routing_type" id="input_direction_routing_type" onChange="pearlpbx_routing_type_change()">
+              <option value='lmask'>Локальная маска номеров</option>
+              <option value='tgrp'>Транкгруппа</option>
+              <option value='trunk'>Транк</option>
+              <option value='context'>Контекст сценария IVR</option>
+              <option value='user'>Конечный пользователь</option>
+            </select>
+
+            <select name="input_direction_routing_dest" id="input_direction_routing_dest" style="width: 100px;" >
+              <option value="0">Кто угодно</option>
+            </select>
+
+            <select name="input_direction_routing_source" id="input_direction_routing_source" style="width: 100px;">
+              <option value="Anybody">Для всех</option>
+            </select>
+            <a class="btn btn-inverse" onclick="pearlpbx_direction_add_routing();">Добавить маршрут</a>
+          </div>
+        </div>
+
+      </fieldset>
+    </form>
+
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Отменить</a>
+    <a href="#" class="btn btn-primary" onClick="pearlpbx_direction_update()">Сохранить</a>
+    <a href="#" class="btn btn-danger" onClick="pearlpbx_direction_remove()">Удалить направление</a>
+  </div>
+</div>
+<!-- Конец диалога редактирования направления -->
+
+<!-- Окно результата проверки маршрутизации -->
+<div class="modal fade" id="pearlpbx_check_routing_result" style="display: none; left: 600px;  width: 600px; max-height: 650px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Результат проверки маршрутизации</h3>
+  </div>
+  <div class="modal-body">
+    <div id="pearlpbx_check_routing_result_window">
+
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Закрыть</a>
+  </div>
+</div>
+
+<!-- Конец: Окно результата проверки маршрутизации -->
+
+<!-- Страница @Права доступа -->
+<div id="pearlpbx_permissions" style="display: none">
+ <div class="pearlpbx-main-container-header">
+  <h1><center> Права доступа </center></h1>
+ </div>
+ <div id="pearlpbx_permissions_div">
+
+ </div>
+ <div>
+  <center>
+  <a href="#" class="btn btn-primary" onClick="pearlpbx_save_permissions()">Сохранить</a>
+   <a href="#" class="btn" onClick="pearlpbx_reload_permissions()">Отменить</a>
+  </center>
+ </div>
+
+</div>
+<!-- Конец Страница Права доступа -->
+
+<!-- Страница со списком транкгрупп -->
+<div id="trunkgroups" style="display: none">
+ <div class="pearlpbx-main-container-header">
+  <h1><center> Транкгруппы </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader" id="pearlpbx_trunkgroups_list">
+ </div>
+
+ <div id="pearlpbx_button_add_trunkgroups">
+  <center>
+   <a href="#pearlpbx_trunkgroup_edit" data-toggle="modal" class="btn btn-primary" onClick="pearlpbx_empty_trunkgroup_edit_form()">Добавить новую транкгруппу</a>
+  </center>
+ </div>
+<!-- Скрипт, который заполняет список транкгрупп -->
+<script type="text/javascript">
+    <!--
+
+      $('#pearlpbx_trunkgroups_list').load('/route.pl?a=list-trunkgroups-tab');
+
+    -->
+</script>
+
+</div>
+<!-- Конец Страница со списком транкгрупп -->
+
+<!-- Диалог редактирования транкгруппы. Модальный. -->
+<div class="modal fade" id="pearlpbx_trunkgroup_edit" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Редактирование транкгруппы</h3>
+  </div>
+  <div class="modal-body">
+    <form class="form-horizontal">
+      <fieldset>
+        <input type='hidden' id='input_trunkgroup_hidden_oldname' value=''>
+        <input type='hidden' id='input_trunkgroup_hidden_id' value=''>
+
+        <div class="control-group">
+          <label class="control-label" for="input_trunkgroup_edit_name">Название транкгруппы</label>
+          <div class="controls">
+            <input type="text" class="input-xlarge" id="input_trunkgroup_edit_name">
+            <p class="help-block">Название транкгруппы состоит только из ЛАТИНСКИХ символов и цифр. Например: "trunkgroup123".</p>
+          </div>
+        </div>
+
+          <center>
+          <table class="table table-bordered" id="pearlpbx_edit_trunkgroup_items_list">
+            <thead>
+              <tr>
+                <th>Транк</th>
+              </tr>
+            </thead>
+            <!--  А здесь размещаются список транков, которые подгружаются автоматически -->
+          </table>
+          </center>
+
+
+        <div class="control-group">
+          <div class="controls">
+            <select name="input_trunkgroup_edit_members"
+            id="input_trunkgroup_edit_members" style="width: 300px;">
+            </select>
+            <a class="btn btn-inverse" onclick="pearlpbx_trunkgroup_add_member();">Добавить транк</a>
+            <p class="help-block">Выберите транк из списка внешних транков и нажмите кнопку "Добавить транк".</p>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Отменить</a>
+    <a href="#" class="btn btn-primary" onClick="pearlpbx_trunkgroup_update()">Сохранить</a>
+    <a href="#" class="btn btn-danger" onClick="pearlpbx_trunkgroup_remove()">Удалить транкгруппу</a>
+  </div>
+</div>
+
+<script type="text/javascript">
+    <!--
+
+      $('select#input_trunkgroup_edit_members').load("/sip.pl?a=list&b=externalAsOptionIdValue");
+
+    -->
+</script>
+
+<!-- Конец диалога редактирования очереди -->
+
+<!-- Модальный диалог списка пропущенных звонков по группе. -->
+<div class="modal fade" id="pearlpbx_lost_calls" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Пропущенные звонки</h3>
+  </div>
+  <div class="modal-body">
+    <table class="table table-bordered" id="pearlpbx_lost_calls_list">
+      <thead>
+        <tr>
+          <th>Номер А</th>
+          <th>Дата и время потерянного звонка</th>
+          <th>Время ожидания на линии</th>
+          <th>Дата и время повторного звонка</th>
+          <th>Время ожидания на линии</th>
+          <th>Дата и время исходящего звонка</th>
+          <th>Оператор</th>
+          <th>Время разговора</th>
+        </tr>
+      </thead>
+
+    </table>
+
+
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn btn-primary" data-dismiss="modal">OK</a>
+  </div>
+</div>
+<!-- Конец модального диалога списка пропущенных звонков по группе. -->
+
+<!-- Страница "Установка номеров А" -->
+<div id="pearlpbx_set_callerid" style="display: none">
+ <div class="pearlpbx-main-container-header">
+  <h1><center>Установка номеров А</center></h1>
+ </div>
+ <div id="pearlpbx_setcallerid_div">
+  <table class='table table-bordered' id='pearlpbx_callerid_table'>
+    <thead>
+    <tr>
+      <th>Имя подключения</th>
+      <th>Направление</th>
+      <th>Устанавливаемое значение</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+ </div>
+
+ <div>
+  <form class="form-horizontal">
+  <fieldset>
+
+    <div class="control-group">
+    <div style="float: left;" class="controls">
+
+ <!-- <label class="control-label" for="pearlpbx_setcallerid_src_sip">Подключение:</label> -->
+    <select name="pearlpbx_setcallerid_src_sip" id="pearlpbx_setcallerid_src_sip" style="width: 200px;">
+      <option value="help">Выберите подключение</option>
+    </select>
+
+    <!-- <label class="control-label" for="pearlpbx_setcallerid_dest_direction">Направление:</label>-->
+    <select name="pearlpbx_setcallerid_dest_direction" id="pearlpbx_setcallerid_dest_direction" style="width: 200px;">
+      <option value="help">Выберите направление</option>
+    </select>
+
+
+   <!-- <label class="control-label" for="pearlpbx_setcallerid_value">Значение:</label> -->
+    <input type="text" class="input-small" id="pearlpbx_setcallerid_value" value="NAME">
+    <p class="help-block">Если Вам надо поменять callerid(num) на callerid(name) aka display name, то в поле "Значение" установите значение NAME, иначе номер телефона нужном формате, который надо подставить.</p>
+
+  </div>
+   <center>
+      <a href="javascript:void(0)" class="btn btn-primary" onClick="pearlpbx_add_newcallerid()">Добавить</a>
+    </center>
+
+  </div>
+  </fieldset>
+  </form>
+  </div>
+</div>
+<!-- Конец Страница Права доступа -->
+
+<!-- Диалог редактирования SIP-подключения внешнего Модальный. -->
+
+<div class="modal fade" id="pearlpbx_sip_edit_peer" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">×</button>
+    <h3>Редактирование внешнего подключения по SIP</h3>
+  </div>
+  <div class="modal-body">
+    <form class="form-horizontal">
+      <fieldset>
+        <input type='hidden' id='input_peer_edit_id' value=''>
+        <input type='hidden' id='input_peer_edit_regstr_id' value=''>
+
+        <div class="control-group">
+          <label class="control-label" for="input_peer_edit_comment">Описание подключения</label>
+          <div class="controls">
+            <input type="text" class="input-xlarge" id="input_peer_edit_comment">
+            <p class="help-block">Напишите название оператора, к которому подключаетесь, например, "Оператор связи"</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_peer_edit_name">Name</label>
+          <div class="controls">
+            <input type="text" class="input-small" id="input_peer_edit_name">
+            <p class="help-block">Имя подключения. То, как будет обозначаться SIP-канал</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_peer_edit_username">Username</label>
+          <div class="controls">
+            <input type="text" class="input-small" id="input_peer_edit_username">
+            <p class="help-block">То, что выдал оператор в качестве логина или имени подключения.</p>
+          </div>
+        </div>
+
+         <div class="control-group">
+          <label class="control-label" for="input_peer_edit_secret">Secret</label>
+          <div class="controls">
+            <input type="password" class="input-small" id="input_peer_edit_secret">
+            <p class="help-block">Пароль для данного подключения.</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_peer_edit_registration">Регистрация у оператора </label>
+          <div class="controls">
+            <input type="checkbox" id="input_peer_edit_registration" onChange="pearlpbx_edit_peer_registration()">
+            <p class="help-block">Требуется ли регистрация на сервере у оператора ? </p>
+          </div>
+        </div>
+
+        <div class="control-group" id="div_input_peer_edit_regstr">
+          <label class="control-label" for="input_peer_edit_regstr">Строка регистрации</label>
+          <div class="controls">
+            <input type="text"  class="input-xlarge" id="input_peer_edit_regstr">
+            <p class="help-block">Строка регистрации у оператора: username:password@ip.ad.dr.es:port/extension</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_peer_edit_is_dynamic">Регистрация здесь </label>
+          <div class="controls">
+            <input type="checkbox" id="input_peer_edit_is_dynamic" onChange="pearlpbx_edit_peer_is_dynamic()">
+            <p class="help-block">Если это downlink или равноправный peer, то регистрируется ли он на этом сервере ? </p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_peer_edit_nat">NAT</label>
+          <div class="controls">
+            <input type="checkbox" id="input_peer_edit_nat">
+            <p class="help-block">Присутствует ли по пути Network Address Translation ? </p>
+          </div>
+        </div>
+
+        <div class="control-group" id="div_input_peer_edit_ipaddr">
+          <label class="control-label" for="input_peer_edit_ipaddr">IP</label>
+          <div class="controls">
+            <input type="text" class="input-medium" id="input_peer_edit_ipaddr">
+            <p class="help-block">IP-адрес удаленного сервера или шлюза. Поле можно оставить пустым, если peer регистрируется здесь.</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="input_peer_edit_call_limit">Call limit</label>
+          <div class="controls">
+            <input type="text" class="input-small" id="input_peer_edit_call_limit">
+            <p class="help-block">Количество параллельных звонков разрешенных на этом транке.</p>
+          </div>
+        </div>
+
+
+      </fieldset>
+    </form>
+
+  </div>
+  <div class="modal-footer">
+    <a href="javascript:void(0)" class="btn" data-dismiss="modal">Отменить</a>
+    <a href="javascript:void(0)" class="btn btn-primary" onClick="pearlpbx_sip_update_peer()">Сохранить</a>
+    <a href='javascript:void(0)' class='btn btn-info' onClick="pearlpbx_sip_edit_advanced_mode()">Профессиональный режим</a>
+  </div>
+</div>
+
+<!-- Конец диалога редактирования подключения по SIP  -->
+
+<!-- Страница "Установка номеров Б" -->
+<div id="pearlpbx_convert_extension" style="display: none">
+ <div class="pearlpbx-main-container-header">
+  <h1><center>Установка номеров Б</center></h1>
+ </div>
+ <div id="pearlpbx_setcallerid_div">
+  <table class='table table-bordered' id='pearlpbx_convert_exten_table'>
+    <thead>
+    <tr>
+      <th>Маска номера Б</th>
+      <th>Операция</th>
+      <th>Параметры</th>
+      <th>Шаг</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+ </div>
+
+ <div>
+  <form class="form-horizontal">
+  <fieldset>
+
+    <div class="control-group">
+    <div style="float: left;" class="controls">
+
+    <input type="text" class="input-medium" id="pearlpbx_convert_exten" value="" placeholder="^...$">
+
+    <select name="pearlpbx_convert_exten_operation" id="pearlpbx_convert_exten_operation" style="width: 200px;">
+      <option value="substr">Удалить подстроку</option>
+      <option value="concat">Добавить строку</option>
+    </select>
+
+    <input type="text" class="input-medium" id="pearlpbx_convert_exten_param" value="" placeholder="Параметры А:Б">
+    <input type="text" class="input-small" id="pearlpbx_convert_exten_step" value="" placeholder="Шаг 1..5">
+
+    <p class="help-block">Если операция "удаление подстроки", то параметры вида "А:Б", где А позиция, с которой надо вычислить подстроку, а Б - длина. Б - необзятательный параметр. Пример: "2:", означает, что первые два символа надо обрезать. Если операция "добавить строку", то А - принимает значение "begin" или "end", что означает в начало или в конец строки надо добавить значение параметра Б.</p>
+
+  </div>
+   <center>
+      <a href="javascript:void(0)" class="btn btn-primary" onClick="pearlpbx_add_convert_exten()">Добавить</a>
+    </center>
+
+  </div>
+  </fieldset>
+  </form>
+  </div>
+</div>
+<!-- Конец Страница "Установка номеров Б" -->
+
+
+<!-- DIV-ы для модулей -->
+
+<div id="modules-admin-ivr" style="display: none">
+ <div class="pearlpbx-main-container-header">
+   <h1><center> Модули управления IVR </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+  <div id="pearlpbx-modules-admin-ivr-list">
+  </div>
+  <div class="pearlpbx-modules-admin-ivr-body">
+  </div>
+  <div id="pearlpbx-modules-admin-ivr-bodies-preload" style="display: none;">
+  </div>
+
+ </div>
+</div>
+
+
+
+<script type="text/javascript">
+
+  $('#pearlpbx-modules-admin-ivr-list').load('/modules.pl?list-modules=1&rtype=ivr');
+  $('#pearlpbx-modules-admin-ivr-bodies-preload').load('/modules.pl?list-modules=2&rtype=ivr');
+
+</script>
+
+<div id="modules-katyusha" style="display: none">
+ <div class="pearlpbx-main-container-header">
+   <h1><center> Автодозвон </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+ </div>
+ <div class="pearlpbx-modules-katyusha-body">
+  <span class="label label-warning"> Этот модуль пока не доступен. </span>
+ </div>
+</div>
+
+
+<div id="modules-konference" style="display: none">
+ <div class="pearlpbx-main-container-header">
+   <h1><center> Конференц-связь </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+  <div id="pearlpbx-modules-konference-list">
+  </div>
+  <div class="pearlpbx-modules-konference-body">
+     <span class="label label-warning"> Этот модуль пока не доступен. </span>
+  </div>
+ </div>
+</div>
+
+<div id="modules-backup" style="display: none">
+ <div class="pearlpbx-main-container-header">
+   <h1><center> Резервное копирование </center></h1>
+ </div>
+ <div class="pearlpbx-main-container-subheader">
+  <div id="pearlpbx-modules-backup-list">
+  </div>
+  <div class="pearlpbx-modules-backup-body">
+     <span class="label label-warning"> Этот модуль пока не доступен. </span>
+  </div>
+ </div>
+</div>
+
+<!-- Конец DIV-ы для модулей -->
+
+<div class="modal fade" id="pearlpbx_queue_details" style="display: none; width: 800px; max-height: 650px; overflow-y:scroll;">
+  <div id="pearlpbx_queue_details_name" style="display: none;"></div>
+  <div class="modal-header">
+    <a style='float: right' class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_show_queue_details()'><span class='icon icon-refresh icon-white'></span></a>
+    <h3>Queue status</h3>
+  </div>
+  <div class="modal-body">
+
+  <table class="table table-bordered">
+    <tr>  <th>Name</th>      <td id="qdx_name"></td></tr>
+    <tr>  <th>Calls</th>     <td id="qdx_calls"></td></tr>
+    <tr>  <th>Max</th>       <td id="qdx_max"></td></tr>
+    <tr>  <th>Strategy</th>  <td id="qdx_strategy"></td></tr>
+    <tr>  <th>Holdtime</th>  <td id="qdx_holdtime"></td></tr>
+    <tr>  <th>TalkTime</th>  <td id="qdx_talktime"></td></tr>
+    <tr>  <th>Completed</th> <td id="qdx_completed"></td></tr>
+    <tr>  <th>Abandoned</th> <td id="qdx_abandoned"></td></tr>
+    <tr>  <th>ServiceLevel</th> <td id="qdx_servicelevel"></td></tr>
+  </table>
+
+    <table class="table table-bordered" id="pearlpbx_table_queue_entries">
+      <thead>
+        <tr>
+          <th>Position</th>
+          <th>Caller ID</th>
+          <th>Wait</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+
+    <table class="table table-bordered" id="pearlpbx_table_queue_details">
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th>Penalty</th>
+          <th>Calls Taken</th>
+          <th>Last Call</th>
+          <th>Status</th>
+          <th>Paused</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn btn-primary" data-dismiss="modal">Close</a>
+  </div>
+</div>
+
+
+</body>
+</html>
+

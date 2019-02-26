@@ -30,7 +30,6 @@ COPY directions_list (dlist_id, dlist_name) FROM stdin;
 2	KyivStar and InterCity
 10	MTS
 11	Life
-12	Beeline
 18	Intertelecom 094
 \.
 

@@ -49,6 +49,7 @@ Requires: perl-Starman
 Requires: perl-Clone
 Requires: perl-Plack-Middleware-Session
 Requires: perl-POSIX-AtFork
+Requires: perl-Plack-App-Proxy
 
 %description
 WebGUI for Asterisk written by Alex Radetsky <rad@pearlpbx.com>

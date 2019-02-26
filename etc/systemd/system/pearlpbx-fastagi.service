@@ -1,0 +1,19 @@
+[Unit]
+Description=PearlPBX FastAGI Server 
+Requires=postgresql.service asterisk.service
+After=postgresql.service asterisk.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/sbin/PearlPBX-FastAGI-Server.pl
+PIDFile=/var/run/NetSDS/PearlPBX-FastAGI-Server.pid
+
+# safe_asterisk emulation
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

@@ -5,10 +5,10 @@
 #  DESCRIPTION:  PearlPBX Queues management API
 #
 #       AUTHOR:  Alex Radetsky (Rad), <rad@rad.kiev.ua>
-#      COMPANY:  Net.Style
-#      VERSION:  1.0
+#      COMPANY:  PearlPBX
+#      VERSION:  2.0
 #      CREATED:  23.06.12
-#      REVISION: 001 
+#     MODIFIED:  25.07.17
 #===============================================================================
 =head1 NAME
 
@@ -27,301 +27,261 @@ use strict;
 use warnings;
 
 use DBI;
-use Config::General; 
-use JSON;
-use NetSDS::Util::String; 
+use Config::General;
+use JSON::XS;
+use NetSDS::Util::String;
 
-use version; our $VERSION = "1.00";
-our @EXPORT_OK = qw();
+use PearlPBX::Config qw/conf/;
+use PearlPBX::DB qw/pearlpbx_db/;
+use PearlPBX::HttpUtils qw/http_response/;
 
-#===============================================================================
-#
-=head1 CLASS METHODS
+use Exporter;
+use parent qw(Exporter);
 
-=over
+our @EXPORT = qw (
+    queues_list
+    queues_getqueue
+    queues_setqueue
+    queues_delqueue
+    queues_listmembers
+    queues_addmember
+    queues_removemember
+);
 
-=item B<new($configfilename)> - class constructor
+sub queues_list {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $format = $params->{'format'};
 
-    my $object = PearlPBX::Report->new(%options);
+    use constant HEADER => {
+        'li' => '<ul class="nav nav-tabs">'
+    };
+
+    use constant FOOTER => {
+        'li' => '</ul>'
+    };
+
+    use constant BODY => {
+        'li' => '<li><a href="#pearlpbx_queues_edit" data-toggle="modal" onClick="pearlpbx_queues_load_by_name(\'%s\')">%s</a></li>'
+    };
+
+    unless ( defined ( $format ) ) {
+        return http_response($env,400,"Format is unavailable");
+    }
+
+    my $sql = "select name from public.queues order by name";
+    my $qnames = pearlpbx_db()->selectall_arrayref($sql);
+    my $count = @{$qnames};
+
+    unless ( $count ) {
+        return http_response($env,200,'Queues not defined');
+    }
+
+    my $header = HEADER->{$format};
+    my $footer = FOOTER->{$format};
+    my $body   = '';
+
+    foreach my $q ( @{$qnames} ) {
+        $body .= sprintf(BODY->{$format},$q->[0],$q->[0]);
+    }
+
+    my $text_response = $header . $body . $footer;
+
+    return http_response($env,200,$text_response);
+
+}
+
+=item B<queues_getqueue>
+
+    Looking for queue in the database and returns all fields
 
 =cut
 
-#-----------------------------------------------------------------------
-sub new {
+sub queues_getqueue {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $qname  = $params->{'name'};
 
-	my $class = shift; 
-	
-  my $conf = shift;
+    my $sql = "select * from public.queues where name=?";
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute ($qname); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->stderr);
+    }
+    my $row = $sth->fetchrow_hashref;
+    return http_response($env,200,encode_json($row));
 
-  my $this = {}; 
+}
 
-  unless ( defined ( $conf ) ) {
-     $conf = '/etc/PearlPBX/asterisk-router.conf';
-  }
+=item B<queues_listmembers>
 
-  my $config = Config::General->new (
-    -ConfigFile        => $conf,
-    -AllowMultiOptions => 'yes',
-    -UseApacheInclude  => 'yes',
-    -InterPolateVars   => 'yes',
-    -ConfigPath        => [ $ENV{PEARL_CONF_DIR}, '/etc/PearlPBX' ],
-    -IncludeRelative   => 'yes',
-    -IncludeGlob       => 'yes',
-    -UTF8              => 'yes',
-  );
-
-  unless ( ref $config ) {
-    return undef;
-  }
-
-  my %cf_hash = $config->getall or ();
-  $this->{conf} = \%cf_hash;
-  $this->{dbh} = undef;     # DB handler 
-  $this->{error} = undef;   # Error description string    
-
-	bless ( $this,$class ); 
-	return $this;
-
-};
-
-#***********************************************************************
-=head1 OBJECT METHODS
-
-=over
-
-=item B<db_connect(...)> - соединяется с базой данных. 
-Возвращает undef в случае неуспеха или true если ОК.
-DBH хранит в this->{dbh};  
+    Searching in the database queue members and returns the list
 
 =cut
 
-#-----------------------------------------------------------------------
+sub queues_listmembers {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $qname = $params->{'name'};
 
-sub db_connect {
-	my $this = shift; 
-  
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'dsn'} ) ) {
-        $this->{error} = "Can't find \"db main->dsn\" in configuration.";
-        return undef;  
+    my $sql = "select membername,interface from queue_members where queue_name = ? order by membername";
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute ($qname); };
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->stderr);
     }
 
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'login'} ) ) {
-        $this->{error} = "Can't find \"db main->login\" in configuraion.";
-        return undef;
+    my @rows;
+    while (my $row = $sth->fetchrow_hashref) {
+        push @rows,$row;
     }
 
-    unless ( defined( $this->{conf}->{'db'}->{'main'}->{'password'} ) ) {
-        $this->{error} = "Can't find \"db main->password\" in configuraion.";
-        return undef;
-    }
-
-    my $dsn    = $this->{conf}->{'db'}->{'main'}->{'dsn'};
-    my $user   = $this->{conf}->{'db'}->{'main'}->{'login'};
-    my $passwd = $this->{conf}->{'db'}->{'main'}->{'password'};
-
-    # If DBMS isn' t accessible - try reconnect
-    if ( !$this->{dbh} or !$this->{dbh}->ping ) {
-        $this->{dbh} = 
-            DBI->connect_cached( $dsn, $user, $passwd, { RaiseError => 1, AutoCommit => 0 } );
-    }
-
-    if ( !$this->{dbh} ) {
-        $this->{error} = "Cant connect to DBMS!";
-        return undef;
-    }
-
-    return 1;
-};
-
-=item B<list_internal> 
-
- возвращает HTML представление списка внутренних пользователей
-
-=cut 
-sub list_as_li { 
-	my $this = shift;
-	my $sql = "select name from public.queues order by name";
-
-	return $this->_list($sql);
-}
-
-
-sub _list { 
-	my ($this, $sql) = @_; 
-
-	my $sth = $this->{dbh}->prepare($sql); 
-	eval { $sth->execute(); }; 
-	if ( $@ ) {
-	  print $this->{dbh}->errstr; 
-		return undef; 
-	}
-
-	my $out = '<ul class="nav nav-tabs">';
-  while ( my $row = $sth->fetchrow_hashref ) { 
-		 unless ( defined ( $row->{'comment'} ) ) { 
-		 	$row->{'comment'} = ''; 
-		 } 
-	   $out .= '<li><a href="#pearlpbx_queues_edit" data-toggle="modal" 
-         onClick="pearlpbx_queues_load_by_name(\''.$row->{'name'}.'\')">'.$row->{'name'}.'</a></li>';
-	}		 
-  $out .= "</ul>";
-	return $out; 
-}
-
-sub getqueue { 
-  my ($this, $qname) = @_; 
-
-  my $sql = "select * from public.queues where name=?";
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute ($qname); }; 
-  if ($@) { 
-    print $this->{dbh}->errstr; 
-    return undef; 
-  }
-  my $row = $sth->fetchrow_hashref;
-  return encode_json($row);
+    return http_response($env,200,encode_json(\@rows));
 
 }
 
-sub setqueue { 
-  my ($this, $oldname, $name, $strategy, $timeout, $maxlen) = @_; 
+=item B<queues_setqueue>
 
-  #  Сохраняем параметры группы
+    Updates queue properties in the database
 
-  my $sql = "update public.queues set name=?, strategy=?, timeout=?, maxlen=? where name=?";  
-  my $sth  = $this->{dbh}->prepare($sql);
-  eval { 
-    $sth->execute ($name, $strategy, $timeout, $maxlen, $oldname); 
-  };
-  if ($@) { 
-    warn $this->{dbh}->errstr;
-    return 'ERROR'; 
-  }
+=cut
 
-  # Если у группы новое имя, то стоит и членам группы поменять название группы 
-  if ( $oldname ne $name ) {
-    $sql = "update public.queue_members set queue_name=? where queue_name=?"; 
-    $sth  = $this->{dbh}->prepare($sql);
-    eval { 
-      $sth->execute ($name, $oldname); 
+sub queues_setqueue {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $oldname  = $params->{'oldname'} // '';
+    my $name     = $params->{'name'} // '';
+    my $strategy = $params->{'strategy'} // 'ringall';
+    my $timeout  = $params->{'timeout'} ne '' ? $params->{'timeout'} : 10;
+    my $maxlen   = $params->{'maxlen'} ne '' ? $params->{'maxlen'} : 5;
+
+    if ($name eq '' ) {
+        return http_response($env,400,"Name can not be empty!");
+    }
+
+    if ($oldname eq '' ) {
+        return queues_addqueue ( $env, $name, $strategy, $timeout, $maxlen );
+    }
+
+    #  Сохраняем параметры группы
+    my $sql = "update public.queues set name=?, strategy=?, timeout=?, maxlen=? where name=?";
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval {
+        $sth->execute ($name, $strategy, $timeout, $maxlen, $oldname);
     };
-    if ($@) { 
-      warn $this->{dbh}->errstr;
-      return 'ERROR'; 
-    }
-  }
-
-  $this->{dbh}->commit;
-  return "OK";
-
-}
-
-sub addqueue { 
-  my ($this, $name, $strategy, $timeout, $maxlen) = @_; 
-
-  my $sql = "insert into public.queues (name, strategy,timeout,maxlen ) values ( ?, ? ,? ,?);"; 
-  my $sth  = $this->{dbh}->prepare($sql);
-  eval { 
-    $sth->execute ($name, $strategy, $timeout, $maxlen ); 
-  };
-  if ($@) { 
-    warn $this->{dbh}->errstr;
-    return 'ERROR'; 
-  }
-  $this->{dbh}->commit;
-  return "OK";
-
-}
-
-sub listmembersAsJSON { 
-  my ($this, $qname) = @_;
-
-  my $sql = "select membername,interface from queue_members where queue_name = ? order by membername"; 
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { 
-    $sth->execute ($qname);
-  };
-  if ($@) { 
-    warn $this->{dbh}->errstr;
-    return 'ERROR';
-  }
-
-  my @rows; 
-  while (my $row = $sth->fetchrow_hashref) {
-    push @rows,$row;
-  }
-
-  return encode_json(\@rows);
-
-}
-
-sub addmember { 
-  my ($this, $qname, $member) = @_; 
-
-  # Check for existing operator. 
-  my $sql = "select membername,interface from public.queue_members where queue_name=? and membername=?";
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute($qname,$member);};
-  if ($@) { 
-    warn $this->{dbh}->errstr;
-    return "ERROR";
-  }
-  my $row = $sth->fetchrow_hashref;
-  if ($row->{'membername'}) { 
-    return "ALREADY";
-  }
-  $sql = "insert into public.queue_members (membername,queue_name,interface) values (?,?,?);";
-  $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute($member,$qname,'SIP/'.$member);};
-  if ($@) { 
-    warn $this->{dbh}->errstr;
-    return "ERROR";
-  }
-  $this->{dbh}->commit;
-  return "OK";
-
-}
-
-sub removemember { 
-  my ($this, $qname, $member) = @_; 
-
-  my $sql = "delete from public.queue_members where queue_name=? and membername=?"; 
-  my $sth = $this->{dbh}->prepare($sql);
-  eval { $sth->execute($qname,$member);};
-  if ($@) { 
-    warn $this->{dbh}->errstr;
-    return "ERROR";
-  }
-  $this->{dbh}->commit;
-  return "OK";
-}
-sub delqueue { 
-  my ($this, $name) = @_; 
-
-  #  Сохраняем параметры группы
-
-  my $sql = "delete from public.queues where name=?";  
-  my $sth  = $this->{dbh}->prepare($sql);
-  eval { 
-    $sth->execute ($name); 
-  };
-  if ($@) { 
-    warn $this->{dbh}->errstr;
-    return 'ERROR'; 
-  }
-
-  $sql = "delete from public.queue_members where queue_name=?"; 
-  $sth  = $this->{dbh}->prepare($sql);
-    eval { 
-      $sth->execute ($name); 
-    };
-    if ($@) { 
-      warn $this->{dbh}->errstr;
-      return 'ERROR'; 
+    if ($@) {
+        return http_response($env,400,pearlpbx_db()->errstr);
     }
 
-  $this->{dbh}->commit;
-  return "OK";
+    # Если у группы новое имя, то стоит и членам группы поменять название группы
+    if ( $oldname ne $name ) {
+        $sql = "update public.queue_members set queue_name=? where queue_name=?";
+        $sth = pearlpbx_db()->prepare($sql);
+        eval {
+          $sth->execute ($name, $oldname);
+        };
+        if ($@) {
+            return http_response($env,400,pearlpbx_db()->errstr);
+        }
+    }
+    return http_response($env,200,"OK");
+}
+
+sub queues_addqueue {
+  my ($env, $name, $strategy, $timeout, $maxlen) = @_;
+
+  my $sql = "insert into public.queues (name, strategy,timeout,maxlen ) values ( ?, ? ,? ,?);";
+  my $sth  = pearlpbx_db()->prepare($sql);
+  eval {
+    $sth->execute ($name, $strategy, $timeout, $maxlen );
+  };
+  if ( $@ ) {
+    return http_response($env,400, pearlpbx_db()->errstr);
+  }
+  return http_response($env, 200, "OK");
+}
+
+=item B<queues_addmember>
+
+    Adds the member to the queue
+
+=cut
+
+sub queues_addmember {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $qname = $params->{'queue'};
+    my $member = $params->{'newmember'};
+
+    # Check for existing operator.
+    my $sql = "select membername,interface from public.queue_members where queue_name=? and membername=?";
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute($qname,$member);};
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+    my $row = $sth->fetchrow_hashref;
+    if ($row->{'membername'}) {
+      return http_response($env,200,"ALREADY");
+    }
+
+    $sql = "insert into public.queue_members (membername,queue_name,interface) values (?,?,?);";
+    $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute($member,$qname,'SIP/'.$member);};
+    if ( $@ ) {
+        return http_response($env,400,pearlpbx_db()->errstr);
+    }
+    return http_response($env,200,"OK");
+
+}
+
+=item B<queues_removemember>
+
+    Removes the member from the queue
+
+=cut
+
+sub queues_removemember {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $qname  = $params->{'queue'};
+    my $member = $params->{'member'};
+
+    my $sql = "delete from public.queue_members where queue_name=? and membername=?";
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute($qname,$member); };
+    if ( $@ ) { return http_response($env, 400, pearlpbx_db()->errstr); }
+    return http_response($env,200,"OK");
+}
+
+=item B<queues_delqueue>
+
+    Removes queue settings and members from the database
+
+=cut
+
+sub queues_delqueue {
+    my $env = shift;
+    my $req = Plack::Request->new($env);
+    my $params = $req->parameters;
+    my $name   = $params->{'queue'};
+
+    my $sql = "delete from public.queues where name=?";
+    my $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute ($name); };
+    if ( $@ ) { return http_response($env, 400, pearlpbx_db()->errstr); }
+
+    $sql = "delete from public.queue_members where queue_name=?";
+    $sth = pearlpbx_db()->prepare($sql);
+    eval { $sth->execute ($name); };
+    if ( $@ ) { return http_response($env, 400, pearlpbx_db()->errstr); }
+    return http_response($env,200,"OK");
 }
 
 1;
