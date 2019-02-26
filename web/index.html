@@ -1433,12 +1433,17 @@ function cdrfilter_submit () {
    <h1><center> Автодозвон </center></h1>
  </div>
  <div class="pearlpbx-main-container-subheader">
- </div>
- <div class="pearlpbx-modules-katyusha-body">
-  <span class="label label-warning"> Этот модуль пока не доступен. </span>
+     <div id="pearlpbx-modules-callback-list"></div>
+       <div class="pearlpbx-modules-callback-body">
+       </div>
+     <div id="pearlpbx-modules-callback-bodies-preload" style="display: none"></div>
  </div>
 </div>
 
+<script type="text/javascript">
+  $('#pearlpbx-modules-callback-list').load('/modules.pl?list-modules=1&rtype=callback');
+  $('#pearlpbx-modules-callback-bodies-preload').load('/modules.pl?list-modules=2&rtype=callback');
+</script>
 
 <div id="modules-konference" style="display: none">
  <div class="pearlpbx-main-container-header">

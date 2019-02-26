@@ -1,0 +1,77 @@
+<!-- Список актуальных номеров для дозвона --> 
+
+<center><h2>Список номеров для дозвона </h2></center>
+<table id="pearlpbx_callbacklist_table" class="table table-bordered table-striped">
+<thead>
+	<tr>
+		<th> Номер Абонента </th>
+		<th> Время создания</th>
+		<th> Время обновления </th>
+        <th> Служба </th>
+        <th> <a class='btn btn-success' href="javascript:void(0)" onClick='pearlpbx_get_callbacklist()'><span class='icon icon-refresh icon-white'></span></a> </th>
+	</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+<script type="text/javascript"> 
+
+function pearlpbx_get_callbacklist() { 
+	var remicon = "<img src=/img/remove-icon.png width=16>";
+
+	$('#pearlpbx_callbacklist_table tbody').empty(); 
+	$.getJSON('/modules.pl', { 
+		"exec-module":"callbacklist",
+		"sub":"getJSON",
+
+	}, function (json) { 
+		
+		jQuery.each(json, function () {
+			var remurl = '<td><a href="javascript:void(0)" onClick="pearlpbx_callbacklist_item_remove('+
+				this['id']+')">'+remicon+'</a></td>';
+			var msisdn  = this['callerid'];
+			var created = this['created'];
+            var service = this['servicename']; 
+            var updated = this['updated'];  
+
+			$('#pearlpbx_callbacklist_table tbody').append("<tr>"+
+				"<td>"+msisdn+"</td>"+
+				"<td>"+created+"</td>"+
+				"<td>"+updated+"</td>"+
+				"<td>"+created+"</td>"+remurl+
+				"</tr>");
+		}); 		
+
+	}, "html"); 
+
+}
+
+pearlpbx_get_callbacklist();
+
+function pearlpbx_callbacklist_item_remove ( blacklist_id ) { 
+
+// Submit 
+	$.get("/modules.pl",
+		{ "exec-module":"callbacklist",
+		  "sub":"del",
+		  id:blacklist_id,
+		},function(data) 
+		{
+			if (data == "OK") { 
+				pearlpbx_get_callbacklist();
+				return false; 
+			}
+			if (data == "ERROR") { 
+				alert("Сервер вернул ошибку!");
+				return false;
+			}
+			alert("Server returns unrecognized answer. Please contact system administrator.");
+			alert(data);
+		}, "html"); 
+	return false; 
+}
+
+</script>
+
+

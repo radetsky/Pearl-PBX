@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/env perl 
 #===============================================================================
 #
 #         FILE:  NetSDS-AGI-integration.pl
@@ -40,7 +40,7 @@ package Integration;
 use base qw(NetSDS::App);
 use Data::Dumper;
 use Asterisk::AGI;
-use IO::Socket::INET;
+use IO::Socket::INET; 
 use LWP::UserAgent;
 
 
@@ -123,21 +123,21 @@ sub _begin {
     }
 }
 
-sub _set_uline_userfield {
-    my $this      = shift;
-    my $uline     = shift;
+sub _set_uline_userfield { 
+    my $this      = shift; 
+    my $uline     = shift; 
     my $userfield = shift;
-    my $itype     = shift;
+    my $itype     = shift;  
 
     my $sth = $this->dbh->prepare("update integration.ulines set userfield=?,integration_type=? where id=?");
     $this->log("info",sprintf("set_uline_userfield userfield='%s',integration_type='%s' where id=%s",
             $userfield,
             $itype,
-            $uline));
-    eval { my $rv = $sth->execute($userfield, $itype, $uline); };
-    if ( $@ ) {
-       $this->_exit($this->dbh->errstr);
-    }
+            $uline)); 
+    eval { my $rv = $sth->execute($userfield, $itype, $uline); }; 
+    if ( $@ ) { 
+       $this->_exit($this->dbh->errstr); 
+    } 
 }
 
 sub _find_sipid_by_name {
@@ -147,14 +147,14 @@ sub _find_sipid_by_name {
     $this->_begin;
 
     my $sth = $this->dbh->prepare(
-        "select id,ipaddr from public.sip_peers where name=? order by id asc limit 1"
+"select id,ipaddr from public.sip_peers where name=? order by id asc limit 1"
     );
     eval { my $rv = $sth->execute($sip_name); };
     if ($@) {
         $this->_exit( $this->dbh->errstr );
     }
     my $result = $sth->fetchrow_hashref;
-    unless ( defined ( $result ) ) {
+    unless ( defined($result) ) {
         $this->_exit("CAN'T FIND SIP/$sip_name");
     }
 
@@ -196,8 +196,8 @@ sub _get_iinfo {
 
         eval { my $rv = $sth2->execute($sip_id); };
         if ($@) {
-	    $this->log("warning",$@);
-	    $this->log("warning",$this->dbh->errstr);
+	    $this->log("warning",$@); 
+	    $this->log("warning",$this->dbh->errstr); 
             $this->_exit( $this->dbh->errstr );
         }
         $result = $sth2->fetchrow_hashref;
@@ -214,7 +214,7 @@ sub _get_iinfo {
 sub _open_blank_taxi_navigator {
     my $this  = shift;
     my $iinfo = shift;
-    my $sip_name = shift;
+    my $sip_name = shift; 
 
     my $socket = IO::Socket::INET->new (
         PeerAddr => $iinfo->{'ip_addr_pc'},
@@ -231,8 +231,8 @@ sub _open_blank_taxi_navigator {
 
     my $callerid = $this->agi->get_variable("CALLERID(num)");
     my $calleridlen = length($callerid);
-		if ($calleridlen > 10) {
-    	$callerid = substr($callerid,$calleridlen-10,10);
+		if ($calleridlen > 10) { 
+    	$callerid = substr($callerid,$calleridlen-10,10); 
 		}
     my $uline    = $this->agi->get_variable("PARKINGEXTEN");
 
@@ -240,8 +240,8 @@ sub _open_blank_taxi_navigator {
 
     if ( $socket->print($command) ) {
         $socket->flush;
-	my @result = $socket->getlines;
-	$this->agi->verbose ( Dumper (\@result), 3);
+	my @result = $socket->getlines; 
+	$this->agi->verbose ( Dumper (\@result), 3); 
     }
     else {
         $this->_exit( "CAN'T WRITE TO THE SOCKET "
@@ -273,7 +273,7 @@ sub _open_blank_taxi_office {
 
     my $callerid = $this->agi->get_variable("CALLERID(num)");
     my $calleridlen = length($callerid);
-    $callerid = substr($callerid,$calleridlen-10,10);
+    $callerid = substr($callerid,$calleridlen-10,10); 
     my $uline    = $this->agi->get_variable("PARKINGEXTEN");
 
     my $command = sprintf( "COF\r\n%s\r\n-\r\n%s", $callerid, $uline );
@@ -295,7 +295,7 @@ sub _open_blank_taxi_office {
 sub _open_blank_your_taxi {
     my $this  = shift;
     my $iinfo = shift;
-    my $answered_id = shift;
+    my $answered_id = shift; 
 
     my $ua = LWP::UserAgent->new;
     $ua->timeout(1);
@@ -303,30 +303,30 @@ sub _open_blank_your_taxi {
 
     my $callerid = $this->agi->get_variable("CALLERID(num)");
     my $calleridlen = length($callerid);
-    $callerid = substr($callerid,$calleridlen-10,10);
+    $callerid = substr($callerid,$calleridlen-10,10); 
     my $uline    = $this->agi->get_variable("PARKINGEXTEN");
 
-    my $your_taxi_server_ip = '192.168.0.210:8000';
-    my $your_taxi_provider_id = $this->agi->get_variable("YTAXIPROV");
-    unless ( defined ( $your_taxi_provider_id ) ) {
-	    $this->log("error","YTaxi integration: YTAXIPROV not found! ");
-	    return;
-    }
+    my $your_taxi_server_ip = '192.168.0.6:8000'; 
+    my $your_taxi_provider_id = $this->agi->get_variable("YTAXIPROV"); 
+    unless ( defined ( $your_taxi_provider_id ) ) { 
+	    $this->log("error","YTaxi integration: YTAXIPROV not found! "); 
+	    return; 
+    } 
 
-    my $carclass = $this->agi->get_variable("YTAXICLASS");
-    unless ( defined ( $carclass ) ) {
+    my $carclass = $this->agi->get_variable("YTAXICLASS"); 
+    unless ( defined ( $carclass ) ) { 
         $this->agi->verbose("YTaxi carClass not found.", 3);
-        $carclass = 0;
-    }
+        $carclass = 0; 
+    } 
 
-    $this->_set_uline_userfield($uline,$your_taxi_provider_id,"YourTaxi");
-
-    # Evacuator Киев
-    # 00000000-0000-0000-0000-000000000010
-    # Express Киев
+    $this->_set_uline_userfield($uline,$your_taxi_provider_id,"YourTaxi"); 
+    
+    # Evacuator Киев 
+    # 00000000-0000-0000-0000-000000000010 
+    # Express Киев 
     # 00000000-0000-0000-0000-000000000012
 
-    #my $uline = $this->agi->get_variable("ULINE");
+    #my $uline = $this->agi->get_variable("ULINE");  
 
     my $url = sprintf("http://%s/YTaxi/ru/ManagePBX/IncomingCall?provider=%s&from=%s&to=%s&line=%s&carClass=%d",
         $your_taxi_server_ip,
@@ -334,11 +334,11 @@ sub _open_blank_your_taxi {
         $callerid,
         $answered_id,
 	    $uline,
-        $carclass );
+        $carclass ); 
 
     $this->log("info",$url);
     my $response = $ua->get($url);
-
+ 
     if ($response->is_success) {
         $this->log("info",$response->decoded_content);
     }
@@ -346,13 +346,17 @@ sub _open_blank_your_taxi {
         $this->log("error", $response->status_line);
         $this->_exit($response->status_line);
     }
-
+    
 }
 sub process {
     my $this = shift;
 
-    # Get member interface
+    my $pearlpbx_mohclass = $this->agi->get_variable('PEARLPBX_MOHCLASS'); 
+    if ( defined ( $pearlpbx_mohclass ) ) {
+       $this->agi->set_variable("CHANNEL(musicclass)",$pearlpbx_mohclass); 
+    }
 
+    # Get member interface
     my $memberinterface = $this->_get_memberinterface;
     unless ( defined($memberinterface) ) {
         $this->_exit("CAN'T FIND MEMBERINTERFACE VALUE");
@@ -363,7 +367,7 @@ sub process {
     $memberinterface =~ /^SIP\/(.*)$/;
     my $sip_name = $1;
 
-	if ($this->{debug}) {
+	if ($this->{debug}) { 
 		$this->log("info","sip_name=$sip_name");
 	}
 
@@ -371,13 +375,13 @@ sub process {
 
     my ( $sip_id, $sip_addr ) = $this->_find_sipid_by_name($sip_name);
 	if ($this->{debug}) {
-		$this->log("info","sip_id=$sip_id, sip_addr = $sip_addr");
+		$this->log("info","sip_id=$sip_id, sip_addr = $sip_addr"); 
 	}
 
     # GET Computer integration info
     my $iinfo = $this->_get_iinfo( $sip_id, $sip_addr );
-	if ($this->{debug}){
-		 $this->log("info",Dumper($iinfo));
+	if ($this->{debug}){ 
+		 $this->log("info",Dumper($iinfo)); 
 	}
 
     # Check the type of integration and execute it to Computer .
@@ -402,7 +406,7 @@ sub process {
         $this->log("info","Calling YourTaxi open blank");
         $this->_open_blank_your_taxi($iinfo, $sip_name);
     }
-
+    
 
 
 }

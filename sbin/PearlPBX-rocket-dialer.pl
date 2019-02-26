@@ -2,7 +2,8 @@
 #===============================================================================
 #         FILE:  PearlPBX-rocket-dialer.pl
 #
-#        USAGE:  ./PearlPBX-rocket-dialer.pl --src <Telephone> --dst <Telephone> --taskName AsteriskContext
+#        USAGE:  ./PearlPBX-rocket-dialer.pl --src <Telephone> [--dst <Telephone> --taskName AsteriskContext ] 
+#                --dstContext AsteriskContext (for context as destination ) 
 #                --parameters VAR1=VAL1&VAR2=VAL2&VAR3=VAL3 [ --notifyURL http://google.com/notify?status=%status% ]
 #
 #  DESCRIPTION:  Automatically dials to <Telephone> using PearlPBX routing information.

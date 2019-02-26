@@ -797,7 +797,7 @@ sub _init_uline {
     $this->agi->set_variable( "CDR(userfield)", "$uline" );
     $this->agi->set_variable( "ULINE",          "$uline" );
 
-    $this->_set_callerid_name("LINE $uline $callerid_num");
+    $this->_set_callerid_name("$callerid_num");
 
     $sth
         = $this->dbh->prepare(
@@ -875,7 +875,7 @@ sub _get_callername {
     }
 
     my $sql = "select comment from public.sip_peers where name=?";
-    my $adr = "select displayname from ivr.addressbook where msisdn=?";
+    my $adr = "select displayname from ivr.addressbook where ? ~ msisdn";
 
     $this->agi->verbose( "Searching for $callerid in local sip_peers...", 3 );
 
