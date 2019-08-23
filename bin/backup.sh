@@ -20,17 +20,19 @@
 
 mkdir backup-pearlpbx 
 cd backup-pearlpbx
-pg_dump -U asterisk >./asterisk.sql 
+pg_dump -v -U asterisk >./asterisk.sql 
 mkdir -p etc/asterisk
-cp -a /etc/asterisk/* etc/asterisk/
+sudo cp -av /etc/asterisk/* etc/asterisk/
 mkdir sounds
 mkdir moh 
-cp -a /usr/share/asterisk/sounds/ru/pearlpbx/* ./sounds
-cp -a /usr/share/asterisk/moh/* ./moh 
+mkdir tftpboot
+cp -av /usr/share/asterisk/sounds/ru/pearlpbx/* ./sounds
+cp -av /usr/share/asterisk/moh/* ./moh 
+cp -av /var/lib/tftpboot ./tftpboot 
 mkdir PearlPBX
-cp -a /etc/PearlPBX/* ./PearlPBX
+cp -av /etc/PearlPBX/* ./PearlPBX
 DATE=`date +%Y-%m-%d_%H%M%S`
 cd ..
-tar zcvf backup-pearlpbx-$DATE.tar.gz ./backup-pearlpbx  
+sudo tar zcvf backup-pearlpbx-$DATE.tar.gz ./backup-pearlpbx  
 
 
