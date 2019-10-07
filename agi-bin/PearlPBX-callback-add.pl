@@ -138,6 +138,18 @@ sub _read {
     return $res;  
 }
 
+sub _read_single {
+    my ($this, $callerid ) = @_; 
+
+    my $sql1 = "select * from callback_list where callerid=?"; 
+    my $sth1 = $this->dbh->prepare($sql1); 
+    eval { 
+        $sth1->execute($callerid); 
+    }; 
+    my $res = $sth1->fetchrow_hashref;
+    return $res;  
+}
+
 sub _set_priority {
     my ($this, $callerid, $service, $priority) = @_; 
 
@@ -187,7 +199,14 @@ sub process {
         }
         exit(0);
     }
-       
+     
+    # patch for single entry for every cvallerid 
+    my $r = $this->_read_single($callerid); 
+    if ( defined ( $r ) ) {
+       $this->agi->verbose($callerid . " exists in other service", 3);
+       exit(0);
+    }
+
     my $sql = "insert into callback_list ( callerid, servicename) values ( ?,? )"; 
     my $sth = $this->dbh->prepare($sql);
 

@@ -237,7 +237,7 @@ sub process {
 
     my $event = undef;
     $event = $this->el->_getEvent();
-    
+   
     unless ( defined ( $event ) ) {
         Info("EOF from asterisk manager");
         $this->{to_finalize} = 1;
