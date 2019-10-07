@@ -51,274 +51,275 @@ use constant UNAVAILABLE => 5;     # Status = 5 in QueueStatus means that agent 
 use constant REACHABLE => 1;
 
 sub start {
-  my $self = shift;
-  # Looking for --qname=queueName
-  # We will handle SIGKILL, SIGTERM to return status quo
+    my $self = shift;
+    # Looking for --qname=queueName
+    # We will handle SIGKILL, SIGTERM to return status quo
 
-  my $qname; GetOptions  ('qname=s' => \$qname ); $self->{'qname'} = $qname;
-  unless ( defined ( $qname ) ) {
-      die "Use --qname=%s to set queue name to monitor\n";
-  }
+    my $qname; GetOptions  ('qname=s' => \$qname ); $self->{'qname'} = $qname;
+    unless ( defined ( $qname ) ) {
+          die "Use --qname=%s to set queue name to monitor\n";
+    }
 
-  $self->SUPER::start();
+    $self->SUPER::start();
 
-  unless ( $self->queue_status( $qname ) ) {
-      die "Something wrong with communication with Asterisk Manager\n";
-  }
+    unless ( $self->queue_status( $qname ) ) {
+        die "Something wrong with communication with Asterisk Manager\n";
+    }
 
-  $self->pause_lean_agents();
-  # $self->remember_strategy();
-  # Remember that original params saved in $self->{queue_params};
-  $self->update_strategy();
-  # Goto to process() to listen AMI
+    $self->pause_lean_agents();
 
-  $SIG{INT}  = sub { $self->{to_finalize} = 1; };
-  $SIG{TERM} = sub { $self->{to_finalize} = 1; };
+    # $self->remember_strategy();
+    # Remember that original params saved in $self->{queue_params};
 
+    $self->update_strategy();
+
+    # Goto to process() to listen AMI
+
+    $SIG{INT}  = sub { $self->{to_finalize} = 1; };
+    $SIG{TERM} = sub { $self->{to_finalize} = 1; };
 }
 
 sub stop {
-  my $self = shift;
+    my $self = shift;
 
-  Info("Finishing...");
+    Info("Finishing...");
 
-  #restore strategy
-  $self->update_strategy($self->{queue_params}->{'Strategy'});
-
-
+    #restore strategy
+    $self->update_strategy($self->{queue_params}->{'Strategy'});
 }
 
 sub queue_status {
-  my $self  = shift;
-  my $qname = shift;
+    my $self  = shift;
+    my $qname = shift;
 
-  my $foundQueue = undef;
+    my $foundQueue = undef;
 
-  my $sent = $self->mgr->sendcommand('Action' => 'QueueStatus');
-  unless ( defined($sent) ) {
-      return undef;
-  }
-  my $reply = $self->mgr->receive_answer();
-  unless ( defined($reply) ) {
-      return undef;
-  }
+    my $sent = $self->mgr->sendcommand('Action' => 'QueueStatus');
+    unless ( defined($sent) ) {
+        return undef;
+    }
+    my $reply = $self->mgr->receive_answer();
+    unless ( defined($reply) ) {
+        return undef;
+    }
 
-  my $status = $reply->{'Response'};
-  unless ( defined($status) ) {
-      return undef;
-  }
-  if ( $status ne 'Success' ) {
-      die "Response not success\n";
-      return undef;
-  }
+    my $status = $reply->{'Response'};
+    unless ( defined($status) ) {
+        return undef;
+    }
+    if ( $status ne 'Success' ) {
+        die "Response not success\n";
+        return undef;
+    }
 
-  my @queue_members;
+    my @queue_members;
 
-  my @replies;
-  while (1) {
-      $reply  = $self->mgr->receive_answer();
-      # warn Dumper $reply;
-      my $event = $reply->{'Event'};
-      if ( $event =~ /QueueStatusComplete/i ) {
-        last;
-      }
-      if ( $reply->{'Queue'} eq $qname ) {
-        if ( $event =~ /QueueParams/i ) {
-          $self->{queue_params} = $reply;
-          $foundQueue = 1;
-        } elsif ( $event =~ /QueueMember/i ) {
-          push @queue_members, $reply;
+    my @replies;
+    while (1) {
+        $reply  = $self->mgr->receive_answer();
+        # warn Dumper $reply;
+        my $event = $reply->{'Event'};
+        if ( $event =~ /QueueStatusComplete/i ) {
+            last;
         }
-      }
-  }
-  $self->{queue_members} = \@queue_members;
+        if ( $reply->{'Queue'} eq $qname ) {
+            if ( $event =~ /QueueParams/i ) {
+            $self->{queue_params} = $reply;
+            $foundQueue = 1;
+            } elsif ( $event =~ /QueueMember/i ) {
+            push @queue_members, $reply;
+            }
+        }
+    }
+    $self->{queue_members} = \@queue_members;
 
-  unless ( defined ( $foundQueue ) ) {
-      die "Given queue name not found in QueueStatus response\n";
-  }
-  return 1;
+    unless ( defined ( $foundQueue ) ) {
+        die "Given queue name not found in QueueStatus response\n";
+    }
+    return 1;
 }
 
 sub pause_lean_agents {
-  my $self = shift;
+    my $self = shift;
 
-  Info("Pause lean agents...");
+    Info("Pause lean agents...");
 
-  my $current_time = time;
-  foreach my $member ( @{$self->{queue_members}}) {
-    if ( ( $member->{'LastCall'} > 0 ) && ( $member->{'LastCall'} < ( $current_time - LASTCALL ) ) ) {
-      Infof("Pause lean member %s", $member->{'StateInterface'} );
-      $self->pause_member($member->{'StateInterface'}, 'true');
+    my $current_time = time;
+    foreach my $member ( @{$self->{queue_members}}) {
+        if ( ( $member->{'LastCall'} > 0 ) && ( $member->{'LastCall'} < ( $current_time - LASTCALL ) ) ) {
+            Infof("Pause lean member %s", $member->{'StateInterface'} );
+            $self->pause_member($member->{'StateInterface'}, 'true');
+        }
+        if ($member->{'Status'} == UNAVAILABLE ) {
+            Infof("Pause unavailable member %s", $member->{'StateInterface'});
+            $self->pause_member($member->{'StateInterface'}, 'true');
+        }
     }
-    if ($member->{'Status'} == UNAVAILABLE ) {
-      Infof("Pause unavailable member %s", $member->{'StateInterface'});
-      $self->pause_member($member->{'StateInterface'}, 'true');
-    }
-  }
 }
 
 sub pause_member {
-  my ($self, $member, $status) = @_;
+    my ($self, $member, $status) = @_;
 
-  Infof("Queue pause member %s to status %s", $member, $status);
+    Infof("Queue pause member %s to status %s", $member, $status);
 
-  my $sent = $self->mgr->sendcommand (
-    'Action'    => 'QueuePause',
-    'Interface' => $member,
-    'Paused'    => $status,
-    'Queue'     => $self->{qname},
-  );
+    my $sent = $self->mgr->sendcommand (
+        'Action'    => 'QueuePause',
+        'Interface' => $member,
+        'Paused'    => $status,
+        'Queue'     => $self->{qname},
+    );
 
-  unless ( defined($sent) ) {
-      return undef;
-  }
-  my $reply = $self->mgr->receive_answer();
-  unless ( defined($reply) ) {
-      return undef;
-  }
-
-  my $response = $reply->{'Response'};
-  unless ( defined ( $response ) ) {
-      return undef;
-  }
-  if ( $response ne 'Success' ) {
-      Errf("Response not success: %s", Dumper $reply);
-      return undef;
-  }
+    unless ( defined($sent) ) {
+        return undef;
+    }
+    my $reply = $self->mgr->receive_answer();
+    unless ( defined($reply) ) {
+        return undef;
+    }
+    my $response = $reply->{'Response'};
+    unless ( defined ( $response ) ) {
+        return undef;
+    }
+    if ( $response ne 'Success' ) {
+        Errf("Response not success: %s", Dumper $reply);
+        return undef;
+    }
 }
 
 sub update_strategy {
-  my $self = shift;
-  my $strategy = shift // STRATEGY;
+    my $self = shift;
+    my $strategy = shift // STRATEGY;
 
-  Infof("Update strategy to %s", $strategy);
-
-  my $sql = "update queues set strategy=? where name=?";
-  my $sth = $self->dbh->prepare($sql);
-
-  $sth->execute($strategy, $self->{qname});
-  $self->queue_reload_parameters();
-
+    Infof("Update strategy to %s", $strategy);
+    my $sql = "update queues set strategy=? where name=?";
+    my $sth = $self->dbh->prepare($sql);
+    $sth->execute($strategy, $self->{qname});
+    $self->queue_reload_parameters();
 }
 
 sub queue_reload_parameters {
-  my $self = shift;
-  Infof("Reload parameters for %s", $self->{qname});
-  my $command = 'queue reload parameters '. $self->{qname};
-  # warn $command;
-  my $sent = $self->mgr->sendcommand (
-    'Action'  => "Command",
-    'Command' => $command,
-  );
+    my $self = shift;
+    Infof("Reload parameters for %s", $self->{qname});
+    my $command = 'queue reload parameters '. $self->{qname};
+    # warn $command;
+    my $sent = $self->mgr->sendcommand (
+        'Action'  => "Command",
+        'Command' => $command,
+    );
 
-  while (1) {
-    my $reply  = $self->mgr->receive_answer();
-    unless ( defined ( $reply ) ) {
-      last;
+    while (1) {
+        my $reply  = $self->mgr->receive_answer();
+        unless ( defined ( $reply ) ) {
+            last;
+        }
+        if ( $reply == 0 ) {
+            last;
+        }
+        Infof("Got response: %s", $reply);
     }
-    if ( $reply == 0 ) {
-      last;
-    }
-    Infof("Got response: %s", $reply);
-  }
 
 }
 
 sub incrementFailCounter {
-  my $self = shift;
-  my $interface = shift;
+    my $self = shift;
+    my $interface = shift;
 
-  if ( defined ( $self->{failcounters}->{$interface})) {
-    $self->{failcounters}->{$interface} = $self->{failcounters}->{$interface} + 1;
-  } else {
-    $self->{failcounters}->{$interface} = 1;
-  }
+    if ( defined ( $self->{failcounters}->{$interface})) {
+        $self->{failcounters}->{$interface} = $self->{failcounters}->{$interface} + 1;
+    } else {
+        $self->{failcounters}->{$interface} = 1;
+    }
 
-  Infof("FailCounter for %s set to %d", $interface, $self->{failcounters}->{$interface});
+    Infof("FailCounter for %s set to %d", $interface, $self->{failcounters}->{$interface});
 
-  if ($self->{failcounters}->{$interface} > UNANSWERED ) {
-    $self->pause_member($interface, 'true');
-    $self->{failcounters}->{$interface} = 0;
-  }
+    if ($self->{failcounters}->{$interface} > UNANSWERED ) {
+        $self->pause_member($interface, 'true');
+        $self->{failcounters}->{$interface} = 0;
+    }
+}
 
+sub add_to_callback {
+    my $self = shift;
+    my $event = shift;
+
+    Infof("Add to callback %s in context %s", $event->{'CallerIDNum'}, $event->{'Context'})
 }
 
 sub process {
-  my $self  = shift;
-  my $event = undef;
+    my $self  = shift;
+    my $event = undef;
 
-  $event = $self->el->_getEvent();
-  unless ( defined ( $event ) ) {
-      Info("EOF from asterisk manager");
-      $self->{to_finalize} = 1;
-  }
-
-  if ($event == 0)  {
-      sleep(1);
-      return;
-  }
-
-  unless ( defined ( $event->{'Event'} ) ) {
-      Debug("STRANGE EVENT: %s", $event);
-      return;
-  }
-
-  # Checking AgentRingNoAnswer
-  if ( $event->{'Event'} eq 'AgentRingNoAnswer') {
-    if ( $event->{'Queue'} eq $self->{qname} ) {
-      my $interface = $event->{'Interface'};
-      Infof("Agent %s did not answer to %s %s",
-          $interface,
-          $event->{'Channel'},
-          $event->{'CallerIDNum'});
-      $self->incrementFailCounter($interface);
+    $event = $self->el->_getEvent();
+    unless ( defined ( $event ) ) {
+        Info("EOF from asterisk manager");
+        $self->{to_finalize} = 1;
     }
-  } elsif ( $event->{'Event'} eq 'AgentCalled') {
-      if ( $event->{'Queue'} eq $self->{qname} ) {
-        Infof("Agent called %s", $event->{'Interface'});
-      }
-  } elsif ( $event->{'Event'} eq 'QueueMemberStatus') {
-      if ( $event->{'Queue'} eq $self->{qname} ) {
-        my $interface = $event->{'Interface'};
-        my $state = $event->{'Status'};
-        if ( $state == UNAVAILABLE ) {
-            Infof("Agent UNREACHABLE %s", $interface);
-        } elsif ( $state == REACHABLE ) {
-            # Infof("Agent AVAILABLE %s", $interface);
+
+    if ($event == 0)  {
+        sleep(1);
+        return;
+    }
+
+    unless ( defined ( $event->{'Event'} ) ) {
+        Debug("STRANGE EVENT: %s", $event);
+        return;
+    }
+
+    # Checking AgentRingNoAnswer
+    if ( $event->{'Event'} eq 'AgentRingNoAnswer') {
+        if ( $event->{'Queue'} eq $self->{qname} ) {
+            my $interface = $event->{'Interface'};
+            Infof("Agent %s did not answer to %s %s", $interface, $event->{'Channel'}, $event->{'CallerIDNum'});
+            $self->incrementFailCounter($interface);
         }
-      }
-  } elsif ( $event->{'Event'} eq 'QueueMemberPause') {
-      if ( $event->{'Queue'} eq $self->{qname} ) {
-        my $interface = $event->{'Interface'};
-        my $paused = $event->{'Paused'} == 0 ? 'Unpaused' : 'Paused';
-        Infof("Agent %s %s", $interface, $paused );
-     }
-  } elsif ( $event->{'Event'} eq 'QueueCallerLeave') {
-    if ( $event->{'Queue'} eq $self->{qname} ) {
-        #Infof("We lost caller %s", $event->{'CallerIDNum'});
+    } elsif ( $event->{'Event'} eq 'AgentCalled') {
+        if ( $event->{'Queue'} eq $self->{qname} ) {
+            Infof("Agent called %s", $event->{'Interface'});
+        }
+    } elsif ( $event->{'Event'} eq 'QueueMemberStatus') {
+        if ( $event->{'Queue'} eq $self->{qname} ) {
+            my $interface = $event->{'Interface'};
+            my $state = $event->{'Status'};
+            if ( $state == UNAVAILABLE ) {
+                Infof("Agent UNREACHABLE %s", $interface);
+            } elsif ( $state == REACHABLE ) {
+                # Infof("Agent AVAILABLE %s", $interface);
+            }
+        }
+    } elsif ( $event->{'Event'} eq 'QueueMemberPause') {
+        if ( $event->{'Queue'} eq $self->{qname} ) {
+            my $interface = $event->{'Interface'};
+            my $paused = $event->{'Paused'} == 0 ? 'Unpaused' : 'Paused';
+            Infof("Agent %s %s", $interface, $paused );
+        }
+    } elsif ( $event->{'Event'} eq 'QueueCallerLeave') {
+        if ( $event->{'Queue'} eq $self->{qname} ) {
+            # Infof("We lost caller %s", $event->{'CallerIDNum'});
+        }
+    } elsif ( $event->{'Event'} eq 'QueueCallerAbandon' ) {
+        if ( $event->{'Queue'} eq $self->{qname} ) {
+            Infof("We lost caller %s", $event->{'CallerIDNum'});
+            # Here: add to callback queue
+            $self->add_to_callback($event)
+        }
+    } elsif ( $event->{'Event'} eq 'QueueCallerJoin') {
+        if ( $event->{'Queue'} eq $self->{qname} ) {
+            Infof("Enter %s", $event->{'CallerIDNum'});
+        }
+    } elsif ( $event->{'Event'} eq 'AgentConnect') {
+        if ( $event->{'Queue'} eq $self->{qname} ) {
+            my $interface = $event->{'Interface'};
+            Infof("Agent %s connected to %s",$interface, $event->{'CallerIDNum'});
+            $self->{failcounters}->{$interface} = 0;
+        }
+    } elsif ( $event->{'Event'} eq 'AgentComplete') {
+        if ( $event->{'Queue'} eq $self->{qname} ) {
+            Infof("Agent %s complete with %s",$event->{'Interface'}, $event->{'CallerIDNum'});
+        }
+    } elsif ( defined ( $event->{'Queue'} ) ) {
+        if ( $event->{'Queue'} eq $self->{qname} ) {
+            # warn Dumper $event->{'Event'};
+        }
     }
-  } elsif ( $event->{'Event'} eq 'QueueCallerAbandon' ) { 
-    if ( $event->{'Queue'} eq $self->{qname} ) {
-       Infof("We lost caller %s", $event->{'CallerIDNum'});
-    }
-  } elsif ( $event->{'Event'} eq 'QueueCallerJoin') {
-    if ( $event->{'Queue'} eq $self->{qname} ) {
-      Infof("Enter %s", $event->{'CallerIDNum'});
-    }
-  } elsif ( $event->{'Event'} eq 'AgentConnect') {
-    if ( $event->{'Queue'} eq $self->{qname} ) {
-      my $interface = $event->{'Interface'};
-      Infof("Agent %s connected to %s",$interface, $event->{'CallerIDNum'});
-      $self->{failcounters}->{$interface} = 0;
-    }
-  } elsif ( $event->{'Event'} eq 'AgentComplete') {
-    if ( $event->{'Queue'} eq $self->{qname} ) {
-      Infof("Agent %s complete with %s",$event->{'Interface'}, $event->{'CallerIDNum'});
-    }
-  } elsif ( defined ( $event->{'Queue'} ) ) {
-      if ( $event->{'Queue'} eq $self->{qname} ) {
-          # warn Dumper $event->{'Event'};
-      }
-  }
 }
 
