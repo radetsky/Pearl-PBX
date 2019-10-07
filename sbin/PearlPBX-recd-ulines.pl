@@ -335,7 +335,7 @@ sub _get_next_record_recursive {
     my $uline_id      = $result->{'uline_id'};
     my $original_file = $result->{'original_file'};
     my $next_record   = $result->{'next_record'};
-    $this->speak("Got ID=$id ULINE=$uline_id FILE=$original_file NEXT=$next_record");
+    #$this->speak("Got ID=$id ULINE=$uline_id FILE=$original_file NEXT=$next_record");
 
     unless ( defined ( $result->{'next_record'} ) ) {
         my $is_talk_finished = $this->_more_than_hour_from_now ( $result->{'cdr_start'} ); 
@@ -414,10 +414,34 @@ sub process {
     my $strlog = "/usr/bin/sox ".join (" ",@infiles)." to $outfile"; 
     $this->log("info",$strlog);
     #	$this->speak($strlog); 
-	my $rc = exec_external ('/usr/bin/sox',@infiles,'-t','mp3','-c','2','-r','8000',$outfile); 
+
+    my $allexists = 1; 
+    my $rc = undef; 
+
+    foreach my $wavfile (@infiles) {
+        unless  ( -e $wavfile ) {
+            $allexists = undef; 
+        }
+        
+        my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size,
+            $atime, $mtime, $ctime, $blksize, $blocks) = stat($wavfile); 
+        my $diff = time() - $mtime; 
+        if ($diff < 600) {
+            $this->speak ("Fresh talk. Skip it\n");
+            $this->log("info", "Fresh talk. Skip it");
+            $this->dbh->rollback;  
+            return 
+        }
+
+
+    }
+
+    if ( defined ( $allexists ) ){
+	    $rc = exec_external ('/usr/bin/sox',@infiles,'-t','mp3','-c','2','-r','8000',$outfile); 
+    }
 
 	unless ( defined ( $rc ) ) { 
-		 while ( my $record = shift ( @nexts_copy ) ) {
+		while ( my $record = shift ( @nexts_copy ) ) {
 			my $id = $record->{'id'};
 	        $this->_convert_fault($id);
 		}
@@ -425,7 +449,6 @@ sub process {
 		$this->log("info","Can't convert ".join (" ",@infiles)." to $outfile"); 
 		$this->speak("Can't convert ".join (" ",@infiles)." to $outfile"); 
 		return 1; 
-		$this->_exit ("Can't convert ".join (" ",@infiles)." to $outfile"); 
 	} 
 	while ( my $record = shift ( @nexts_copy ) ) { 
 		my $id = $record->{'id'}; 
@@ -433,7 +456,10 @@ sub process {
 		$this->speak("ID $id joined to $result_file"); 
 	}	
     $this->dbh->commit;
-
+    foreach my $wavfile (@infiles) {
+        $this->speak("Remove $wavfile"); 
+        unlink ( $wavfile );
+    }
 }
 
 1;
