@@ -50,6 +50,26 @@ use constant UNANSWERED => 3;      # Did not answer 5 times ? -> Pause
 use constant UNAVAILABLE => 5;     # Status = 5 in QueueStatus means that agent unavailable
 use constant REACHABLE => 1;
 
+#  CallbackAutoExpress
+#  Callbackavz
+#  CallbackExpressT
+#  Callbackse
+#  CallbackTechnichki
+#  CallbackSOS
+#  Callback247
+
+my %SERVICE = (
+    'IVR2020_24NA7' => '247',
+    'IVR2020_AutoExpress' => 'AutoExpress',
+    'IVR2020_AVZ' => 'avz',
+    'IVR2020_ExpressT' => 'ExpressT',
+    'IVR2020_SE' => 'se',
+    'IVR2020_SOS' => 'SOS',
+    'IVR2020_TEHNICHKI' => 'Technichki'
+);
+
+use constant DEFAULT_SERVICE => 'ExpressT'
+
 sub start {
     my $self = shift;
     # Looking for --qname=queueName
@@ -241,8 +261,15 @@ sub incrementFailCounter {
 sub add_to_callback {
     my $self = shift;
     my $event = shift;
+    my $servicename = $SERVICE{$event->{'Context'}} // DEFAULT_SERVICE;
 
-    Infof("Add to callback %s in context %s", $event->{'CallerIDNum'}, $event->{'Context'})
+    Infof("Add to callback %s in context %s", $event->{'CallerIDNum'}, $event->{'Context'});
+    my $sth = $self->dbh->prepare("insert into public.callback_list (callerid, servicename) values(?,?)");
+    eval { my $rv = $sth->execute($event->{'CallerIDNum'}, $servicename ); };
+    if ($@) {
+        Errf( "Can't add to callback_list: %s", $this->dbh->errstr );
+    }
+
 }
 
 sub process {
