@@ -73,6 +73,8 @@ sub start {
     $this->SUPER::start();
     $SIG{INT}  = sub { $this->{to_finalize} = 1; };
     $SIG{TERM} = sub { $this->{to_finalize} = 1; };
+    
+    $this->{agentas} = undef; # Just declare 
 }
 
 sub _check_queue_status {
@@ -85,25 +87,33 @@ sub _check_queue_status {
         # too verbose
         # $this->log( "info", $qm->{'StateInterface'} . " " . QueueStatus->[$qm->{'Status'}] . " " . PauseStatus->[$qm->{'Paused'}]);
         if ($qm->{'Event'} eq 'QueueMember') {
+
+            my $agent = $qm->{'StateInterface'};
+            unless ( defined ( $this->{agentas}->{$agent} ) ) {
+                $this->{agentas}->{$agent} = time(); # remember the time when last state changed 
+            }
+
             if ($qm->{'Paused'} == 0) {
                 if ($qm->{'Status'} == 1) {
-                    my $agent = $qm->{'StateInterface'};
                     my $queue = $qm->{'Queue'};
                     my $service = substr $queue, 8; # Cut "Callback" prefix from QueueName to find the service in the DB
-                    Infof("[QUEUESTATUS] Found available %s for service %s", $agent, $service )
-                    next; # DEBUG VERSION
+                    my $lastCall = time() - $this->{agentas}->{$agent}; 
+                    Infof("[QUEUESTATUS] Found available %s for service %s. Call %d ago", $agent, $service, $lastCall); 
+                    next unless $service eq 'SOS'; # DEBUG VERSION
+                    next unless $lastCall > 10; # Do not call if $agent available less than 10 seconds 
                     my $dst = $this->_get_today_undone ($service);
                     unless ( defined ( $dst ) ) {
-                        # $this->log("info","_check_queue_status: No destination for service $service");
+                        Infof("No destination for service %s",$service);
                         next;
                     }
                     $this->_originate_call($dst, $agent, $service);
-                    $this->log("info", "_check_queue_status: Calling to $agent with connect to $dst and service $service");
+                    Infof("Calling to %s with connect to %s and service %s", $agent, $dst, $service);
                     return;
                 } #end if status == 1
             } #end if
         } #end if
     } #end foreach
+    Info("--------> END OF STATUS <----------"); 
 }
 
 sub _originate_call {
@@ -164,9 +174,9 @@ sub queue_status {
         }
         if ( $reply->{'Queue'} =~ 'Callback' ) {
             if ( $event =~ /QueueParams/i ) {
-            $self->{queue_params} = $reply;
+                $self->{queue_params} = $reply;
             } elsif ( $event =~ /QueueMember/i ) {
-            push @queue_members, $reply;
+                push @queue_members, $reply;
             }
         }
     }
@@ -259,22 +269,9 @@ sub process {
     if ( $event->{'Event'} =~ 'QueueMemberStatus' ) {
         if ( $event->{'Paused'} == 0 ) {
             if ( $event->{'Queue'} =~ 'Callback' ) {
-                $this->log( "info", $event->{'StateInterface'} . " " . QueueStatus->[$event->{'Status'}] . " " . PauseStatus->[$event->{'Paused'}]);
-                if ( QueueStatus->[$event->{'Status'}] eq 'AST_DEVICE_NOT_INUSE' ) {
-                    my $agent = $event->{'StateInterface'};
-                    my $queue = $event->{'Queue'};
-                    $queue    =~ s/Callback//ig; #Another way to cut "Callback"
-                    Infof("[PROCESS] Found available agent %s for service %s", $agent, $queue )
-                    return ; # Do not need to run callback tonight
-
-                    my $dst   = $this->_get_today_undone ($queue);
-                    unless ( defined ( $dst ) ) {
-                       $this->log( "info", "No destination for service $queue");
-                       return;
-                    }
-                    $this->_originate_call($dst, $agent, $queue);
-                    return;
-                }
+                my $agent = $event->{'StateInterface'};
+                Infof("%s %s %s", $agent,  QueueStatus->[$event->{'Status'}], PauseStatus->[$event->{'Paused'}]);
+                $this->{agentas}->{$agent} = time();
             }
         }
     }
