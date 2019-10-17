@@ -98,17 +98,19 @@ sub _check_queue_status {
                     my $queue = $qm->{'Queue'};
                     my $service = substr $queue, 8; # Cut "Callback" prefix from QueueName to find the service in the DB
                     my $lastCall = time() - $this->{agentas}->{$agent}; 
-                    Infof("[QUEUESTATUS] Found available %s for service %s. Call %d ago", $agent, $service, $lastCall); 
-                    next unless $service eq 'SOS'; # DEBUG VERSION
-                    next unless $lastCall > 10; # Do not call if $agent available less than 10 seconds 
-                    my $dst = $this->_get_today_undone ($service);
-                    unless ( defined ( $dst ) ) {
-                        Infof("No destination for service %s",$service);
-                        next;
+                    Infof("[QUEUESTATUS] Found %s -> %s. seconds: %d", $agent, $service, $lastCall); 
+                    if ( $service eq 'SOS' or $service eq 'se' or $service eq 'ExpressT' ) {
+                        next unless $lastCall > 10; # Do not call if $agent available less than 10 seconds 
+                        my $dst = $this->_get_today_undone ($service);
+                        unless ( defined ( $dst ) ) {
+                            # Infof("No destination for service %s",$service);
+                            next;
+                        }
+                        $this->{agentas}->{$agent} = time(); 
+                        $this->_originate_call($dst, $agent, $service);
+                        Infof("Calling to %s with connect to %s and service %s", $agent, $dst, $service);
+                        return;
                     }
-                    $this->_originate_call($dst, $agent, $service);
-                    Infof("Calling to %s with connect to %s and service %s", $agent, $dst, $service);
-                    return;
                 } #end if status == 1
             } #end if
         } #end if
@@ -137,7 +139,7 @@ sub _originate_call {
     my $reply = 0;
     while ( !$reply ) {
         $reply = $this->mgr->receive_answer();
-        $this->log( "info", Dumper $reply);
+        Info($reply);
     }
 
 }

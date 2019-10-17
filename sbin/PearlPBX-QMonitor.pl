@@ -22,7 +22,7 @@ $ENV{LOG_STDERR} = 1;
 QMonitor->run(
     daemon      => undef,
     verbose     => 1,
-    use_pidfile => 1,
+    use_pidfile => undef,
     has_conf    => 1,
     conf_file   => "/etc/PearlPBX/asterisk-router.conf",
     infinite    => 1,
