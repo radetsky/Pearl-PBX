@@ -269,13 +269,38 @@ sub incrementFailCounter {
     }
 }
 
+sub lookup_in_addressbook {
+    my $self     = shift; 
+    my $callerid = shift; 
+
+    my $sth = $self->dbh->prepare("select count(msisdn) as c from ivr.addressbook where msisdn=?");
+    eval {
+        $sth->execute($callerid);
+    };
+    if ( $@ ) {
+        return undef;
+    }
+
+    my $result = $sth->fetchrow_hashref();
+    if ( ! defined ( $result->{'c'} ) ) {
+        return undef;
+    }
+    if ( $result->{'c'} > 0 ) {
+        Infof("%s exists in addressbook", $callerid); 
+        return 1;
+    }
+    return undef;
+}
+
 sub add_to_callback {
     my $self = shift;
     my $event = shift;
     
     my $context = $event->{'Context'}; 
-    my $servicename = $self->_service($context);
-     
+    my $servicename = $self->_service($context); 
+    my $callerid = $event->{'CallerIDNum'}; 
+
+    return if ( $self->lookup_in_addressbook($callerid) ); 
 
     Infof("Add to callback %s context %s service %s hold %s pos %s", $event->{'CallerIDNum'}, 
         $context, $servicename, $event->{'HoldTime'}, $event->{'Position'});
