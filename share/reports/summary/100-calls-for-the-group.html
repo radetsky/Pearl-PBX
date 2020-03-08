@@ -1,0 +1,46 @@
+<!-- Отчет по звонкам за период 2020 -->
+<center>
+  <h2>Отчет по звонкам за период 2020</h2>
+</center>
+<form class="well" onSubmit="return calls_for_the_group()">
+  <fieldset>
+    <input id='dateFrom_sum100' data-datepicker="datepicker" class="input-date" type="text" value="" />
+    to
+    <input id='dateTo_sum100' data-datepicker="datepicker" class="input-date" type="text" value="" />
+    <select name="queues_sum100" id="queues_sum100" class="pearlpbx-list-queues"></select>
+    <input type="submit" class="btn btn-primary" value="Получить отчет">
+  </fieldset>
+</form>
+<div id="calls_for_the_group_result">
+</div>
+
+<script type="text/javascript">
+  function calls_for_the_group() {
+    var dateFrom;
+    var dateTo;
+    var parsed;
+    var queue;
+
+    dateFrom = $( '#dateFrom_sum100' ).val();
+    dateTo = $( '#dateTo_sum100' ).val();
+    queue = $( 'select#queues_sum100 option:selected' ).val();
+
+    parsed = pearlpbx_parse_period( dateFrom, dateTo, "00:00", "23:59" );
+    if ( parsed == false ) {
+      return false;
+    }
+
+    $( '#calls_for_the_group_result' ).html( "Request sent..." );
+
+    $.get( "/reports.pl",
+      {
+        "exec-report": "CallsForTheGroup",
+        dateFrom: dateFrom,
+        dateTill: dateTo,
+        queue: queue
+      }, function ( data ) {
+        $( '#calls_for_the_group_result' ).html( data );
+      }, "html" );
+    return false;
+  }
+</script>
