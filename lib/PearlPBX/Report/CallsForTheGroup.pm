@@ -27,17 +27,18 @@ sub new {
 sub report {
     my ($this, $params) = @_;
 
-    my $sinceDateTime = $this->filldatetime ( $params->{dateFrom}, "00:00:00" );
-    my $tillDateTime  = $this->filldatetime ( $params->{dateTill}, "23:59:59" );
+    my $sincedatetime = $this->filldatetime ( $params->{dateFrom}, "00:00:00" );
+    my $tilldatetime  = $this->filldatetime ( $params->{dateTill}, "23:59:59" );
     unless ( defined ( $params->{queue} ) ) {
         $this->{error} = "Queuename is undefined";
+        warn "Queue is undefined"; 
         return undef;
     }
     # Всего в отчете надо получить такую информацию.
     # Кол-во принятых, кол-во пропущенных, всего, процент пропущенных.
 
     # Принятых.
-    my $sql_connected = "select count(queuename) as s,queuename from queue_log where event='CONNECT' and queuename=? and time between ? and ?";
+    my $sql_connected = "select count(queuename) as s from queue_log where event='CONNECT' and queuename=? and time between ? and ?";
     my $sth_connected = $this->{dbh}->prepare($sql_connected);
     eval { $sth_connected->execute( $params->{queue}, $sincedatetime, $tilldatetime); };
     if ($@) {
@@ -62,7 +63,7 @@ sub report {
     my $total = $lost + $connected;
 
     # Процент пропущенных
-    my $p_lost = ($lost * 100) / $total
+    my $p_lost = ($lost * 100) / $total; 
 
 
     my $template = Template->new ( {
@@ -70,12 +71,11 @@ sub report {
         INTERPOLATE  => 1,
     } ) || die "$Template::ERROR";
 
-    my @d = sort keys %{ $dayz };
     my $tmpl_vars = {
         connected => $connected,
         lost => $lost,
         total => $total,
-        p_lost => $p_lost
+        p_lost => sprintf("%.2f", $p_lost), 
     };
 
     $template->process('CallsForTheGroup.html', $tmpl_vars) || die $template->error();
