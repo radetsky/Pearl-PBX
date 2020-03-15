@@ -26,9 +26,9 @@ sub new {
 
 sub _connected {
     my $this = shift;
+    my $qname = shift;
     my $since = shift;
     my $till = shift;
-    my $qname = shift;
 
     # Принятых без учета адресной книги.
     my $sql_connected = "select count(queue) as s from public.queue_parsed where queue=?
@@ -48,9 +48,9 @@ sub _connected {
 
 sub _missed {
     my $this = shift;
+    my $qname = shift;
     my $since = shift;
     my $till = shift;
-    my $qname = shift;
 
     # Пропущенных без учета адресной книги.
     my $sql_missed = "select count(queue) as s from public.queue_parsed where queue=?
@@ -155,9 +155,9 @@ sub report {
     # Кол-во принятых, кол-во пропущенных, всего, процент пропущенных.
 
     my $connected = $this->_connected($params->{queue}, $sincedatetime, $tilldatetime);
-    return undef unless ( defined ( $connected ) )
+    return undef unless ( defined ( $connected ) );
     my $missed = $this->_missed($params->{queue}, $sincedatetime, $tilldatetime);
-    return undef unless ( defined ( $missed ) )
+    return undef unless ( defined ( $missed ) );
     my ($lucky, $done ) =  $this->_get_lucky_done ($params->{queue}, $sincedatetime, $tilldatetime);
     my $lost = $missed - $lucky - $done;
 
