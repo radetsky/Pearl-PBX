@@ -144,8 +144,9 @@ sub _lucky {
 sub report {
     my ($this, $params) = @_;
 
-    my $sincedatetime = $this->filldatetime ( $params->{dateFrom}, "00:00:00" );
-    my $tilldatetime  = $this->filldatetime ( $params->{dateTill}, "23:59:59" );
+    my $sincedatetime = $this->filldatetime ( $params->{dateFrom}, $params->{'timeFrom'} );
+    my $tilldatetime  = $this->filldatetime ( $params->{dateTill}, $params->{'timeTo'} );
+
     unless ( defined ( $params->{queue} ) ) {
         $this->{error} = "Queuename is undefined";
         warn "Queue is undefined";
