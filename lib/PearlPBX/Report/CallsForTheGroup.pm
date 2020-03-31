@@ -107,11 +107,11 @@ sub _get_lucky_done {
       } else {
         $done++;
       }
-
     } else {
       $lucky++;
     }
   }
+
   return ($lucky, $done);
 }
 
@@ -161,6 +161,10 @@ sub report {
     return undef unless ( defined ( $missed ) );
     my ($lucky, $done ) =  $this->_get_lucky_done ($params->{queue}, $sincedatetime, $tilldatetime);
     my $lost = $missed - $lucky - $done;
+
+    # Если на одного и того же пользователя был и повторный дозвон и обратный callback, 
+    # То будут минусы. 
+    $lost = 0 if $lost < 0; 
 
     # Всего.
     my $total = $connected + $missed;
