@@ -283,6 +283,11 @@ sub incrementFailCounter {
     Infof("FailCounter for %s set to %d", $interface, $self->{failcounters}->{$interface});
 
     if ($self->{failcounters}->{$interface} > UNANSWERED ) {
+        if ($self->availableMembersCount() < 3) {
+            Infof("Can not pause member %s because of small count of active members.", $interface); 
+            return;
+        }
+
         $self->pause_member($interface, 'true');
         $self->{failcounters}->{$interface} = 0;
     }
