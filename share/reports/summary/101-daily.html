@@ -1,0 +1,40 @@
+<!-- Отчет по звонкам (сутки) 2020 -->
+<center>
+  <h2>Отчет по звонкам (сутки) 2020</h2>
+</center>
+<form class="well" onSubmit="return evakuators_daily()">
+  <fieldset>
+    <input id='dateFrom_sum101' data-datepicker="datepicker" class="input-date" type="text" value="" />
+    <select name="queues_sum101" id="queues_sum101">
+        <option value="evakuator">evakuator</option>
+        <option value="SOS">SOS</option>
+        <option value="Technichki">Technichki</option>
+        <option value="spectechnika">spectechnika</option>
+        <option value="total">Total</option>
+    </select>
+    <input type="submit" class="btn btn-primary" value="Получить отчет">
+  </fieldset>
+</form>
+<div id="evakuators_daily_result">
+</div>
+
+<script type="text/javascript">
+  function evakuators_daily() {
+    var dateFrom;
+    var queue;
+
+    dateFrom = $( '#dateFrom_sum101' ).val();
+    queue = $( 'select#queues_sum100 option:selected' ).val();
+    $( '#evakuators_daily_result' ).html( "Request sent..." );
+    $.get( "/reports.pl",
+      {
+        "exec-report": "EvakuatorsDaily",
+        dateFrom: dateFrom,
+        queue: queue
+      }, function ( data ) {
+        $( '#evakuators_daily_result' ).html( data );
+      }, "html" );
+
+    return false;
+  }
+</script>
