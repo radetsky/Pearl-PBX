@@ -73,13 +73,17 @@ sub _prepare {
                            time between ? and ? and success=0 and callerid not in (select msisdn from ivr.addressbook)");
 
     # Подробный список пропущенных
-    $this->{'missed_list'} = $this->{dbh}->prepare("select time,callerid,holdtime from queue_parsed where queue=?
+    $this->{'missed_list_with_queue'} = $this->{dbh}->prepare("select time,callerid,holdtime from queue_parsed where queue=?
                            and success=0 and time between ? and ? order by time desc");
 
+    $this->{'missed_list_total'} = $this->{dbh}->prepare("select time,callerid,holdtime from queue_parsed where
+                           success=0 and time between ? and ? order by time desc");
     # Список дозвонившихся после пропущенного
-    $this->{'missed_lucky'} = $this->{dbh}->prepare("select time,holdtime from queue_parsed where queue=?
+    $this->{'missed_lucky_with_queue'} = $this->{dbh}->prepare("select time,holdtime from queue_parsed where queue=?
                           and callerid=? and success=1 and time between ? and ? order by time desc limit 1");
 
+    $this->{'missed_lucky_total'} = $this->{dbh}->prepare("select time,holdtime from queue_parsed where
+                          callerid=? and success=1 and time between ? and ? order by time desc limit 1");
     # Список обработанных операторами
     $this->{'missed_done'} = $this->{dbh}->prepare("select calldate, billsec, src from public.cdr where dst=?
                           and calldate between ? and ? and disposition = 'ANSWERED' order by calldate limit 1");
@@ -139,14 +143,22 @@ sub _missed {
 sub _get_lucky_done {
   my ($this, $queuename, $sincedatetime, $tilldatetime) = @_;
 
-  eval { $this->{'missed_list'}->execute( $queuename, $sincedatetime, $tilldatetime ); };
+  my $sth_list; 
+  if ($queuename ne 'total') {
+      $sth_list = $this->{'missed_list_with_queue'}; 
+      eval { $sth_list->execute( $queuename, $sincedatetime, $tilldatetime ); };
+  } else {
+      $sth_list = $this->{'missed_list_total'}; 
+      eval { $sth_list->execute( $sincedatetime, $tilldatetime ); };
+  }
+
   if ($@) {
       $this->{error} = $this->{dbh}->errstr;
       return undef;
   }
 
   my @first_rows;
-  while ( my $hash_ref = $this->{'missed_list'}->fetchrow_hashref ) {
+  while ( my $hash_ref = $sth_list->fetchrow_hashref ) {
       push @first_rows,$hash_ref;
   }
 
@@ -186,12 +198,20 @@ sub _outtime {
 sub _lucky {
     my ($this, $callerid, $first_time, $queuename, $tilldatetime) = @_;
 
-    eval { $this->{'missed_lucky'}->execute ($queuename, $callerid, $first_time, $tilldatetime); };
+    my $sth_lucky; 
+
+    if ( $queuename ne 'total') {
+        $sth_lucky = $this->{'missed_lucky_with_queue'}; 
+        eval { $sth_lucky->execute($queuename, $callerid, $first_time, $tilldatetime); };
+    } else {
+        $sth_lucky = $this->{'missed_lucky_total'}; 
+        eval { $sth_lucky->execute($callerid, $first_time, $tilldatetime); };
+    }
     if ($@) {
         $this->{error} = $this->{dbh}->errstr;
         return undef;
     }
-    my $lucky = $this->{'missed_lucky'}->fetchrow_hashref;
+    my $lucky = $sth_lucky->fetchrow_hashref;
     unless ( defined ( $lucky->{'time'}) ) { return undef; }
     return 1;
 }
