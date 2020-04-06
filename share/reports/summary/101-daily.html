@@ -24,7 +24,7 @@
     var queue;
 
     dateFrom = $( '#dateFrom_sum101' ).val();
-    queue = $( 'select#queues_sum100 option:selected' ).val();
+    queue = $( 'select#queues_sum101 option:selected' ).val();
     $( '#evakuators_daily_result' ).html( "Request sent..." );
     $.get( "/reports.pl",
       {
@@ -33,6 +33,7 @@
         queue: queue
       }, function ( data ) {
         $( '#evakuators_daily_result' ).html( data );
+        evakuators_daily_make_graph();
       }, "html" );
 
     return false;

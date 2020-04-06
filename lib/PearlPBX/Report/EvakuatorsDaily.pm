@@ -52,6 +52,14 @@ sub new {
     my ($class, $conf) = @_;
     my $this = $class->SUPER::new($conf);
 
+    bless $this;
+    return $this;
+}
+
+sub _prepare { 
+    my $this = shift; 
+
+
     $this->{'connected_with_queue'} = $this->{dbh}->prepare("select count(queue) as s from public.queue_parsed where queue=?
                            and time between ? and ? and success=1 and callerid not in (select msisdn from ivr.addressbook)");
 
@@ -76,8 +84,6 @@ sub new {
     $this->{'missed_done'} = $this->{dbh}->prepare("select calldate, billsec, src from public.cdr where dst=?
                           and calldate between ? and ? and disposition = 'ANSWERED' order by calldate limit 1");
 
-    bless $this;
-    return $this;
 }
 
 sub _connected {
@@ -200,6 +206,8 @@ sub report {
     my @result;
     my @graph;
 
+    $this->_prepare();
+
     my $current_hour = 0; # 0 - 23
     foreach my $h (@HOURS) {
         my $start = $h->[0];
@@ -215,8 +223,11 @@ sub report {
         my ($lucky, $done ) = $this->_get_lucky_done ($queue, $sincedatetime, $tilldatetime);
         my $lost = $missed - $lucky - $done;
         $lost = 0 if $lost < 0;
-        my $total = $connected + $missed;
-        my $p_lost = ($lost * 100) / $total;
+        my $total = $connected + $lost;
+        my $p_lost = 0; 
+        if ( $total != 0 ) {
+            $p_lost = ($lost * 100) / $total;
+        }
         my $result_row = {
             hour => $current_hour,
             sincedatetime => $sincedatetime,
@@ -224,14 +235,15 @@ sub report {
             connected => $connected,
             lost => $lost,
             total => $total,
-            p_lost => $p_lost
+            p_lost => sprintf("%.2f", $p_lost),
         };
         push @result, $result_row;
         push @graph, {
             hour => $current_hour,
-            connected => $connected,
+            total => $total, 
             lost => $lost,
         };
+        $current_hour++; 
 
     }
 

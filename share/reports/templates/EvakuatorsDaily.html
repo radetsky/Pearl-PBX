@@ -1,4 +1,4 @@
-<table class="table table-stripped" style="float: left; width: 300px;">
+<table class="table table-stripped" style="width: 600px;">
     <thead>
         <tr>
             <th>Час</th>
@@ -20,7 +20,7 @@
         [% END %]
     </tbody>
 </table>
-<div id='graph101' style="float: left; width: 600px; height: 400px; ">
+<div id='graph101' style="width: 600px; height: 400px; ">
 </div>
 
 <script type="text/javascript" src="/js/jqPlot/plugins/jqplot.pieRenderer.min.js"></script>
@@ -28,18 +28,23 @@
 <script type="text/javascript" src="/js/jqPlot/plugins/jqplot.categoryAxisRenderer.min.js"></script>
 <script type="text/javascript">
     function evakuators_daily_make_graph() {
-        var data = [% jdata %];
-        var plot1 = jQuery.jqplot( 'graph101', [ data ],
+        let data = [% jdata %];
+        let xaxis = data.map((rawdata) => { return rawdata.hour });
+        let total = data.map((rawdata) => { return rawdata.total }); 
+        let lost  = data.map((rawdata) => { return rawdata.lost }); 
+        console.log(data);
+        jQuery.jqplot( 'graph101', [ total, lost ],
             {
                 seriesDefaults: {
                     renderer: jQuery.jqplot.BarRenderer,
                     rendererOptions: {
-                        varyBarColor: true
-                    }
+                        varyBarColor: false
+                    },
                 },
                 axes: {
                     xaxis: {
-                        renderer: jQuery.jqplot.CategoryAxisRenderer
+                        renderer: jQuery.jqplot.CategoryAxisRenderer,
+                        ticks: xaxis,
                     }
                 }
             }
