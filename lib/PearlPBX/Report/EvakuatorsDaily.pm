@@ -140,7 +140,7 @@ sub _get_lucky_done {
   }
 
   my @first_rows;
-  while ( my $hash_ref = $sth->fetchrow_hashref ) {
+  while ( my $hash_ref = $this->{'missed_list'}->fetchrow_hashref ) {
       push @first_rows,$hash_ref;
   }
 
@@ -172,7 +172,7 @@ sub _outtime {
         $this->{error} = $this->{dbh}->errstr;
         return undef;
     }
-    my $outtime = $sth->fetchrow_hashref;
+    my $outtime = $this->{'missed_done'}->fetchrow_hashref;
     unless ( defined ( $outtime->{'calldate'}) ) { return undef; }
     return 1;
 }
@@ -185,7 +185,7 @@ sub _lucky {
         $this->{error} = $this->{dbh}->errstr;
         return undef;
     }
-    my $lucky = $sth_redial->fetchrow_hashref;
+    my $lucky = $this->{'missed_lucky'}->fetchrow_hashref;
     unless ( defined ( $lucky->{'time'}) ) { return undef; }
     return 1;
 }
