@@ -229,6 +229,10 @@ sub report {
     $this->_prepare();
 
     my $current_hour = 0; # 0 - 23
+    my $sum_received = 0; 
+    my $sum_lost = 0; 
+    my $sum_total = 0; 
+    
     foreach my $h (@HOURS) {
         my $start = $h->[0];
         my $stop  = $h->[1];
@@ -257,6 +261,10 @@ sub report {
             total => $total,
             p_lost => sprintf("%.2f", $p_lost),
         };
+        $sum_received = $sum_received + $connected; 
+        $sum_lost     = $sum_lost     + $lost; 
+        $sum_total    = $sum_total    + $total; 
+        
         push @result, $result_row;
         push @graph, {
             hour => $current_hour,
@@ -264,8 +272,17 @@ sub report {
             lost => $lost,
         };
         $current_hour++; 
-
     }
+
+    push @result, { 
+        hour => $current_hour++, 
+        sincedatetime => 'Total',
+        tilldatetime => '', 
+        connected => $sum_received, 
+        lost => $sum_lost, 
+        total => $sum_total, 
+        p_lost => '',
+    }; 
 
     my $jdata = encode_json(\@graph);
 
@@ -280,7 +297,6 @@ sub report {
     };
 
     $template->process('EvakuatorsDaily.html', $tmpl_vars) || die $template->error();
-
 }
 
 
