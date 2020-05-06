@@ -58,13 +58,20 @@ sub start {
     # Looking for --qname=queueName
     # We will handle SIGKILL, SIGTERM to return status quo
 
-    my $qname; GetOptions  ('qname=s' => \$qname ); $self->{'qname'} = $qname;
+    $self->SUPER::start();
+
+    my $qname;
+    GetOptions ('qname=s' => \$qname );
+    $self->{qname} = $qname;
     unless ( defined ( $qname ) ) {
           die "Use --qname=%s to set queue name to monitor\n";
     }
 
-    $self->SUPER::start();
-    $self->{qname} = $qname;
+    my $disable_callback;
+    GetOptions ('disable_callback' => \$disable_callback);
+    $self->{disable_callback} = $disable_callback;
+
+    Info("Disabled Callback feature") if $disable_callback;
 
     unless ( $self->queue_status( $qname ) ) {
         die "Something wrong with communication with Asterisk Manager\n";
@@ -284,7 +291,7 @@ sub incrementFailCounter {
 
     if ($self->{failcounters}->{$interface} > UNANSWERED ) {
         if ($self->availableMembersCount() < 3) {
-            Infof("Can not pause member %s because of small count of active members.", $interface); 
+            Infof("Can not pause member %s because of small count of active members.", $interface);
             return;
         }
 
