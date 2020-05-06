@@ -58,21 +58,21 @@ sub start {
     # Looking for --qname=queueName
     # We will handle SIGKILL, SIGTERM to return status quo
 
-    $self->SUPER::start();
 
     my $qname;
-    GetOptions ('qname=s' => \$qname );
+    my $disable_callback;
+    
+    GetOptions (
+        'qname=s' => \$qname,
+        'disable_callback' => \$disable_callback,
+    );
+    Info("Disabled Callback feature") if $disable_callback;
     $self->{qname} = $qname;
     unless ( defined ( $qname ) ) {
           die "Use --qname=%s to set queue name to monitor\n";
     }
-
-    my $disable_callback;
-    GetOptions ('disable_callback' => \$disable_callback);
     $self->{disable_callback} = $disable_callback;
-
-    Info("Disabled Callback feature") if $disable_callback;
-
+    $self->SUPER::start();
     unless ( $self->queue_status( $qname ) ) {
         die "Something wrong with communication with Asterisk Manager\n";
     }
@@ -326,6 +326,8 @@ sub lookup_in_addressbook {
 sub add_to_callback {
     my $self = shift;
     my $event = shift;
+
+    return if ($self->{disable_callback}); 
 
     my $context = $event->{'Context'};
     my $servicename = $self->_service($context);
