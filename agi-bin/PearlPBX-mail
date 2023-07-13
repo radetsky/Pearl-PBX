@@ -16,7 +16,8 @@
 #      VERSION:  1.0
 #      CREATED:  05.09.2014
 #     MODIFIED:  06.12.2016
-#     REVISION:  002
+#     MODIFIED:  13.07.2023
+#     REVISION:  003
 #===============================================================================
 
 use 5.8.0;
@@ -44,6 +45,8 @@ use Data::Dumper;
 use NetSDS::Util::String;
 use MIME::Base64;
 use NetSDS::Util::DateTime;
+use NetSDS::Asterisk::Manager;
+
 
 sub process {
     my $this = shift;
@@ -52,7 +55,7 @@ sub process {
         $this->agi->verbose(
             "Usage: "
               . $this->name
-              . ' email@dest.com ${CALLERID(num)}',
+              . ' ${CALLERID(name)} ${CALLERID(num)}',
             3
         );
         exit(-1);
@@ -61,36 +64,129 @@ sub process {
         $this->agi->verbose(
             "Usage: "
               . $this->name
-              . ' email@dest.com ${CALLERID(num)}',
+              . ' ${CALLERID(name)} ${CALLERID(num)}',
             3
         );
         exit(-1);
     }
-    $this->_mail($ARGV[0], $ARGV[1]);
+
+    $this->_manager_connect();
+    my @replies = $this->_status();
+    my $status = $this->_pretty_print(@replies);
+    $this->_logoff();
+    $this->_mail($ARGV[0], $ARGV[1], $status);
 
     exit(0);
 }
 
+sub _outgoing_call {
+  my $this = shift;
+  my $string = shift;
+  if (length($string) == 3 && $string =~ /^\d{3}$/) {
+    return 1;
+  }
+  if (length($string) == 4 && $string =~ /^\d{4}$/) {
+    return 1;
+  }
+  return 0;
+}
+
+sub _pretty_print {
+  my $this = shift;
+  my @channels = @_;
+
+  my $output = "";
+  foreach my $channel (@channels) {
+    my $name = $channel->{Channel};
+    $name =~ s/SIP\/(.*)-.*$/$1/;
+    my $outcall = $this->_outgoing_call($name) ? "out" : "in";
+    $output .= sprintf("%-20s %-3s %-10s %-8s %-10s %-10s %-10s\n",
+                       $channel->{ConnectedLineNum} eq '' ? $channel->{CallerIDnum} : $channel->{ConnectedLineNum},
+                       $outcall,
+                       $name,
+                       $channel->{Application},
+                       $channel->{Duration},
+                       join("@", $channel->{Extension}, $channel->{Context}),
+                       $channel->{ChannelStateDesc},
+		     );
+  }
+
+  my @strings = split("\n", $output);
+  @strings = sort { $a cmp $b } @strings;
+  my $sorted_string = join("\n", @strings);
+  return $sorted_string . "\n";
+}
+
+sub _logoff {
+  my $this = shift;
+
+  $this->{manager}->sendcommand(Action => "Logoff");
+  my $reply = $this->{manager}->receive_answer();
+
+}
+
+sub _status {
+  my $this = shift;
+  my $qname = shift;
+
+  my $sent = $this->{manager}->sendcommand('Action' => 'CoreShowChannels');
+  unless ( defined($sent) ) {
+      return undef;
+  }
+  my $reply = $this->{manager}->receive_answer();
+  unless ( defined($reply) ) {
+      return undef;
+  }
+
+  my $status = $reply->{'Response'};
+  unless ( defined($status) ) {
+      return undef;
+  }
+  if ( $status ne 'Success' ) {
+      $this->agi->verbose('Status: Response not success',3);
+      return undef;
+  }
+
+  my @replies;
+  while (1) {
+      $reply  = $this->{manager}->receive_answer();
+      $status = $reply->{'Event'};
+      if ( $status =~ /CoreShowChannelsComplete/i ) {
+          last;
+      }
+      if ( $status =~ /CoreShowChannel/i ) {
+	  push @replies, $reply;
+      }
+  }
+
+  return @replies;
+
+}
 
 sub _mail {
 
-my ($this, $param1, $param2) = @_;
+my ($this, $param1, $param2, $status) = @_;
 
 my $sendmail   = '/usr/sbin/sendmail';
 my $from       = $this->{conf}->{'email_from'};
-my $to         = $param1;
+my $to         = $ARGV[2]?$ARGV[2]:$this->{conf}->{'email'};
 
-my $subject = 'Пропущенный звонок с номера: ' . $param2;
-my $body = "С уважением, PearlPBX\n";
+my $subject = 'Пропущений дзвінок з номера: ' . $param1 . ' ' . $param2;
 
-#utf8::encode($subject);
+my $ready_operators_count = $this->agi->get_variable('READYTORECEIVE') // '0';
+
+my $body = "Кількість вільних операторів: " . $ready_operators_count . "\n";
+$body = $body . "Статус каналів:\n";
+$body = $body . $status . "\n";
+$body = $body . "З повагою, PearlPBX\n";
+
 $subject = encode_base64($subject,'');
 $body = encode_base64($body);
 
 open( MAIL, "| $sendmail -t -oi" ) or die("$!");
 
 print MAIL <<EOF;
-Content-Type: text/html; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: base64
 From: $from
 To: $to
@@ -103,6 +199,54 @@ close MAIL;
 
 return 1;
 }
+
+sub _manager_connect {
+  my $this = shift;
+
+    # connect
+    unless ( defined( $this->conf->{'el'}->{'host'} ) ) {
+        $this->speak("Can't file el->host in configuration.");
+        exit(-1);
+    }
+    unless ( defined( $this->conf->{'el'}->{'port'} ) ) {
+        $this->speak("Can't file el->port in configuration.");
+        exit(-1);
+    }
+    unless ( defined( $this->conf->{'el'}->{'username'} ) ) {
+        $this->speak("Can't file el->username in configuration.");
+        exit(-1);
+    }
+    unless ( defined( $this->conf->{'el'}->{'secret'} ) ) {
+        $this->speak("Can't file el->secret in configuration.");
+        exit(-1);
+    }
+
+    my $el_host     = $this->conf->{'el'}->{'host'};
+    my $el_port     = $this->conf->{'el'}->{'port'};
+    my $el_username = $this->conf->{'el'}->{'username'};
+    my $el_secret   = $this->conf->{'el'}->{'secret'};
+
+    my $manager = NetSDS::Asterisk::Manager->new(
+        host     => $el_host,
+        port     => $el_port,
+        username => $el_username,
+        secret   => $el_secret,
+        events   => 'Off',
+    );
+
+    my $connected = $manager->connect;
+    unless ( defined($connected) ) {
+
+        $this->agi->verbose("Can't connect to the asterisk manager interface: ".$manager->geterror(), 3);
+        $this->log( "warning",
+            "Can't connect to the asterisk manager interface: ".$manager->geterror());
+        exit(-1);
+    }
+
+    $this->{manager} = $manager;
+    return 1;
+}
+
 
 1;
 
