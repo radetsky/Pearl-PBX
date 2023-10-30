@@ -206,6 +206,22 @@ sub process {
         $optional = 0;
     }
 
+    eval {
+        $optional = $optional + 0;
+    }
+    if ($@) {
+        $this->agi->verbose("Optional parameter is not a number. Exiting.", 3);
+        exit(-1);
+    }
+
+    if ($optional > 10) {
+        my $res = $this->_read($callerid, $service);
+        if ( defined($res) ) {
+            $this->_set_priority($callerid, $service, $optional);
+            exit(0);
+        }
+    }
+
     if ( defined ( $optional ) && $optional eq '0' ) {
         my $res = $this->_read($callerid, $service);
         if ( defined($res) && ($res->{'priority'} <= -2 )) {
