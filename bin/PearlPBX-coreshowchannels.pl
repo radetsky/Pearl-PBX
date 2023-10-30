@@ -1,23 +1,17 @@
 #!/usr/bin/env perl
 #===============================================================================
 #
-#         FILE:  PearlPBX-mail.pl
+#         FILE:  PearlPBX-coreshowchannels.pl
 #
-#        USAGE:  ./PearlPBX-mail.pl
+#        USAGE:  ./PearlPBX-coreshowchannels.pl
 #
-#  DESCRIPTION:  Mail about missed call to support@ (see config)
-#
-#      OPTIONS:  ${CALLERID1}, ${CALLERID2}
-# REQUIREMENTS:  ---
-#         BUGS:  ---
-#        NOTES:  ---
+#  DESCRIPTION:  Show current channels in Asterisk. Exactly as asterisk -rx "core show channels".
+#                But this script can be run from any user and any directory.
+#      OPTIONS:  None
 #       AUTHOR:  Alex Radetsky (Rad), <rad@rad.kiev.ua>
-#      COMPANY:  PearlPBX
 #      VERSION:  1.0
-#      CREATED:  05.09.2014
-#     MODIFIED:  06.12.2016
-#     MODIFIED:  13.07.2023
-#     REVISION:  003
+#      CREATED:  27.10.2014
+#     REVISION:  001
 #===============================================================================
 
 use 5.8.0;
@@ -26,7 +20,7 @@ use warnings;
 
 $| = 1;
 
-Mail->run(
+CoreShowChannels->run(
     conf_file   => '/etc/PearlPBX/asterisk-router.conf',
     has_conf    => 1,
     daemon      => undef,
@@ -38,79 +32,45 @@ Mail->run(
 
 1;
 
-package Mail;
+package CoreShowChannels;
 
-use base 'PearlPBX::IVR';
-use Data::Dumper;
-use NetSDS::Util::String;
-use MIME::Base64;
-use NetSDS::Util::DateTime;
+use base 'NetSDS::App';
+use 5.8.0;
+use strict;
+use warnings;
+
 use NetSDS::Asterisk::Manager;
-
+use Data::Dumper;
 
 sub process {
-    my $this = shift;
-
-    unless ( defined( $ARGV[0] ) ) {
-        $this->agi->verbose(
-            "Usage: "
-              . $this->name
-              . ' ${CALLERID(name)} ${CALLERID(num)}',
-            3
-        );
-        exit(-1);
-    }
-    unless ( defined( $ARGV[1] ) ) {
-        $this->agi->verbose(
-            "Usage: "
-              . $this->name
-              . ' ${CALLERID(name)} ${CALLERID(num)}',
-            3
-        );
-        exit(-1);
-    }
-
-    $this->_manager_connect();
-    my @replies = $this->_status();
-    my $status = $this->_pretty_print(@replies);
-    $this->_logoff();
-    $this->_mail($ARGV[0], $ARGV[1], $status);
-
-    exit(0);
-}
-
-sub _outgoing_call {
   my $this = shift;
-  my $string = shift;
-  if (length($string) == 3 && $string =~ /^\d{3}$/) {
-    return 1;
-  }
-  if (length($string) == 4 && $string =~ /^\d{4}$/) {
-    return 1;
-  }
-  return 0;
+
+  $this->_manager_connect();
+  my @replies = $this->_status();
+  print($this->_pretty_print(@replies)); 
+  $this->_logoff();
+
+  exit(0);
 }
 
 sub _pretty_print {
-  my $this = shift;
-  my @channels = @_;
+  my $this = shift; 
+  my @channels = @_; 
 
   my $output = "";
   foreach my $channel (@channels) {
     my $name = $channel->{Channel};
     $name =~ s/SIP\/(.*)-.*$/$1/;
-    my $outcall = $this->_outgoing_call($name) ? "out" : "in";
-    $output .= sprintf("%-20s %-3s %-10s %-8s %-10s %-10s %-10s\n",
+    $output .= sprintf("%-20s %-10s %-8s %-10s %-10s %-10s\n",
                        $channel->{ConnectedLineNum} eq '' ? $channel->{CallerIDnum} : $channel->{ConnectedLineNum},
-                       $outcall,
                        $name,
                        $channel->{Application},
                        $channel->{Duration},
                        join("@", $channel->{Extension}, $channel->{Context}),
-                       $channel->{ChannelStateDesc},
+                       $channel->{ChannelStateDesc},		
 		     );
   }
-
+  
   my @strings = split("\n", $output);
   @strings = sort { $a cmp $b } @strings;
   my $sorted_string = join("\n", @strings);
@@ -163,43 +123,6 @@ sub _status {
 
 }
 
-sub _mail {
-
-my ($this, $param1, $param2, $status) = @_;
-
-my $sendmail   = '/usr/sbin/sendmail';
-my $from       = $this->{conf}->{'email_from'};
-my $to         = $ARGV[2]?$ARGV[2]:$this->{conf}->{'email'};
-
-my $subject = 'Пропущений дзвінок з номера: ' . $param1 . ' ' . $param2;
-
-my $ready_operators_count = $this->agi->get_variable('READYTORECEIVE') // '0';
-
-my $body = "Кількість вільних операторів: " . $ready_operators_count . "\n";
-$body = $body . "Статус каналів:\n";
-$body = $body . $status . "\n";
-$body = $body . "З повагою, PearlPBX\n";
-
-$subject = encode_base64($subject,'');
-$body = encode_base64($body);
-
-open( MAIL, "| $sendmail -t -oi" ) or die("$!");
-
-print MAIL <<EOF;
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
-From: $from
-To: $to
-Subject: =?UTF-8?B?$subject?=
-
-$body
-EOF
-
-close MAIL;
-
-return 1;
-}
-
 sub _manager_connect {
   my $this = shift;
 
@@ -249,5 +172,7 @@ sub _manager_connect {
 
 
 1;
+#===============================================================================
 
+__END__
 

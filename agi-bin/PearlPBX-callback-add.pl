@@ -83,14 +83,14 @@ sub _hangup_check {
 sub _remove_callerid {
     my ($this, $callerid, $service) = @_; 
 
-    $this->agi->verbose("Removing $callerid from $service callback"); 
+    $this->agi->verbose("Removing $callerid from $service callback", 3); 
     my $sql2 = "delete from callback_list where callerid=? and servicename=?"; 
     my $sth2 = $this->dbh->prepare($sql2); 
     eval {
         $sth2->execute($callerid, $service); 
     }; 
     if ($@) {
-        $this->agi->verbose($this->dbh->errstr); 
+        $this->agi->verbose($this->dbh->errstr, 3); 
         exit(-1);
     }
 }
@@ -98,14 +98,14 @@ sub _remove_callerid {
 sub _increase_priority {
     my ($this, $callerid, $service) = @_; 
 
-    $this->agi->verbose("Increasing priority for ".$callerid ); 
+    $this->agi->verbose("Increasing priority for ".$callerid , 3); 
     my $sql2 = "update callback_list set priority=priority+1,inprogress='f',updated=now() where callerid=? and servicename=?"; 
     my $sth2 = $this->dbh->prepare($sql2);
     eval { 
          $sth2->execute($callerid, $service); 
     };
     if ($@) {
-         $this->agi->verbose( $this->dbh->errstr ); 
+         $this->agi->verbose( $this->dbh->errstr, 3 ); 
          exit(-1);
     }
 }
@@ -113,14 +113,14 @@ sub _increase_priority {
 sub _decrease_priority {
     my ($this, $callerid, $service) = @_; 
 
-    $this->agi->verbose("Decreasing priority for ".$callerid ); 
+    $this->agi->verbose("Decreasing priority for ".$callerid, 3 ); 
     my $sql2 = "update callback_list set priority=priority-1,inprogress='f',updated=now() where callerid=? and servicename=?"; 
     my $sth2 = $this->dbh->prepare($sql2);
     eval { 
          $sth2->execute($callerid, $service); 
     };
     if ($@) {
-         $this->agi->verbose( $this->dbh->errstr ); 
+         $this->agi->verbose( $this->dbh->errstr, 3 ); 
          exit(-1);
     }
 }
@@ -128,7 +128,7 @@ sub _decrease_priority {
 sub _read {
     my ($this, $callerid, $service ) = @_; 
 
-    $this->agi->verbose("Getting priority for $callerid"); 
+    $this->agi->verbose("Getting priority for $callerid", 3 ); 
     my $sql1 = "select * from callback_list where callerid=? and servicename=?"; 
     my $sth1 = $this->dbh->prepare($sql1); 
     eval { 
@@ -138,17 +138,29 @@ sub _read {
     return $res;  
 }
 
+sub _read_single {
+    my ($this, $callerid ) = @_; 
+
+    my $sql1 = "select * from callback_list where callerid=?"; 
+    my $sth1 = $this->dbh->prepare($sql1); 
+    eval { 
+        $sth1->execute($callerid); 
+    }; 
+    my $res = $sth1->fetchrow_hashref;
+    return $res;  
+}
+
 sub _set_priority {
     my ($this, $callerid, $service, $priority) = @_; 
 
-    $this->agi->verbose("Setting priority to $priority for ".$callerid ); 
+    $this->agi->verbose("Setting priority to $priority for ".$callerid, 3 ); 
     my $sql2 = "update callback_list set priority=?,inprogress='f',updated=now() where callerid=? and servicename=?"; 
     my $sth2 = $this->dbh->prepare($sql2);
     eval { 
          $sth2->execute($priority, $callerid, $service); 
     };
     if ($@) {
-         $this->agi->verbose( $this->dbh->errstr ); 
+         $this->agi->verbose( $this->dbh->errstr, 3 ); 
          exit(-1);
     }
 }
@@ -187,7 +199,14 @@ sub process {
         }
         exit(0);
     }
-       
+     
+    # patch for single entry for every cvallerid 
+    my $r = $this->_read_single($callerid); 
+    if ( defined ( $r ) ) {
+       $this->agi->verbose($callerid . " exists in other service", 3);
+       exit(0);
+    }
+
     my $sql = "insert into callback_list ( callerid, servicename) values ( ?,? )"; 
     my $sth = $this->dbh->prepare($sql);
 

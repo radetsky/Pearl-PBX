@@ -61,7 +61,7 @@ sub start {
 
     my $qname;
     my $disable_callback;
-    
+
     GetOptions (
         'qname=s' => \$qname,
         'disable_callback' => \$disable_callback,
@@ -290,11 +290,6 @@ sub incrementFailCounter {
     Infof("FailCounter for %s set to %d", $interface, $self->{failcounters}->{$interface});
 
     if ($self->{failcounters}->{$interface} > UNANSWERED ) {
-        if ($self->availableMembersCount() < 3) {
-            Infof("Can not pause member %s because of small count of active members.", $interface);
-            return;
-        }
-
         $self->pause_member($interface, 'true');
         $self->{failcounters}->{$interface} = 0;
     }
@@ -326,8 +321,6 @@ sub lookup_in_addressbook {
 sub add_to_callback {
     my $self = shift;
     my $event = shift;
-
-    return if ($self->{disable_callback}); 
 
     my $context = $event->{'Context'};
     my $servicename = $self->_service($context);
