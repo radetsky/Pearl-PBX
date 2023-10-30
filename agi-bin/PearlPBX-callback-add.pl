@@ -181,12 +181,12 @@ sub process {
     my $service  = $ARGV[1];
     my $optional = $ARGV[2]; # optional parameter: command, priority, seconds to wait before call
 
-    unless defined $callerid {
+    unless ( defined ( $callerid ) ) {
         $this->agi->verbose("CallerID is not defined. Exiting.", 3);
         exit(-1);
     }
 
-    unless defined $service {
+    unless ( defined ( $service ) ) {
         $this->agi->verbose("Service is not defined. Exiting.", 3);
         exit(-1);
     }
