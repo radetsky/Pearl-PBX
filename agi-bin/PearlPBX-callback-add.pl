@@ -174,6 +174,28 @@ sub _set_priority {
     }
 }
 
+sub _new_priority {
+    my ($this, $callerid, $service) = @_;
+
+    $this->agi->verbose("Adding new call for $callerid for service $service", 3 );
+
+    my $sql = "insert into callback_list ( callerid, servicename ) values ( ?,? )";
+    my $sth = $this->dbh->prepare($sql);
+
+    eval {
+        $sth->execute ($callerid, $service );
+    };
+
+    if ($@) {
+        $this->agi->verbose( $this->dbh->errstr, 3 );
+        exit(-1);
+    }
+
+    $this->agi->verbose("inserted to callback list: $callerid", 3);
+    return 1;
+
+}
+
 sub process {
     my $this = shift;
 
@@ -203,12 +225,13 @@ sub process {
     }
 
     unless ( defined ( $optional ) ) {
-        $optional = 0;
+        $this->_new_priority($callerid, $service);
+        exit(0);
     }
 
     eval {
         $optional = $optional + 0;
-    }
+    };
     if ($@) {
         $this->agi->verbose("Optional parameter is not a number. Exiting.", 3);
         exit(-1);
