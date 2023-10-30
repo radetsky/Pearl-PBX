@@ -1,0 +1,53 @@
+<table class="table table-stripped" style="width: 600px;">
+    <thead>
+        <tr>
+            <th>Час</th>
+            <th>Принятых</th>
+            <th>Пропущенных</th>
+            <th>Всего</th>
+            <th>% проп.</th>
+        </tr>
+    </thead>
+    <tbody>
+        [% FOREACH row IN rawdata %]
+        <tr>
+            <td>[% row.sincedatetime%] - [% row.tilldatetime %] </td>
+            <td>[% row.connected %]</td>
+            <td>[% row.lost %]</td>
+            <td>[% row.total %]</td>
+            <td>[% row.p_lost %]</td>
+        </tr>
+        [% END %]
+    </tbody>
+</table>
+<div id='graph101' style="width: 600px; height: 400px; ">
+</div>
+
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.pieRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.barRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqPlot/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+<script type="text/javascript">
+    function evakuators_daily_make_graph() {
+        let data = [% jdata %];
+        let xaxis = data.map((rawdata) => { return rawdata.hour });
+        let total = data.map((rawdata) => { return rawdata.total }); 
+        let lost  = data.map((rawdata) => { return rawdata.lost }); 
+        console.log(data);
+        jQuery.jqplot( 'graph101', [ total, lost ],
+            {
+                seriesDefaults: {
+                    renderer: jQuery.jqplot.BarRenderer,
+                    rendererOptions: {
+                        varyBarColor: false
+                    },
+                },
+                axes: {
+                    xaxis: {
+                        renderer: jQuery.jqplot.CategoryAxisRenderer,
+                        ticks: xaxis,
+                    }
+                }
+            }
+        );
+    }
+</script>

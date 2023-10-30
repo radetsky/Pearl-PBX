@@ -51,24 +51,32 @@ use constant UNAVAILABLE => 5;     # Status = 5 in QueueStatus means that agent 
 use constant REACHABLE => 1;
 
 
-use constant DEFAULT_SERVICE => 'ExpressT'; 
+use constant DEFAULT_SERVICE => 'ExpressT';
 
 sub start {
     my $self = shift;
     # Looking for --qname=queueName
     # We will handle SIGKILL, SIGTERM to return status quo
 
-    my $qname; GetOptions  ('qname=s' => \$qname ); $self->{'qname'} = $qname;
+
+    my $qname;
+    my $disable_callback;
+
+    GetOptions (
+        'qname=s' => \$qname,
+        'disable_callback' => \$disable_callback,
+    );
+    Info("Disabled Callback feature") if $disable_callback;
+    $self->{qname} = $qname;
     unless ( defined ( $qname ) ) {
           die "Use --qname=%s to set queue name to monitor\n";
     }
-
+    $self->{disable_callback} = $disable_callback;
     $self->SUPER::start();
-
     unless ( $self->queue_status( $qname ) ) {
         die "Something wrong with communication with Asterisk Manager\n";
     }
-
+    $self->availableMembersCount();
     $self->pause_lean_agents();
 
     # $self->remember_strategy();
@@ -92,10 +100,10 @@ sub stop {
 }
 
 sub _service {
-    my $self = shift; 
-    my $param = shift; 
+    my $self = shift;
+    my $param = shift;
 
-    
+
     #  CallbackAutoExpress
     #  CallbackAutoExpress
     #  Callbackavz
@@ -115,7 +123,7 @@ sub _service {
         'IVR2020_TEHNICHKI' => 'Technichki'
     };
 
-    return $service->{$param} // DEFAULT_SERVICE; 
+    return $service->{$param} // DEFAULT_SERVICE;
 }
 
 
@@ -168,6 +176,24 @@ sub queue_status {
         die "Given queue name not found in QueueStatus response\n";
     }
     return 1;
+}
+
+
+sub availableMembersCount {
+    my $self = shift;
+
+    my $count = 0;
+
+    $self->queue_status($self->{qname});
+
+    foreach my $member ( @{$self->{queue_members}}) {
+        if ( $member->{'Paused'} eq '0' ) {
+            $count++;
+        }
+    }
+
+    Infof("Queue %s have %d active members", $self->{qname}, $count);
+    return $count;
 }
 
 sub pause_lean_agents {
@@ -270,8 +296,8 @@ sub incrementFailCounter {
 }
 
 sub lookup_in_addressbook {
-    my $self     = shift; 
-    my $callerid = shift; 
+    my $self     = shift;
+    my $callerid = shift;
 
     my $sth = $self->dbh->prepare("select count(msisdn) as c from ivr.addressbook where msisdn=?");
     eval {
@@ -286,7 +312,7 @@ sub lookup_in_addressbook {
         return undef;
     }
     if ( $result->{'c'} > 0 ) {
-        Infof("%s exists in addressbook", $callerid); 
+        Infof("%s exists in addressbook", $callerid);
         return 1;
     }
     return undef;
@@ -295,14 +321,14 @@ sub lookup_in_addressbook {
 sub add_to_callback {
     my $self = shift;
     my $event = shift;
-    
-    my $context = $event->{'Context'}; 
-    my $servicename = $self->_service($context); 
-    my $callerid = $event->{'CallerIDNum'}; 
 
-    return if ( $self->lookup_in_addressbook($callerid) ); 
+    my $context = $event->{'Context'};
+    my $servicename = $self->_service($context);
+    my $callerid = $event->{'CallerIDNum'};
 
-    Infof("Add to callback %s context %s service %s hold %s pos %s", $event->{'CallerIDNum'}, 
+    return if ( $self->lookup_in_addressbook($callerid) );
+
+    Infof("Add to callback %s context %s service %s hold %s pos %s", $event->{'CallerIDNum'},
         $context, $servicename, $event->{'HoldTime'}, $event->{'Position'});
     my $sth = $self->dbh->prepare("insert into public.callback_list (callerid, servicename) values(?,?)");
     eval { my $rv = $sth->execute($event->{'CallerIDNum'}, $servicename ); };
