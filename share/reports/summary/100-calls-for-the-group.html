@@ -1,0 +1,59 @@
+<!-- Отчет по звонкам за период 2020 -->
+<center>
+  <h2>Отчет по звонкам за период 2020</h2>
+</center>
+<form class="well" onSubmit="return calls_for_the_group()">
+  <fieldset>
+    <input id='dateFrom_sum100' data-datepicker="datepicker" class="input-date" type="text" value="" />
+    <input id='timeFrom_sum100' class="input-mini" type="text" value="00:00" />
+    to
+    <input id='dateTo_sum100' data-datepicker="datepicker" class="input-date" type="text" value="" />
+    <input id='timeTo_sum100' class="input-mini" type="text" value="23:59" />
+
+    <select name="queues_sum100" id="queues_sum100">
+        <option value="evakuator">evakuator</option>
+        <option value="SOS">SOS</option>
+        <option value="Technichki">Technichki</option>
+        <option value="spectechnika">spectechnika</option>
+    </select>
+    <input type="submit" class="btn btn-primary" value="Получить отчет">
+  </fieldset>
+</form>
+<div id="calls_for_the_group_result">
+</div>
+
+<script type="text/javascript">
+  function calls_for_the_group() {
+    var dateFrom;
+    var dateTo;
+    var parsed;
+    var queue;
+
+    dateFrom = $( '#dateFrom_sum100' ).val();
+    dateTo = $( '#dateTo_sum100' ).val();
+    timeFrom = $('#timeFrom_sum100').val(); 
+    timeTo = $('#timeTo_sum100').val(); 
+
+    queue = $( 'select#queues_sum100 option:selected' ).val();
+
+    parsed = pearlpbx_parse_period( dateFrom, dateTo, timeFrom, timeTo );
+    if ( parsed == false ) {
+      return false;
+    }
+
+    $( '#calls_for_the_group_result' ).html( "Request sent..." );
+
+    $.get( "/reports.pl",
+      {
+        "exec-report": "CallsForTheGroup",
+        dateFrom: dateFrom,
+        dateTill: dateTo,
+        timeFrom: timeFrom,
+        timeTo: timeTo, 
+        queue: queue
+      }, function ( data ) {
+        $( '#calls_for_the_group_result' ).html( data );
+      }, "html" );
+    return false;
+  }
+</script>
