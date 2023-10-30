@@ -202,6 +202,10 @@ sub process {
        exit(0);
     }
 
+    unless ( defined ( $optional ) ) {
+        $optional = 0;
+    }
+
     if ( defined ( $optional ) && $optional eq '0' ) {
         my $res = $this->_read($callerid, $service);
         if ( defined($res) && ($res->{'priority'} <= -2 )) {
@@ -214,13 +218,16 @@ sub process {
         exit(0);
     }
 
-    my $sql = "insert into callback_list ( callerid, servicename) values ( ?,? )";
+    my $sql = "insert into callback_list ( callerid, servicename ) values ( ?,? )";
     my $sth = $this->dbh->prepare($sql);
 
     eval {
         $sth->execute ($callerid, $service );
     };
-
+    if ($@) {
+        $this->agi->verbose( $this->dbh->errstr, 3 );
+        exit(-1);
+    }
     $this->agi->verbose("inserted to callback list: $callerid", 3);
     exit(0);
 }
