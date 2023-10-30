@@ -13,7 +13,7 @@ exit(0);
 
 sub generate_series {
     my @names = (); 
-    for ( my $year = 2015; $year <= 2022; $year++ ) {
+    for ( my $year = 2022; $year <= 2024; $year++ ) {
         for ( my $month = 1; $month <= 12; $month++ ) {
             my $monthz = $month < 10 ? "0".$month : $month; 
             my $name = sprintf("%d%s",$year,$monthz);
@@ -92,12 +92,12 @@ sub generate_recordings {
         BEGIN
              IF ( NEW.cdr_start >= DATE '%s-01' AND
                   NEW.cdr_start < DATE '%s-01' ) THEN
-                  INSERT INTO recordings_%s VALUES (NEW.*);\n", $name->{'b'},$name->{'c'},$name->{'a'} ); 
+                  INSERT INTO integration.recordings_%s VALUES (NEW.*);\n", $name->{'b'},$name->{'c'},$name->{'a'} ); 
 
     foreach $name ( @names ) {
         printf("ELSIF ( NEW.cdr_start >= DATE '%s-01' AND
                         NEW.cdr_start < DATE '%s-01' ) THEN
-                                INSERT INTO recordings_%s VALUES (NEW.*);\n",$name->{'b'},$name->{'c'},$name->{'a'} ); 
+                                INSERT INTO integration.recordings_%s VALUES (NEW.*);\n",$name->{'b'},$name->{'c'},$name->{'a'} ); 
 
     }
 
