@@ -39,6 +39,14 @@ use NetSDS::Asterisk::Manager;
 
 use constant CALL_TIMEOUT => 60*1000;
 
+# create table callback_simple (
+#  id bigserial primary key,
+#  callerid varchar(16) unique,
+#  servicename varchar(32) not null,
+#  after timestamp with time zone default now(),
+#  created timestamp with time zone default now()
+# );
+
 sub start {
     my $this = shift;
     $this->SUPER::start();
@@ -57,14 +65,44 @@ sub start {
         exit(-1);
     }
     $this->{context} = $ARGV[1];
+    $this->{calltime} = {}; # Hash of calltime for each callerid
+}
+
+sub _get_today_undone {
+    my $this       = shift;
+    my $service    = shift;
+
+    # Find all undone applications for last 1 hour
+    my $sth = $this->dbh->prepare(
+        "select * from callback_simple where after < now() and servicename=? order by id limit 1");
+    eval { $sth->execute($service); };
+    if ($@) {
+        $this->_exit( $this->dbh->errstr );
+    }
+    my $result = $sth->fetchrow_hashref;
+    return undef unless ( defined ( $result ) );
+    return $result->{'callerid'};
+}
+
+sub _delete_from_list {
+    my $this = shift;
+    my $num  = shift;
+
+    Info("Deleting from list $num");
+    eval {
+        $this->dbh->do("delete from callback_simple where callerid='$num'");
+    };
+    if ($@) {
+        $this->_exit( $this->dbh->errstr );
+    };
+    return 1;
 }
 
 sub _originate_call {
     my ($this, $dst, $service, $context) = @_;
 
     $this->log("info","Calling to $dst with connect to $context and service $service");
-    print("Calling to $dst with connect to $context and service $service\n");
-    $this->_set_inprogress($service, $dst);
+    $this->_delete_from_list($dst);
     $this->mgr->sendcommand (
         Action   => 'Originate',
         ActionID => $dst,
@@ -77,81 +115,36 @@ sub _originate_call {
         Account  => $service,
         Async    => 'true',
     );
-
     my $reply = 0;
     while ( !$reply ) {
         $reply = $this->mgr->receive_answer();
-        ($reply);
+        Info($reply);
     }
-
 }
 
-sub _get_today_undone {
-    my $this       = shift;
-    my $service    = shift;
+sub _set_calltime {
+    my ($this, $num, $calltime, $service) = @_;
 
-    # Find all undone applications for last 1 hour
-    my $sth = $this->dbh->prepare(
-        "select * from callback_list where created >= now()-'1 hour'::interval and not inprogress and servicename=? order by updated limit 1");
-    eval { $sth->execute($service); };
-    if ($@) {
-        $this->_exit( $this->dbh->errstr );
-    }
-    my $result = $sth->fetchrow_hashref;
-    return undef unless ( defined ( $result ) );
-    return $result->{'callerid'};
-}
-
-sub _set_inprogress {
-    my $this = shift;
-    my $service = shift;
-    my $callerid = shift;
-
-    my $sth = $this->dbh->prepare(
-        "update callback_list set inprogress='t' where servicename=? and callerid=?"
-    );
-    eval { $sth->execute($service, $callerid); };
-    if ( $@ ) {
-       $this->_exit( $this->dbh->errstr );
-    }
-    return 1;
-}
-
-sub _set_end_progress {
-    my $this = shift;
-    my $num  = shift;
-
+    Info("Setting calltime for $num to $calltime");
+    print("Setting calltime for $num to $calltime\n");
+    $this->{calltime}{$num} = $calltime;
     eval {
-        $this->dbh->do("update callback_list set inprogress='f', updated=now() where callerid='$num'");
+        $this->dbh->do("insert into callback_simple (callerid, servicename, after) values ('$num', '$service', now() + '$calltime seconds'::interval)");
     };
     if ($@) {
         $this->_exit( $this->dbh->errstr );
     };
-    return 1;
+
 }
 
-sub _delete_from_list {
-    my $this = shift;
-    my $num  = shift;
+sub _get_calltime {
+    my ($this, $num) = @_;
 
-    eval {
-        $this->dbh->do("delete from callback_list where callerid='$num'");
-    };
-    if ($@) {
-        $this->_exit( $this->dbh->errstr );
-    };
-    return 1;
+    unless ( defined ($this->{calltime}{$num}) ) {
+        return 0;
+    }
+    return $this->{calltime}{$num};
 }
-
-sub _cutoff_channel {
-    my $this    = shift;
-    my $channel = shift;
-    my ( $proto, $a ) = split( '/', $channel );
-    my ( $peername, $channel_number ) = split( '-', $a );
-
-    return $peername;
-}
-
 
 sub process {
     my $this = shift;
@@ -175,17 +168,23 @@ sub process {
     }
 
     if ( $event->{'Event'} =~ 'OriginateResponse' ) {
-        print Dumper($event);
-        if ($event->{'Reason'} != 4) {
-            $this->_set_end_progress($event->{'ActionID'});
+        if ($event->{'Reason'} == 4) {
+            undef $this->{calltime}{$event->{'ActionID'}};
+        } else {
+            my $calltime = $this->_get_calltime($event->{'ActionID'});
+            if ($calltime >= 0 && $calltime < 180) {
+                $this->_set_calltime($event->{'ActionID'}, 180, $this->{service});
+            } elsif ($calltime >= 180 && $calltime < 300) {
+                $this->_set_calltime($event->{'ActionID'}, 300, $this->{service});
+            } else {
+                $this->_delete_from_list($event->{'ActionID'});
+            }
         }
     }
-
     my $dst = $this->_get_today_undone ($this->{service});
     unless ( defined ( $dst ) ) {
         return;
     }
-
     $this->_originate_call($dst, $this->{service}, $this->{context});
 }
 1;
