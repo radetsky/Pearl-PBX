@@ -63,6 +63,7 @@ sub _originate_call {
     my ($this, $dst, $service, $context) = @_;
 
     $this->log("info","Calling to $dst with connect to $context and service $service");
+    print("Calling to $dst with connect to $context and service $service\n");
     $this->_set_inprogress($service, $dst);
     $this->mgr->sendcommand (
         Action   => 'Originate',
@@ -144,7 +145,6 @@ sub process {
 
     my $event = $this->el->_getEvent();
 
-
     unless ( defined ( $event ) ) {
         Info("EOF from asterisk manager");
         $this->{to_finalize} = 1;
@@ -161,6 +161,8 @@ sub process {
         return;
     }
 
+
+    print Dumper($event->{'Event'});
     if ( $event->{'Event'} =~ 'OriginateResponse' ) {
         if ($event->{'Reason'} != 4) {
             $this->_set_end_progress($event->{'ActionID'});
@@ -173,6 +175,5 @@ sub process {
     }
 
     $this->_originate_call($dst, $this->{service}, $this->{context});
-
 }
 1;
