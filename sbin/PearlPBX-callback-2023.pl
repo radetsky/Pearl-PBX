@@ -67,7 +67,7 @@ sub _originate_call {
     $this->mgr->sendcommand (
         Action   => 'Originate',
         ActionID => $dst,
-        Channel  => f"Local/$dst\@default",
+        Channel  => "Local/$dst\@default",
         Context  => $context,
         Exten    => $dst,
         Priority => '1',
