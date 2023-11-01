@@ -50,13 +50,13 @@ sub start {
             "Usage: " . $this->name . ' <service> <context>' . "\n" );
         exit(-1);
     }
-    $this->service = $ARGV[0];
+    $this->{service} = $ARGV[0];
     unless ( defined ( $ARGV[1]) ) {
         $this->speak(
             "Usage: " . $this->name . ' <service> <context>' . "\n" );
         exit(-1);
     }
-    $this->context = $ARGV[1];
+    $this->{context} = $ARGV[1];
 }
 
 sub _originate_call {
@@ -167,12 +167,12 @@ sub process {
         }
     }
 
-    my $dst = $this->_get_today_undone ($this->service);
+    my $dst = $this->_get_today_undone ($this->{service});
     unless ( defined ( $dst ) ) {
         return;
     }
 
-    $this->_originate_call($dst, $this->service, $this->context);
+    $this->_originate_call($dst, $this->{service}, $this->{context});
 
 }
 1;
