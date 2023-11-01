@@ -81,7 +81,7 @@ sub _originate_call {
     my $reply = 0;
     while ( !$reply ) {
         $reply = $this->mgr->receive_answer();
-        Info($reply);
+        ($reply);
     }
 
 }
@@ -122,7 +122,20 @@ sub _set_end_progress {
     my $num  = shift;
 
     eval {
-        $this->dbh->do("update callback_list set inprogress='f' where callerid='$num'");
+        $this->dbh->do("update callback_list set inprogress='f', updated=now() where callerid='$num'");
+    };
+    if ($@) {
+        $this->_exit( $this->dbh->errstr );
+    };
+    return 1;
+}
+
+sub _delete_from_list {
+    my $this = shift;
+    my $num  = shift;
+
+    eval {
+        $this->dbh->do("delete from callback_list where callerid='$num'");
     };
     if ($@) {
         $this->_exit( $this->dbh->errstr );
@@ -161,9 +174,8 @@ sub process {
         return;
     }
 
-
-    print Dumper($event->{'Event'});
     if ( $event->{'Event'} =~ 'OriginateResponse' ) {
+        print Dumper($event);
         if ($event->{'Reason'} != 4) {
             $this->_set_end_progress($event->{'ActionID'});
         }
