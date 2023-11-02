@@ -118,7 +118,7 @@ sub _originate_call {
     my $reply = 0;
     while ( !$reply ) {
         $reply = $this->mgr->receive_answer();
-        Info($reply);
+        Info(Dumper($reply));
     }
 }
 
