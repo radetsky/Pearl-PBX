@@ -1,18 +1,18 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 #===============================================================================
 #
 #         FILE:  PearlPBX-QueueCheck.pl
 #
-#        USAGE:  ./PearlPBX-QueueCheck.pl 
+#        USAGE:  ./PearlPBX-QueueCheck.pl
 #
-#  DESCRIPTION:  Проверяет указанную очередь и возвращает количество свободных операторов для разговора. 
-#                Сделано для того, что бы проверить наличие свободных операторов в очереди перед тем, как направить туда звонок. 
-#                Для скорейшего решения об обработке звонка надо знать сколько там свободных операторов. До вызова Queue(queue). 
+#  DESCRIPTION:  Проверяет указанную очередь и возвращает количество свободных операторов для разговора.
+#                Сделано для того, что бы проверить наличие свободных операторов в очереди перед тем, как направить туда звонок.
+#                Для скорейшего решения об обработке звонка надо знать сколько там свободных операторов. До вызова Queue(queue).
 #
 #      OPTIONS:  QueueName
 #       AUTHOR:  Alex Radetsky (Rad), <rad@rad.kiev.ua>
 #      VERSION:  1.0
-#      CREATED:  27.10.2014 
+#      CREATED:  27.10.2014
 #     REVISION:  001
 #===============================================================================
 
@@ -24,7 +24,7 @@ $| = 1;
 
 QueueCheck->run(
     conf_file   => '/etc/PearlPBX/asterisk-router.conf',
-    has_conf    => 1, 
+    has_conf    => 1,
     daemon      => undef,
     use_pidfile => undef,
     verbose     => undef,
@@ -33,10 +33,10 @@ QueueCheck->run(
 );
 
 1;
- 
-package QueueCheck; 
 
-use base 'PearlPBX::IVR'; 
+package QueueCheck;
+
+use base 'PearlPBX::IVR';
 use 5.8.0;
 use strict;
 use warnings;
@@ -45,26 +45,27 @@ use NetSDS::Asterisk::Manager;
 use Data::Dumper;
 
 
-sub process { 
-  my $this = shift; 
+sub process {
+  my $this = shift;
 
-  unless ( defined ( $ARGV[0] ) ) { 
-	$this->agi->verbose("Usage: ".$this->{name}." <queuename> ", 3); 
+  unless ( defined ( $ARGV[0] ) ) {
+	$this->agi->verbose("Usage: ".$this->{name}." <queuename> ", 3);
 	   exit(-1);
   }
   $this->agi->set_variable ('READYTORECEIVE','0');
-  $this->_manager_connect(); 
-  $this->agi->verbose("Manager connected",3); 
-  $this->_queue_status($ARGV[0]); 
-  $this->_logoff(); 
+  $this->agi->set_variable ('QUEUECALLERS','0');
+  $this->_manager_connect();
+  $this->agi->verbose("Manager connected",3);
+  $this->_queue_status($ARGV[0]);
+  $this->_logoff();
 
   exit(0);
 }
 
-sub _logoff { 
-  my $this = shift; 
+sub _logoff {
+  my $this = shift;
 
-  $this->{manager}->sendcommand(Action => "Logoff"); 
+  $this->{manager}->sendcommand(Action => "Logoff");
   my $reply = $this->{manager}->receive_answer();
   unless ( defined($reply) ) {
       return undef;
@@ -72,11 +73,11 @@ sub _logoff {
 
 }
 
-sub _queue_status { 
-  my $this = shift; 
-  my $qname = shift; 
+sub _queue_status {
+  my $this = shift;
+  my $qname = shift;
 
-  my $sent = $this->{manager}->sendcommand('Action' => 'QueueStatus'); 
+  my $sent = $this->{manager}->sendcommand('Action' => 'QueueStatus');
   unless ( defined($sent) ) {
       return undef;
   }
@@ -104,26 +105,32 @@ sub _queue_status {
       push @replies, $reply;
   }
 
-  my $ready = 0; 
+  my $ready = 0;
+  my $callers = 0;
 
   foreach my $r (@replies) {
-    if ($r->{'Event'} eq 'QueueMember') { 
-      if ($r->{'Queue'} eq $qname ) { # Наша очередь 
-        if ($r->{'Status'} eq '1') { 
-          if ($r->{'Paused'} eq '0') { 
-            $ready = $ready + 1; 
+    if ($r->{'Event'} eq 'QueueEntry') {
+      if ($r->{'Queue'} eq $qname ) { # Наша очередь
+        $callers = $callers + 1;
+      }
+    }
+    if ($r->{'Event'} eq 'QueueMember') {
+      if ($r->{'Queue'} eq $qname ) { # Наша очередь
+        if ($r->{'Status'} eq '1') {
+          if ($r->{'Paused'} eq '0') {
+            $ready = $ready + 1;
           }
         }
-      } 
-    }  
+      }
+    }
   }
-  $this->agi->set_variable("READYTORECEIVE",$ready); 
-  $this->agi->verbose("READYTORECEIVE=$ready",3); 
+  $this->agi->set_variable("READYTORECEIVE",$ready);
+  $this->agi->set_variable("QUEUECALLERS",$callers);
 
 }
 
-sub _manager_connect { 
-  my $this = shift; 
+sub _manager_connect {
+  my $this = shift;
 
     # connect
     unless ( defined( $this->conf->{'el'}->{'host'} ) ) {
@@ -165,9 +172,9 @@ sub _manager_connect {
         exit(-1);
     }
 
-    $this->{manager} = $manager; 
-    return 1; 
-} 
+    $this->{manager} = $manager;
+    return 1;
+}
 
 
 1;
