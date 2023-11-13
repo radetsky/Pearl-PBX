@@ -39,9 +39,9 @@ use Data::Dumper;
 use NetSDS::Util::String;
 
 sub _add_callerid {
-    my ($this, $callerid, $service) = @_;
+    my ($this, $callerid, $service, $after) = @_;
     $this->agi->verbose("Adding new call for $callerid for service $service", 3 );
-    my $sql = "insert into callback_simple ( callerid, servicename ) values ( ?,? )";
+    my $sql = sprintf("insert into callback_simple ( callerid, servicename, after ) values ( ?,?,now()+'%d seconds'::interval )", $after+0);
     my $sth = $this->dbh->prepare($sql);
     eval {
         $sth->execute ($callerid, $service );
@@ -58,6 +58,7 @@ sub process {
     my $this = shift;
     my $callerid = $ARGV[0];
     my $service  = $ARGV[1];
+    my $after    = $ARGV[2];
 
     unless ( defined ( $callerid ) ) {
         $this->agi->verbose("CallerID is not defined. Exiting.", 3);
@@ -67,7 +68,12 @@ sub process {
         $this->agi->verbose("Service is not defined. Exiting.", 3);
         exit(-1);
     }
-    $this->_add_callerid($callerid, $service);
+    unless ( defined ( $after ) ) {
+        $this->agi->verbose("After is not defined. Using 0 seconds.", 3);
+        $after = 0;
+    }
+
+    $this->_add_callerid($callerid, $service, $after);
     exit(0);
 }
 
