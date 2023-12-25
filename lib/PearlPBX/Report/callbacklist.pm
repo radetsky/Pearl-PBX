@@ -1,14 +1,10 @@
 #===============================================================================
-#
 #         FILE:  callbacklist.pm
-#
-#  DESCRIPTION:
-#
-#        NOTES:  ---
 #       AUTHOR:  Alex Radetsky (Rad), <rad@rad.kiev.ua>
 #      COMPANY:  PearlPBX
-#      VERSION:  1.0
-#      CREATED:  29.12.2014 
+#      VERSION:  2.0
+#      CREATED:  29.12.2014
+#     MODIFIED:  25.12.2023 # Merry Christmas :)
 #===============================================================================
 
 package PearlPBX::Report::callbacklist;
@@ -31,28 +27,25 @@ sub new {
     return $this;
 }
 
-sub _sql_cond { 
-    my ($this, $hide) = @_; 
+sub pearlpbx_player {
+	my $this = shift;
+	my $cdr_start = shift;
+	my $cdr_src = shift;
+	my $cdr_dst = shift;
+    my $uniqueid = shift;
 
-    if ($hide =~ /true/) { 
-	return " and not done "; 
-    } else { 
-	return " "; 
-    }
-} 
+	return '<a data-toggle="modal" href="#pearlpbx_player" onClick="turnOnPBXPlayer(\''.$cdr_start.'\',\''.$cdr_src.'\',\''.$cdr_dst.'\',\''.$uniqueid.'\')">link</a>';
+}
 
 sub report {
-    my ($this, $params) = @_; 
+    my ($this, $params) = @_;
 
     my $sincedatetime =
       $this->filldatetime( $params->{'dateFrom'}, $params->{'timeFrom'} );
     my $tilldatetime =
       $this->filldatetime( $params->{'dateTo'}, $params->{'timeTo'} );
-    my $done = $params->{'done'}; 
-    my $sql_cond = $this->_sql_cond ( $done );
 
-    my $sql = "select created,callerid,operator,calledidnum, calledidname, done from callback_list where created between ? and ? $sql_cond order by created desc"; 
-
+    my $sql = "select cdr_start, cdr_src, cdr_dst, cdr_uniqueid from integration.recordings where cdr_src=cdr_dst and cdr_start between ? and ? order by cdr_start";
     my $sth = $this->{dbh}->prepare($sql);
     eval { $sth->execute( $sincedatetime, $tilldatetime ); };
     if ($@) {
@@ -60,7 +53,7 @@ sub report {
         return undef;
     }
 
-    my $hash_ref = $sth->fetchall_hashref('created');
+    my $hash_ref = $sth->fetchall_hashref('cdr_start');
     unless ($hash_ref) {
         return 0;
     }
@@ -73,12 +66,13 @@ sub report {
     ) || die "$Template::ERROR\n";
 
     my @cdr_keys      = $this->hashref2arrayofhashref($hash_ref);
-    
+
     my $template_vars = {
         cdr_keys        => \@cdr_keys,
+        pearlpbx_player => sub { return $this->pearlpbx_player(@_); },
     };
 
-    warn Dumper $hash_ref, \@cdr_keys; 
+    warn Dumper $hash_ref, \@cdr_keys;
 
     $template->process( 'callbacklist.html', $template_vars )
       || die $template->error();
