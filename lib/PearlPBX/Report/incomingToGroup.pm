@@ -80,8 +80,8 @@ sub report {
     my $tilldatetime  = $this->filldatetime( $params->{'dateTo'},  $params->{'timeTo'} );
 		my $queuename = $params->{'queue'};
 
-    my $sql =
-		"select calldate,src,dst,split_part(channel,'-',1) as channel, split_part(dstchannel,'-',1) as dstchannel,disposition,billsec,uniqueid from public.cdr where calldate between ? and ? and split_part(dstchannel,'-',1) in (select interface from public.queue_members where queue_name = ?) order by calldate";
+    # my $sql = "select calldate,src,dst,split_part(channel,'-',1) as channel, split_part(dstchannel,'-',1) as dstchannel,disposition,billsec,uniqueid from public.cdr where calldate between ? and ? and split_part(dstchannel,'-',1) in (select interface from public.queue_members where queue_name = ?) order by calldate";
+    my $sql = "select time, callerid, agentid, status, holdtime, calltime from public.queue_parsed where time between ? and ? and queuename = ? order by time"
 
     my $sth = $this->{dbh}->prepare($sql);
     eval { $sth->execute( $sincedatetime, $tilldatetime, $queuename ); };
@@ -103,7 +103,6 @@ sub report {
 		my @cdr_keys = $this->hashref2arrayofhashref($hash_ref);
 		my $template_vars = {
 			cdr_keys => \@cdr_keys,
-			pearlpbx_player => sub { return $this->pearlpbx_player(@_); },
 		};
 		$template->process ('incomingToGroup.html', $template_vars) || die $template->error();
 

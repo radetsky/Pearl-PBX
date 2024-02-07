@@ -5,25 +5,21 @@
 <tr>
 <th>Дата/время</th>
 <th>Номер А</th>
-<th>Номер Б</th>
-<th>Канал А</th>
-<th>Канал Б</th>
+<th>Агент</th>
 <th>Состояние</th>
-<th>Время</th>
-<th>Запись</th>
+<th>Ожидание</th>
+<th>Длительность</th>
 </tr>
 </thead>
 <tbody>
 [% FOREACH cdr_key IN cdr_keys %]
 <tr>
-<td>[% cdr_key.calldate %]</td>
-<td>[% cdr_key.src %]</td>
-<td>[% cdr_key.dst %]</td>
-<td>[% cdr_key.channel %]</td>
-<td>[% cdr_key.dstchannel %]</td>
-<td>[% cdr_key.disposition %]</td>
-<td>[% cdr_key.billsec %]</td>
-<td>[% pearlpbx_player(cdr_key.calldate,cdr_key.src,cdr_key.dst,cdr_key.disposition,cdr_key.uniqueid) %]</td>
+<td>[% cdr_key.time %]</td>
+<td>[% cdr_key.callerid %]</td>
+<td>[% cdr_key.agentid %]</td>
+<td>[% cdr_key.status %]</td>
+<td>[% cdr_key.holdtime %]</td>
+<td>[% cdr_key.calltime %]</td>
 </tr>
 [% END %]
 </tbody>
