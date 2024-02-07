@@ -3,23 +3,17 @@
 <table id="pearlpbx_ivr_callback_list_table" class="table table-bordered table-stripped">
 <thead>
         <tr>
-                <th> Время заявки </th>
+                <th> Время </th>
                 <th> Номер Абонента </th>
-                <th> Канал Б </th>
-                <th> Номер Б </th>
-                <th> Отработана </th>
-                <th> Кем </th>
+                <th> Запись </th>
         </tr>
 </thead>
 <tbody>
 [% FOREACH cdr_key IN cdr_keys %]
 <tr>
-<td>[% cdr_key.created %]</td>
-<td>[% cdr_key.callerid %]</td>
-<td>[% cdr_key.calledidname %]</td>
-<td>[% cdr_key.calledidnum %]</td>
-<td>[% cdr_key.done %]</td>
-<td>[% cdr_key.operator %]</td>
+<td>[% cdr_key.cdr_start %]</td>
+<td>[% cdr_key.cdr_src %]</td>
+<td>[% pearlpbx_player(cdr_key.cdr_start,cdr_key.cdr_src,cdr_key.cdr_dst,cdr_key.cdr_uniqueid) %]</td>
 </tr>
 [% END %]
 </tbody>

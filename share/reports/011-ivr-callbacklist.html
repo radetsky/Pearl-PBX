@@ -1,6 +1,6 @@
-<!-- Список заявок на обратный звонок -->
+<!-- Callback -->
 
-<center><h2>Список заявок на обратный звонок </h2></center>
+<center><h2>Callback</h2></center>
 <form class="well" onSubmit="return callbacklist_submit()">
 
     <fieldset>
@@ -11,22 +11,19 @@
         <input id='dateTo011' data-datepicker="datepicker" class="input-date" type="text" value="" />
         <input id='timeTo011' class="input-mini" type="text" value="23:59" />
 
-        <input type="checkbox" name="hide_done_011" id="hide_done_011"  > Спрятать выполненные 
-
         <input type="submit" class="btn btn-primary" value="Поиск">
-	
+
     </fieldset>
 </form>
 <div id="callbacklist"></div>
 
 <script type="text/javascript">
 
-function callbacklist_submit() { 
+function callbacklist_submit() {
   var dateFrom;
   var timeFrom;
   var dateTo;
   var timeTo;
-  var direction;
   var parsed;
 
   dateFrom = $('#dateFrom011').val();
@@ -34,10 +31,8 @@ function callbacklist_submit() {
   timeFrom = $('#timeFrom011').val();
   timeTo = $('#timeTo011').val();
 
-  done = $('#hide_done_011').prop('checked'); 
-
   parsed = pearlpbx_parse_period (dateFrom, dateTo, timeFrom, timeTo);
-  if (parsed == false ) {
+  if (parsed === false ) {
     return false;
   }
   $.get("/reports.pl",
@@ -46,7 +41,6 @@ function callbacklist_submit() {
       timeFrom: timeFrom,
       dateTo: dateTo,
       timeTo: timeTo,
-      done: done
     },function(data)
     {
       $('#callbacklist').html(data);
@@ -55,7 +49,7 @@ function callbacklist_submit() {
 }
 
 pearlpbx_today();
-  
+
 </script>
 
 
