@@ -33,7 +33,7 @@ use warnings;
 
 use base qw(PearlPBX::Report);
 use Data::Dumper;
-use Template; 
+use Template;
 
 use version; our $VERSION = "1.0";
 our @EXPORT_OK = ();
@@ -79,20 +79,20 @@ sub report {
     my $sincedatetime = $this->filldatetime( $params->{'dateFrom'}, $params->{'timeFrom'} );
     my $tilldatetime  = $this->filldatetime( $params->{'dateTill'}, $params->{'timeTill'} );
 
-    my $sql_cond = $this->fill_direction_sql_condition (0); 
+    my $sql_cond = $this->fill_direction_sql_condition (0);
 
     my $disposition = $this->_sql_cond_disposition ( $params->{'disposition'} );
     my $billsec = $this->_sql_cond_billsec ( $params->{'billsec'} );
 
-    my $src = $this->_sql_cond_src ($params->{'src'} ); 
+    my $src = $this->_sql_cond_src ($params->{'src'} );
     my $dst = $this->_sql_cond_dst ($params->{'dst'} );
 
-    my $channel = $this->_sql_cond_channel ($params->{'channel'}); 
-    my $dstchannel = $this->_sql_cond_dstchannel ($params->{'dstchannel'}); 
+    my $channel = $this->_sql_cond_channel ($params->{'channel'});
+    my $dstchannel = $this->_sql_cond_dstchannel ($params->{'dstchannel'});
 
-    my $sql = "select calldate,src,dst,split_part(channel,'-',1) as channel, 
-     split_part(dstchannel,'-',1) as dstchannel,disposition,billsec,uniqueid 
-      from public.cdr where calldate between ? and ? 
+    my $sql = "select calldate,src,dst,split_part(channel,'-',1) as channel,
+     split_part(dstchannel,'-',1) as dstchannel,disposition,billsec,uniqueid
+      from public.cdr where calldate between ? and ?
        and $sql_cond $src $dst $channel $dstchannel $disposition $billsec order by calldate";
 
     my $sth = $this->{dbh}->prepare($sql);
@@ -102,35 +102,35 @@ sub report {
         return undef;
     }
 
-    my @cdr_keys; 
+    my @cdr_keys;
     while ( my $hash_ref = $sth->fetchrow_hashref ) {
-        push @cdr_keys, $hash_ref; 
+        push @cdr_keys, $hash_ref;
     }
 
-	my $template = Template->new( { 
+	my $template = Template->new( {
 		INCLUDE_PATH => '/usr/share/pearlpbx/reports/templates',
-		INTERPOLATE  => 1, 
-	} ) || die "$Template::ERROR\n"; 
+		INTERPOLATE  => 1,
+	} ) || die "$Template::ERROR\n";
 
-	my $template_vars = { 
+	my $template_vars = {
 		cdr_keys => \@cdr_keys,
-		pearlpbx_player => sub { return $this->pearlpbx_player(@_); }, 
-	};  
-	$template->process ('cdrfilter.html', $template_vars) || die $template->error(); 
-		
+		pearlpbx_player => sub { return $this->pearlpbx_player(@_); },
+	};
+	$template->process ('cdrfilter.html', $template_vars) || die $template->error();
+
 }
 
-sub _sql_cond_disposition { 
-    my ( $this, $disposition ) = @_; 
+sub _sql_cond_disposition {
+    my ( $this, $disposition ) = @_;
 
     if ( $disposition =~ /ANSWERED/ ) {
         return 'and disposition=\'ANSWERED\'';
     }
-    if ( $disposition =~ /BUSY/ ) { 
-        return 'and disposition=\'BUSY\''; 
+    if ( $disposition =~ /BUSY/ ) {
+        return 'and disposition=\'BUSY\'';
     }
-    if ( $disposition =~ /FAILED/ ) { 
-        return 'and disposition=\'FAILED\''; 
+    if ( $disposition =~ /FAILED/ ) {
+        return 'and disposition=\'FAILED\'';
     }
     if ( $disposition =~ /NO ANSWER/ ) {
         return 'and disposition=\'NO ANSWER\'';
@@ -139,72 +139,76 @@ sub _sql_cond_disposition {
 
 }
 
-sub _sql_cond_billsec { 
-    my ($this, $billsec) = @_; 
+sub _sql_cond_billsec {
+    my ($this, $billsec) = @_;
 
-    if ($billsec == 1) { 
-        return 'and billsec between 0 and 30'; 
+    if ($billsec == 1) {
+        return 'and billsec between 0 and 30';
     }
     if ($billsec == 2) {
-        return 'and billsec between 30 and 60'; 
+        return 'and billsec between 30 and 60';
     }
     if ($billsec == 3) {
-        return 'and billsec between 60 and 120'; 
+        return 'and billsec between 60 and 120';
     }
-    if ($billsec == 4) { 
-        return 'and billsec between 120 and 180'; 
+    if ($billsec == 4) {
+        return 'and billsec between 120 and 180';
     }
-    if ($billsec == 5) { 
-        return 'and billsec between 180 and 300'; 
+    if ($billsec == 5) {
+        return 'and billsec between 180 and 300';
     }
-    if ($billsec == 6) { 
-        return 'and billsec > 300'; 
+    if ($billsec == 6) {
+        return 'and billsec > 300';
     }
     if ($billsec == 7) {
         return 'and billsec > 60';
     }
-    if ($billsec == 8) { 
+    if ($billsec == 8) {
         return 'and billsec > 120';
     }
-    if ($billsec == 9) { 
+    if ($billsec == 9) {
         return 'and billsec > 180';
     }
     if ($billsec == 10) {
-        return 'and billsec > 240'; 
+        return 'and billsec > 240';
     }
-    return ''; 
+    return '';
 }
 
-sub _sql_cond_src { 
-    my ($this,$src) = @_; 
+sub _sql_cond_src {
+    my ($this,$src) = @_;
 
     if ($src =~ /^\d/) {
-        return "and src ~ E'$src'"; 
+        return "and src ~ E'$src'";
     }
-    return ''; 
+    return '';
 }
-sub _sql_cond_dst { 
-    my ($this,$dst) = @_; 
+sub _sql_cond_dst {
+    my ($this,$dst) = @_;
+
+    if (substr($dst, 0, 1) eq '=') {
+        return "and dst = '".substr($dst,1)."'";
+    }
 
     if ($dst =~ /^\d/) {
-        return "and dst ~ E'$dst'"; 
+        return "and dst ~ E'$dst'";
     }
-    return ''; 
+    return '';
 }
 
-sub _sql_cond_channel { 
-    my ($this, $channel) = @_; 
+sub _sql_cond_channel {
+    my ($this, $channel) = @_;
 
-    if ( $channel =~ /^SIP/ ) { 
-        return "and channel like '".$channel."%'"; 
+    if ( $channel =~ /^SIP/ ) {
+        return "and channel like '".$channel."%'";
     }
 }
 
-sub _sql_cond_dstchannel { 
-    my ($this, $dstchannel) = @_; 
+sub _sql_cond_dstchannel {
+    my ($this, $dstchannel) = @_;
 
-    if ( $dstchannel =~ /^SIP/ ) { 
-        return "and dstchannel like '".$dstchannel."%'"; 
+    if ( $dstchannel =~ /^SIP/ ) {
+        return "and dstchannel like '".$dstchannel."%'";
     }
 }
 
